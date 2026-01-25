@@ -1,0 +1,14 @@
+{
+    "NotFound": {
+        "title": "404 - Page non trouvée",
+        "text1": "Désolé, la page que vous recherchez n'existe pas.",
+        "text2": "Veuillez vérifier l'URL ou revenir à la page d'accueil.",
+        "back-to-home": "Retourner à l'accueil"
+    },
+    "ErrorPage": {
+        "title": "Oups ! Une erreur est survenue",
+        "text1": "Il semble y avoir un problème avec votre demande.",
+        "retry": "Réessayer",
+        "back-to-home": "Retourner à l'accueil"
+    }
+}

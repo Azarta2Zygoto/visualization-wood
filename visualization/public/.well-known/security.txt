@@ -1,0 +1,3 @@
+Contact: mailto:quentin.potiron@gmail.com
+Expires: 2026-12-31T22:00:00.000Z
+Preferred-Languages: en, fr

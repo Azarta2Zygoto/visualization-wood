@@ -1,0 +1,14 @@
+/* TEAM */
+Role: developper
+Name: Quentin Potiron
+Contact: mailto:quentin.potiron@gmail.com
+Location: France
+
+Role: developper
+Name: Clément Petitjean
+Location: France
+
+/* SITE */
+Last update: 21/10/2025
+Standards: HTML5, CSS3
+Components: React, Next.JS

@@ -1,0 +1,7 @@
+src/dictionaries/*.d.json.ts
+*.mjs
+*.config.ts
+*.yaml
+*.yml
+*.hbs
+CHANGELOG.md
