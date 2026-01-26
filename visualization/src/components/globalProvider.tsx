@@ -8,9 +8,13 @@ const locales = ["fr"];
 const GlobalContext = createContext<{
     locale: string;
     setLocale: (v: string) => void;
+    windowSize: { width: number; height: number };
+    setWindowSize: (size: { width: number; height: number }) => void;
 }>({
     locale: defaultLocale,
     setLocale: () => {},
+    windowSize: { width: 0, height: 0 },
+    setWindowSize: () => {},
 });
 
 export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -32,16 +36,40 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
         const lang = isSupported ? navigatorLang : defaultLocale;
         return lang;
     });
+    const [windowSize, setWindowSize] = useState<{
+        width: number;
+        height: number;
+    }>(() => {
+        if (typeof window === "undefined") {
+            return { width: 0, height: 0 };
+        }
+        return { width: window.innerWidth, height: window.innerHeight };
+    });
 
     useEffect(() => {
         localStorage.setItem("locale", locale);
     }, [locale]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        };
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, []);
 
     return (
         <GlobalContext.Provider
             value={{
                 locale,
                 setLocale,
+                windowSize,
+                setWindowSize,
             }}
         >
             {children}

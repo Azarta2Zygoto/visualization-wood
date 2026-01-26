@@ -28,7 +28,6 @@
 }
 * {
     box-sizing: border-box;
-    scroll-behavior: smooth;
     scrollbar-width: thin;
     scrollbar-color: var(--color-special) var(--color-page);
 }
@@ -109,4 +108,12 @@ main {
     outline: none;
     border-color: var(--color-special);
     box-shadow: 0 0 0 3px var(--color-special);
+}
+.world-map-container {
+    z-index: -1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
 }

@@ -2,6 +2,7 @@
 
 import { type JSX, useEffect, useState } from "react";
 
+import { WorldMap } from "@/components/map";
 import { readNpz } from "@/utils/read";
 
 export default function HomePage(): JSX.Element {
@@ -32,6 +33,7 @@ export default function HomePage(): JSX.Element {
             ) : (
                 <p>Loading data...</p>
             )}
+            <WorldMap />
         </main>
     );
 }
