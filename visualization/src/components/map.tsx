@@ -5,7 +5,11 @@ import { type JSX, useEffect, useRef } from "react";
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
+import pays from "@/data/data_col0_names_en.json";
+
 import { useGlobal } from "./globalProvider";
+
+const pays_values = Object.values(pays);
 
 export function WorldMap(): JSX.Element {
     const svgRef = useRef<SVGSVGElement>(null);
@@ -82,9 +86,14 @@ export function WorldMap(): JSX.Element {
                     .attr("fill", (d: any) => {
                         // France has id 250 in the world topology
                         console.log(d);
+                        if (pays_values.includes(d.properties.name)) {
+                            console.log(d.properties.name);
+                        }
                         return d.properties.name === "France"
                             ? "#ff6b6b"
-                            : "#d3d3d3";
+                            : pays_values.includes(d.properties.name)
+                              ? "#87ceeb"
+                              : "#d3d3d3";
                     })
                     .attr("stroke", "#999")
                     .attr("stroke-width", 0.5)
