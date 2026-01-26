@@ -31,7 +31,7 @@ def open_files(input_file_path:str, start_year:int, end_year:int) -> tuple[list[
 
     return read_files, headers
 
-def output_file(output_file_path:str, data:list[list[str]], header:list[str]) -> None:
+def output_file(output_file_path:str, data:list[list[str]], header:list[str], output=["csv", "npz"]) -> None:
     """
     Outputs the processed data to a specified file.
 
@@ -41,10 +41,13 @@ def output_file(output_file_path:str, data:list[list[str]], header:list[str]) ->
         header (list): The header to write.
     """
     try:
-        with open(output_file_path+".csv", mode='w', newline='', encoding='utf-8') as output_file:
-            writer = csv.writer(output_file, delimiter=';')
-            writer.writerow(header)
-            writer.writerows(data)
+        if "csv" in output:
+            with open(output_file_path+".csv", mode='w', newline='', encoding='utf-8') as output_file:
+                writer = csv.writer(output_file, delimiter=';')
+                writer.writerow(header)
+                writer.writerows(data)
+        
+        if "npz" in output:
             np.savez_compressed(output_file_path+'.npz', data=np.array(data, dtype=np.int32))
 
         print(f"Successfully wrote to {output_file_path}.")
@@ -136,7 +139,7 @@ def count_element_in_column(data, column_index, element)->int:
             count += 1
     return count
 
-def erased_one_column(data:list[list[str]], header:list[str], column_index:int)->tuple[list[list[str]], list[str]]:
+def erased_one_column(data:list[list[str]], header:list[str], column_value:str|list[str])->tuple[list[list[str]], list[str]]:
     """
     Erases a specified column.
 
@@ -147,17 +150,26 @@ def erased_one_column(data:list[list[str]], header:list[str], column_index:int)-
     Returns:
         list: The modified data with rows containing the value removed.
     """
+    column_indexes:list[int] = []
+    if isinstance(column_value, str):
+        column_index = header.index(column_value)
+        column_indexes.append(column_index)
+    else:
+        for col_value in column_value:
+            column_index = header.index(col_value)
+            column_indexes.append(column_index)
+
     new_data = []
     for element in data:
         sub_element = []
         for i, value in enumerate(element):
-            if i != column_index:
+            if i not in column_indexes:
                 sub_element.append(value)
         new_data.append(sub_element)
 
     new_header = []
     for i, hd in enumerate(header):
-        if i != column_index:
+        if i not in column_indexes:
             new_header.append(hd)
     return new_data, new_header
 
@@ -282,16 +294,17 @@ def multiple_indexation_columns(
         for col_index, value in enumerate(row):
             if col_index >= 1:
                 if col_index in indexes:
-                    if value not in dicos[col_index]:
-                        L = len(dicos[col_index])
-                        dicos[col_index][value] = L
+                    if value not in dicos[col_index-1]:
+                        L = len(dicos[col_index-1])
+                        dicos[col_index-1][value] = L
                         new_row.append(str(L))
                     else:
-                        new_row.append(str(dicos[col_index][value]))
+                        new_row.append(str(dicos[col_index-1][value]))
                 else:
                     new_row.append(value)
         new_file.append(new_row)
         iter += 1
+    indexed_data.append(new_file)
 
     for dico in dicos:
         if len(dico) > 0:
@@ -301,7 +314,7 @@ def multiple_indexation_columns(
             print(f"Output dictionary for column {dicos.index(dico)} to {output_file_name_dico}")
 
     for index, file_data in enumerate(indexed_data):
-        output_file(output_file_name+"_"+str(first_col_value+index), file_data, header[1:])
+        output_file(output_file_name+"_"+str(first_col_value+index), file_data, header[1:], output=["npz"])
     return indexed_data
 
 
@@ -318,7 +331,7 @@ if __name__ == "__main__":
     specific_count = count_element_in_column(data, 0, "NOM")
     print(f"Occurrences of 'NOM' in column 0: {specific_count}")
 
-    new_data, new_header = erased_one_column(data, header, 3)
+    new_data, new_header = erased_one_column(data, header, ["GEOGRAPHIE_LIB", "N027_MOD", "N053_MOD", "N890_MOD"])
     print(f"Data after erasing column 3: {new_data[0]}, New Header: {new_header}")
 
     all_count = count_all_columns(new_data)
