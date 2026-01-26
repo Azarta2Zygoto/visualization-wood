@@ -207,4 +207,4 @@ marimo/_lsp/
 __marimo__/
 
 # The huge dataset files
-data/
+/data/

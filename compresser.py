@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+import json
 
 def open_files(input_file_path:str, start_year:int, end_year:int) -> tuple[list[list[str]], list[str]]:
     """
@@ -44,7 +45,7 @@ def output_file(output_file_path:str, data:list[list[str]], header:list[str]) ->
             writer = csv.writer(output_file, delimiter=';')
             writer.writerow(header)
             writer.writerows(data)
-            np.savez_compressed('ints.npz', data=np.array(data, dtype=np.int32))
+            np.savez_compressed(output_file_path+'.npz', data=np.array(data, dtype=np.int32))
 
         print(f"Successfully wrote to {output_file_path}.")
     except Exception as e:
@@ -58,7 +59,6 @@ def json_output_file(output_file_path:str, data:dict) -> None:
         output_file_path (str): Path to the output file.
         data (list): The data to write.
     """
-    import json
     try:
         with open(output_file_path, mode='w', encoding='utf-8') as output_file:
             json.dump(data, output_file, ensure_ascii=False, indent=4)
@@ -66,6 +66,21 @@ def json_output_file(output_file_path:str, data:dict) -> None:
     except Exception as e:
         print(f"Error writing to file: {e}")
 
+def revert_json(dico:dict) -> dict:
+    """
+    Reverts a JSON file to a dictionary.
+
+    Args:
+        dico (dict): the input dict.
+        start (int): The starting index for processing.
+        end (int): The ending index for processing.
+    Returns:
+        dict: The reverted dictionary.
+    """
+    reverted_dico = {}
+    for key, value in dico.items():
+        reverted_dico[value] = key
+    return reverted_dico
 
 def count_distinct_elements(data, column_index)->tuple[set, int]:
     """
@@ -175,7 +190,7 @@ def indexation_columns(
         data:list[list[str]],
         header:list[str],
         output_file_name:str,
-        max_limit=250
+        max_limit=250,
     )->list[list[str]]:
     """
     Indexes columns with distinct elements exceeding a maximum limit.
@@ -213,15 +228,86 @@ def indexation_columns(
 
     for dico in dicos:
         if len(dico) > 0:
-            output_file_name_dico = f"{output_file_name}_col{dicos.index(dico)}_dict.json"
-            json_output_file(output_file_name_dico, dico)
+            revert_dico = revert_json(dico)
+            output_file_name_dico = f"{output_file_name}_col{dicos.index(dico)}.json"
+            json_output_file(output_file_name_dico, revert_dico)
+            print(f"Output dictionary for column {dicos.index(dico)} to {output_file_name_dico}")
+
     output_file(output_file_name, indexed_data, header)
     return indexed_data
 
 
 
+def multiple_indexation_columns(
+        data:list[list[str]],
+        header:list[str],
+        output_file_name:str,
+        first_col_value = 2012,
+        max_limit=250,
+    )->list[list[list[str]]]:
+    """
+    Indexes columns with distinct elements exceeding a maximum limit.
+
+    Args:
+        data (list): The data to process.
+        max_limit (int): The maximum limit for distinct elements.
+
+    Returns:
+        list: The modified data with indexed columns.
+    """
+    if not data:
+        return [data]
+
+    num_columns = len(data[0])
+    count_colum = count_all_columns(data)
+    indexes = [col_index for col_index in range(num_columns) if count_colum[col_index] < max_limit]
+    print(f"Indexing columns: {indexes}", count_colum)
+    dicos: list[dict[str, int]] = [{} for _ in range(num_columns)]
+
+    iter = 0
+    date = first_col_value
+
+    indexed_data:list[list[list[str]]] = []
+    new_file:list[list[str]] = []
+    while iter < len(data):
+        new_row = []
+        row = data[iter]
+
+        first_value = int(row[0])
+        if first_value != date:
+            indexed_data.append(new_file)
+            new_file = []
+            date += 1
+
+        for col_index, value in enumerate(row):
+            if col_index >= 1:
+                if col_index in indexes:
+                    if value not in dicos[col_index]:
+                        L = len(dicos[col_index])
+                        dicos[col_index][value] = L
+                        new_row.append(str(L))
+                    else:
+                        new_row.append(str(dicos[col_index][value]))
+                else:
+                    new_row.append(value)
+        new_file.append(new_row)
+        iter += 1
+
+    for dico in dicos:
+        if len(dico) > 0:
+            revert_dico = revert_json(dico)
+            output_file_name_dico = f"{output_file_name}_col{dicos.index(dico)}.json"
+            json_output_file(output_file_name_dico, revert_dico)
+            print(f"Output dictionary for column {dicos.index(dico)} to {output_file_name_dico}")
+
+    for index, file_data in enumerate(indexed_data):
+        output_file(output_file_name+"_"+str(first_col_value+index), file_data, header[1:])
+    return indexed_data
+
+
 if __name__ == "__main__":
     input_path = "data/FDS_COMEXTBOIS"
+    output_folder = "visualization/public/data/"
     start_year = 2012
     end_year = 2025
 
@@ -244,4 +330,6 @@ if __name__ == "__main__":
     # output_path = "compressed_output.csv"
     # output_file(output_path, new_data, new_header)
 
-    new_data = indexation_columns(new_data, new_header, "result/indexed_compressed_output", max_limit=250)
+    # indexation_columns(new_data, new_header, output_folder+"data", max_limit=250)
+
+    multiple_indexation_columns(new_data, new_header, output_folder+"data", first_col_value=start_year, max_limit=250)
