@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     },
     basePath: '/visualization-wood', // Base path for the static export
     assetPrefix: '/visualization-wood/',
+    env: {
+        NEXT_PUBLIC_BASE_PATH: '/visualization-wood'
+    }
 };
 
 const withNextIntl = createNextIntlPlugin();
