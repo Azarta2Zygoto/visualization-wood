@@ -2,12 +2,13 @@
 
 import { Fragment, type JSX, useEffect, useState } from "react";
 
+import ConfigBar from "@/components/configBar";
 import { WorldMap } from "@/components/map";
 import metadata_app from "@/data/metadata.json";
 import { readNpz } from "@/utils/read";
 
 export default function HomePage(): JSX.Element {
-    const [values, setValues] = useState<{ [key: string]: number[][] }>({});
+    const [, setValues] = useState<{ [key: string]: number[][] }>({});
 
     useEffect(() => {
         async function fetchData(year: number) {
@@ -28,16 +29,9 @@ export default function HomePage(): JSX.Element {
         <Fragment>
             <WorldMap />
             <main>
-                <h1 className="title">Welcome to the Visualization App</h1>
-                {values ? (
-                    <div>
-                        <h2>Data Preview:</h2>
-                        <pre>{JSON.stringify(values, null, 2).slice(0, 5)}</pre>
-                    </div>
-                ) : (
-                    <p>Chargement des données...</p>
-                )}
+                <h1 className="title">Echanges internationaux de bois</h1>
             </main>
+            <ConfigBar />
         </Fragment>
     );
 }

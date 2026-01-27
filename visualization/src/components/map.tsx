@@ -84,24 +84,32 @@ export function WorldMap(): JSX.Element {
                     .attr("class", "country")
                     .attr("d", pathGenerator as any)
                     .attr("fill", (d: any) => {
-                        // France has id 250 in the world topology
-                        console.log(d);
-                        if (pays_values.includes(d.properties.name)) {
-                            console.log(d.properties.name);
-                        }
                         return d.properties.name === "France"
                             ? "#ff6b6b"
                             : pays_values.includes(d.properties.name)
                               ? "#87ceeb"
                               : "#d3d3d3";
                     })
+                    .attr("data-name", (d: any) => d.properties.name)
                     .attr("stroke", "#999")
                     .attr("stroke-width", 0.5)
                     .style("cursor", "pointer")
                     .on("mouseover", (event: any) => {
                         d3.select(event.currentTarget)
-                            .attr("stroke-width", 1)
-                            .attr("opacity", 0.8);
+                            .attr("stroke-width", (d: any) => {
+                                return pays_values.includes(
+                                    d.properties.name,
+                                ) || d.properties.name === "France"
+                                    ? 1
+                                    : 0.5;
+                            })
+                            .attr("opacity", (d: any) => {
+                                return pays_values.includes(
+                                    d.properties.name,
+                                ) || d.properties.name === "France"
+                                    ? 0.8
+                                    : 1;
+                            });
                     })
                     .on("mouseout", (event: any) => {
                         d3.select(event.currentTarget)

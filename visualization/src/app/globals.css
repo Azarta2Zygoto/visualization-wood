@@ -7,6 +7,7 @@
     --color-mat: #b9d7ff;
     --color-page: #f3ede6;
     --border-color: #333;
+    --on-map: #06518f52;
 }
 
 @media (prefers-reduced-motion) {
@@ -61,7 +62,7 @@ main {
     pointer-events: none;
 }
 
-.notfound-main {
+.error-main {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -70,6 +71,7 @@ main {
     padding: 5vh 10vw;
     width: 100%;
     text-align: center;
+    pointer-events: auto;
 }
 .h-secondary {
     margin: 1rem 0;
@@ -122,4 +124,28 @@ main {
     pointer-events: auto;
 }
 .title {
+    background-color: var(--on-map);
+    font-size: clamp(1.3rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+.h2-primary {
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    font-weight: 700;
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.config-bar {
+    position: fixed;
+    right: 1rem;
+    top: 10rem;
+    background-color: var(--on-map);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 4px 8px var(--color-mat);
+    z-index: 10;
 }

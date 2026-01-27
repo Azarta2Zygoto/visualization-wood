@@ -57,4 +57,4 @@ Vous devriez alors avoir comme deux derniers messages dans le terminal :
  ✓ Ready in X.Xs
 ```
 
-De plus, l'application tourne par défaut sur le port 3000 du localhost. L'url de l'application est donc à : http://localhost:3000/visualization
+De plus, l'application tourne par défaut sur le port 3000 du localhost. L'url de l'application est donc à : http://localhost:3000/visualization-wood
