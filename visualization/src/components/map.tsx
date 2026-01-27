@@ -5,7 +5,7 @@ import { type JSX, useEffect, useRef } from "react";
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
-import pays from "@/data/data_col0_names_en.json";
+import pays from "@/data/country.json";
 
 import { useGlobal } from "./globalProvider";
 
