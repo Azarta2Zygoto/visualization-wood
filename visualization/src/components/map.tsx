@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { type JSX, useEffect, useRef } from "react";
+import { type JSX, useEffect, useRef, useState } from "react";
 
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
@@ -31,20 +31,11 @@ export function WorldMap({
     isMultipleMode,
 }: WorldMapProps): JSX.Element {
     const svgRef = useRef<SVGSVGElement>(null);
+    const [worldMapCountry, setWorldMapCountry] = useState<any>(null);
+    const [projectionMap, setProjectionMap] = useState<any>(null);
     const { windowSize } = useGlobal();
 
     useEffect(() => {
-        const usefulData = allData[year]?.filter((entry) => {
-            const productMatch =
-                productsSelected.length === 0 ||
-                productsSelected.includes(entry[3]);
-            const monthMatch = entry[2] === month;
-            const dataType = entry[1] === type;
-            return productMatch && monthMatch && dataType;
-        });
-
-        console.log("usefulData:", usefulData);
-
         const loadMap = async () => {
             const svg = svgRef.current;
             if (!svg) return;
@@ -63,8 +54,9 @@ export function WorldMap({
             // Create projection and path
             const projection = d3
                 .geoNaturalEarth1()
-                .scale(200)
+                .scale(300)
                 .translate([width / 2, height / 2]);
+            setProjectionMap(() => projection);
 
             const pathGenerator = d3.geoPath().projection(projection);
 
@@ -84,6 +76,7 @@ export function WorldMap({
                     worldData,
                     worldData.objects.countries,
                 ) as any;
+                setWorldMapCountry(countries);
 
                 // Create SVG
                 const mapSvg = d3
@@ -146,88 +139,6 @@ export function WorldMap({
                             .attr("opacity", 1);
                     });
 
-                // Aggregate data by country
-                const dataByCountry: { [key: string]: number } = {};
-                if (usefulData) {
-                    usefulData.forEach((entry: any) => {
-                        const countryIndex = entry[0];
-                        const countryName =
-                            pays[countryIndex as keyof typeof pays];
-                        const value = entry[4] || 0; // Assuming index 4 contains the value
-                        if (countryName) {
-                            dataByCountry[countryName] =
-                                (dataByCountry[countryName] || 0) + value;
-                        }
-                    });
-                }
-
-                // Find max value for scaling
-                const maxValue = Math.max(
-                    ...usefulData.map((data) => data[4]),
-                    1,
-                );
-                const radiusScale = d3
-                    .scaleLinear()
-                    .domain([0, maxValue])
-                    .range([2, 20]);
-
-                // Calculate country centroids and draw circles
-                const countryFeatures =
-                    countries.type === "FeatureCollection"
-                        ? countries.features
-                        : [countries];
-
-                countryFeatures.forEach((feature: any) => {
-                    const countryName = feature.properties.name;
-                    if (dataByCountry[countryName]) {
-                        // Calculate centroid using d3.geoCentroid
-                        const centroid = d3.geoCentroid(feature);
-                        const projectedCentroid = projection(centroid);
-
-                        if (projectedCentroid) {
-                            mapSvg
-                                .append("circle")
-                                .attr("class", "data-point")
-                                .attr("cx", projectedCentroid[0])
-                                .attr("cy", projectedCentroid[1])
-                                .attr(
-                                    "r",
-                                    radiusScale(dataByCountry[countryName]),
-                                )
-                                .attr("fill", "#ff9800")
-                                .attr("opacity", 0.7)
-                                .attr("stroke", "#e65100")
-                                .attr("stroke-width", 1)
-                                .style("cursor", "pointer")
-                                .on("mouseover", function () {
-                                    d3.select(this)
-                                        .attr("opacity", 1)
-                                        .attr("stroke-width", 2);
-                                    // Show tooltip
-                                    mapSvg
-                                        .append("text")
-                                        .attr("class", "tooltip")
-                                        .attr("x", projectedCentroid[0])
-                                        .attr("y", projectedCentroid[1] - 25)
-                                        .attr("text-anchor", "middle")
-                                        .attr("font-size", "12px")
-                                        .attr("background", "white")
-                                        .attr("fill", "black")
-                                        .text(
-                                            `${countryName}: ${dataByCountry[countryName].toFixed(0)}`,
-                                        );
-                                })
-                                .on("mouseout", function () {
-                                    d3.select(this)
-                                        .attr("opacity", 0.7)
-                                        .attr("stroke-width", 1);
-                                    // Remove tooltip
-                                    mapSvg.selectAll(".tooltip").remove();
-                                });
-                        }
-                    }
-                });
-
                 // Draw ocean borders
                 mapSvg
                     .append("path")
@@ -261,6 +172,107 @@ export function WorldMap({
         type,
         windowSize.height,
         windowSize.width,
+        year,
+    ]);
+
+    useEffect(() => {
+        const usefulData = allData[year]?.filter((entry) => {
+            const productMatch =
+                productsSelected.length === 0 ||
+                productsSelected.includes(entry[3]);
+            const monthMatch = entry[2] === month;
+            const dataType = entry[1] === type;
+            return productMatch && monthMatch && dataType;
+        });
+
+        const updateMap = () => {
+            const svg = svgRef.current;
+            if (!svg || !usefulData) return;
+
+            const mapSvg = d3.select(svg);
+
+            // Aggregate data by country
+            const dataByCountry: { [key: string]: number } = {};
+            usefulData.forEach((entry: any) => {
+                const countryIndex = entry[0];
+                const countryName = pays[countryIndex as keyof typeof pays];
+                const value = entry[4] || 0; // Assuming index 4 contains the value
+                if (countryName) {
+                    dataByCountry[countryName] =
+                        (dataByCountry[countryName] || 0) + value;
+                }
+            });
+
+            // Find max value for scaling
+            const maxValue = Math.max(...usefulData.map((data) => data[4]), 1);
+            const radiusScale = d3
+                .scaleLinear()
+                .domain([0, maxValue])
+                .range([2, 20]);
+
+            // Calculate country centroids and draw circles
+            const countryFeatures =
+                worldMapCountry.type === "FeatureCollection"
+                    ? worldMapCountry.features
+                    : [worldMapCountry];
+
+            countryFeatures.forEach((feature: any) => {
+                const countryName = feature.properties.name;
+                if (dataByCountry[countryName]) {
+                    // Calculate centroid using d3.geoCentroid
+                    const centroid = d3.geoCentroid(feature);
+                    const projectedCentroid = projectionMap(centroid);
+
+                    if (projectedCentroid) {
+                        mapSvg
+                            .append("circle")
+                            .attr("class", "data-point")
+                            .attr("cx", projectedCentroid[0])
+                            .attr("cy", projectedCentroid[1])
+                            .attr("r", radiusScale(dataByCountry[countryName]))
+                            .attr("fill", "#ff9800")
+                            .attr("opacity", 0.7)
+                            .attr("stroke", "#e65100")
+                            .attr("stroke-width", 1)
+                            .style("cursor", "pointer")
+                            .on("mouseover", function () {
+                                d3.select(this)
+                                    .attr("opacity", 1)
+                                    .attr("stroke-width", 2);
+                                // Show tooltip
+                                mapSvg
+                                    .append("text")
+                                    .attr("class", "tooltip")
+                                    .attr("x", projectedCentroid[0])
+                                    .attr("y", projectedCentroid[1] - 25)
+                                    .attr("text-anchor", "middle")
+                                    .attr("font-size", "12px")
+                                    .attr("background", "white")
+                                    .attr("fill", "black")
+                                    .text(
+                                        `${countryName}: ${dataByCountry[countryName].toFixed(0)}`,
+                                    );
+                            })
+                            .on("mouseout", function () {
+                                d3.select(this)
+                                    .attr("opacity", 0.7)
+                                    .attr("stroke-width", 1);
+                                // Remove tooltip
+                                mapSvg.selectAll(".tooltip").remove();
+                            });
+                    }
+                }
+            });
+        };
+
+        updateMap();
+    }, [
+        allData,
+        month,
+        productsSelected,
+        projectionMap,
+        type,
+        worldMapCountry,
         year,
     ]);
 
