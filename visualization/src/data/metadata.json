@@ -1,6 +1,7 @@
 {
     "bois": {
         "start_year": 2012,
+        "start_month": 0,
         "end_year": 2025
     }
 }

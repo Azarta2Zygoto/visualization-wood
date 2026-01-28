@@ -11,11 +11,40 @@ import { useGlobal } from "./globalProvider";
 
 const pays_values = Object.values(pays);
 
-export function WorldMap(): JSX.Element {
+interface WorldMapProps {
+    allData: { [key: string]: number[][] };
+    type: number;
+    year: number;
+    month: number;
+    productsSelected: number[];
+    countriesSelected: number[];
+    isMultipleMode: boolean;
+}
+
+export function WorldMap({
+    allData,
+    type,
+    year,
+    month,
+    productsSelected,
+    countriesSelected,
+    isMultipleMode,
+}: WorldMapProps): JSX.Element {
     const svgRef = useRef<SVGSVGElement>(null);
     const { windowSize } = useGlobal();
 
     useEffect(() => {
+        const usefulData = allData[year]?.filter((entry) => {
+            const productMatch =
+                productsSelected.length === 0 ||
+                productsSelected.includes(entry[3]);
+            const monthMatch = entry[2] === month;
+            const dataType = entry[1] === type;
+            return productMatch && monthMatch && dataType;
+        });
+
+        console.log("usefulData:", usefulData);
+
         const loadMap = async () => {
             const svg = svgRef.current;
             if (!svg) return;
@@ -117,6 +146,88 @@ export function WorldMap(): JSX.Element {
                             .attr("opacity", 1);
                     });
 
+                // Aggregate data by country
+                const dataByCountry: { [key: string]: number } = {};
+                if (usefulData) {
+                    usefulData.forEach((entry: any) => {
+                        const countryIndex = entry[0];
+                        const countryName =
+                            pays[countryIndex as keyof typeof pays];
+                        const value = entry[4] || 0; // Assuming index 4 contains the value
+                        if (countryName) {
+                            dataByCountry[countryName] =
+                                (dataByCountry[countryName] || 0) + value;
+                        }
+                    });
+                }
+
+                // Find max value for scaling
+                const maxValue = Math.max(
+                    ...usefulData.map((data) => data[4]),
+                    1,
+                );
+                const radiusScale = d3
+                    .scaleLinear()
+                    .domain([0, maxValue])
+                    .range([2, 20]);
+
+                // Calculate country centroids and draw circles
+                const countryFeatures =
+                    countries.type === "FeatureCollection"
+                        ? countries.features
+                        : [countries];
+
+                countryFeatures.forEach((feature: any) => {
+                    const countryName = feature.properties.name;
+                    if (dataByCountry[countryName]) {
+                        // Calculate centroid using d3.geoCentroid
+                        const centroid = d3.geoCentroid(feature);
+                        const projectedCentroid = projection(centroid);
+
+                        if (projectedCentroid) {
+                            mapSvg
+                                .append("circle")
+                                .attr("class", "data-point")
+                                .attr("cx", projectedCentroid[0])
+                                .attr("cy", projectedCentroid[1])
+                                .attr(
+                                    "r",
+                                    radiusScale(dataByCountry[countryName]),
+                                )
+                                .attr("fill", "#ff9800")
+                                .attr("opacity", 0.7)
+                                .attr("stroke", "#e65100")
+                                .attr("stroke-width", 1)
+                                .style("cursor", "pointer")
+                                .on("mouseover", function () {
+                                    d3.select(this)
+                                        .attr("opacity", 1)
+                                        .attr("stroke-width", 2);
+                                    // Show tooltip
+                                    mapSvg
+                                        .append("text")
+                                        .attr("class", "tooltip")
+                                        .attr("x", projectedCentroid[0])
+                                        .attr("y", projectedCentroid[1] - 25)
+                                        .attr("text-anchor", "middle")
+                                        .attr("font-size", "12px")
+                                        .attr("background", "white")
+                                        .attr("fill", "black")
+                                        .text(
+                                            `${countryName}: ${dataByCountry[countryName].toFixed(0)}`,
+                                        );
+                                })
+                                .on("mouseout", function () {
+                                    d3.select(this)
+                                        .attr("opacity", 0.7)
+                                        .attr("stroke-width", 1);
+                                    // Remove tooltip
+                                    mapSvg.selectAll(".tooltip").remove();
+                                });
+                        }
+                    }
+                });
+
                 // Draw ocean borders
                 mapSvg
                     .append("path")
@@ -143,7 +254,15 @@ export function WorldMap(): JSX.Element {
         };
 
         loadMap();
-    }, [windowSize.height, windowSize.width]);
+    }, [
+        allData,
+        month,
+        productsSelected,
+        type,
+        windowSize.height,
+        windowSize.width,
+        year,
+    ]);
 
     return (
         <div className="world-map-container">
