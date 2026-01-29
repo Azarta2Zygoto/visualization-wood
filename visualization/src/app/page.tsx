@@ -19,21 +19,31 @@ export default function HomePage(): JSX.Element {
     const [productsSelected, setProductsSelected] = useState<number[]>([0]);
     const [countriesSelected, setCountriesSelected] = useState<number[]>([]);
     const [isMultipleMode, setIsMultipleMode] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    // Lazy load data only for the current year
     useEffect(() => {
         async function fetchData(year: number) {
+            // Check if data is already loaded
+            if (allData[year]) {
+                return;
+            }
+
+            setIsLoading(true);
             try {
                 const data = await readNpz(year);
-                setAllData((prev) => ({ ...prev, [year]: data }));
-                console.log("Data loaded:", data);
-                // You can add more logic here to handle the loaded data
+                // Only keep current year data to prevent memory buildup
+                setAllData({ [year]: data });
+                console.log(`Data loaded for year ${year}`);
             } catch (error) {
-                console.error("Error loading data:", error);
+                console.error(`Error loading data for year ${year}:`, error);
+            } finally {
+                setIsLoading(false);
             }
         }
 
-        fetchData(metadata_app.bois.start_year);
-    }, []);
+        fetchData(currentYear);
+    }, [currentYear]);
 
     return (
         <Fragment>

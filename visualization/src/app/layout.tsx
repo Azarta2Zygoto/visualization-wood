@@ -5,7 +5,7 @@ import { GlobalProvider } from "@/components/globalProvider";
 import "./globals.css";
 import IntlProvider from "./intlProvider";
 
-const BASE = "https://azarta2zygoto.github.io/visualization/";
+const BASE = "https://azarta2zygoto.github.io/visualization-wood/";
 
 export const metadata: Metadata = {
     metadataBase: new URL(BASE),

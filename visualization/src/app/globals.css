@@ -7,7 +7,7 @@
     --color-mat: #b9d7ff;
     --color-page: #f3ede6;
     --border-color: #333;
-    --on-map: #06518f52;
+    --on-map: #a0d4ffbb;
 }
 
 @media (prefers-reduced-motion) {
@@ -148,4 +148,30 @@ main {
     padding: 0.5rem 1rem;
     box-shadow: 0 4px 8px var(--color-mat);
     z-index: 10;
+}
+
+.tooltip-map {
+    position: absolute;
+    transform: translateX(-50%);
+    background-color: var(--on-map);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    pointer-events: none;
+    box-shadow: 0 4px 8px var(--color-mat);
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    white-space: nowrap;
+    transition:
+        opacity 0.3s,
+        top 0.3s,
+        left 0.3s;
+}
+.tooltip-country {
+    width: 42px;
+    height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+.data-point {
+    pointer-events: none;
 }

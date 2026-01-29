@@ -8,6 +8,7 @@ import * as topojson from "topojson-client";
 import pays from "@/data/country.json";
 
 import { useGlobal } from "./globalProvider";
+import TooltipMap from "./tooltipMap";
 
 const pays_values = Object.values(pays);
 
@@ -33,6 +34,17 @@ export function WorldMap({
     const svgRef = useRef<SVGSVGElement>(null);
     const [worldMapCountry, setWorldMapCountry] = useState<any>(null);
     const [projectionMap, setProjectionMap] = useState<any>(null);
+    const [tooltipData, setTooltipData] = useState<{
+        year: number;
+        month: number;
+        country: string;
+        value: number;
+    } | null>(null);
+    const [tooltipPosition, setTooltipPosition] = useState<{
+        x: number;
+        y: number;
+    }>({ x: 0, y: 0 });
+    const [lectureData, setLectureData] = useState<number[][]>([]);
     const { windowSize } = useGlobal();
 
     useEffect(() => {
@@ -165,25 +177,18 @@ export function WorldMap({
         };
 
         loadMap();
-    }, [
-        allData,
-        month,
-        productsSelected,
-        type,
-        windowSize.height,
-        windowSize.width,
-        year,
-    ]);
+    }, [windowSize.height, windowSize.width]);
 
     useEffect(() => {
-        const usefulData = allData[year]?.filter((entry) => {
+        const newLectureData = allData[year]?.filter((entry) => {
             const productMatch =
                 productsSelected.length === 0 ||
                 productsSelected.includes(entry[3]);
             const monthMatch = entry[2] === month;
-            const dataType = entry[1] === type;
-            return productMatch && monthMatch && dataType;
+            return productMatch && monthMatch;
         });
+        setLectureData(newLectureData || []);
+        const usefulData = newLectureData?.filter((entry) => entry[1] === type);
 
         const updateMap = () => {
             const svg = svgRef.current;
@@ -216,6 +221,27 @@ export function WorldMap({
                     ? worldMapCountry.features
                     : [worldMapCountry];
 
+            mapSvg
+                .selectAll(".country")
+                .on("mouseover", (event) => {
+                    const currentCountryName =
+                        event.target.__data__.properties.name;
+                    if (!dataByCountry[currentCountryName]) return;
+                    setTooltipData({
+                        year,
+                        month,
+                        country: currentCountryName,
+                        value: dataByCountry[currentCountryName],
+                    });
+                    setTooltipPosition({
+                        x: event.pageX,
+                        y: event.pageY,
+                    });
+                })
+                .on("mouseout", () => {
+                    setTooltipData(null);
+                });
+
             countryFeatures.forEach((feature: any) => {
                 const countryName = feature.properties.name;
                 if (dataByCountry[countryName]) {
@@ -234,32 +260,7 @@ export function WorldMap({
                             .attr("opacity", 0.7)
                             .attr("stroke", "#e65100")
                             .attr("stroke-width", 1)
-                            .style("cursor", "pointer")
-                            .on("mouseover", function () {
-                                d3.select(this)
-                                    .attr("opacity", 1)
-                                    .attr("stroke-width", 2);
-                                // Show tooltip
-                                mapSvg
-                                    .append("text")
-                                    .attr("class", "tooltip")
-                                    .attr("x", projectedCentroid[0])
-                                    .attr("y", projectedCentroid[1] - 25)
-                                    .attr("text-anchor", "middle")
-                                    .attr("font-size", "12px")
-                                    .attr("background", "white")
-                                    .attr("fill", "black")
-                                    .text(
-                                        `${countryName}: ${dataByCountry[countryName].toFixed(0)}`,
-                                    );
-                            })
-                            .on("mouseout", function () {
-                                d3.select(this)
-                                    .attr("opacity", 0.7)
-                                    .attr("stroke-width", 1);
-                                // Remove tooltip
-                                mapSvg.selectAll(".tooltip").remove();
-                            });
+                            .style("cursor", "pointer");
                     }
                 }
             });
@@ -279,6 +280,14 @@ export function WorldMap({
     return (
         <div className="world-map-container">
             <svg ref={svgRef} />
+            <TooltipMap
+                usefullData={lectureData}
+                position={tooltipPosition}
+                country={tooltipData?.country}
+                year={tooltipData?.year}
+                month={tooltipData?.month}
+                appear={tooltipData !== null}
+            />
         </div>
     );
 }
