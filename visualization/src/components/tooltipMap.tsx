@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { type JSX, useLayoutEffect, useRef, useState } from "react";
+import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
@@ -35,13 +35,11 @@ export default function TooltipMap({
     const countryCode = Object.values(countryConversion).find(
         (c) => c.en === country || c.fr === country,
     )?.code;
-    const [values] = useState<{
-        export_euro: number | string;
-        import_euro: number | string;
-        export_tonnes: number | string;
-        import_tonnes: number | string;
-        balance_euro: number | string;
-    }>(calculateData(usefullData, country));
+
+    const values = useMemo(
+        () => calculateData(usefullData, country),
+        [usefullData, country],
+    );
 
     useLayoutEffect(() => {
         if (!tooltipRef.current) return;
@@ -153,12 +151,15 @@ function calculateData(
             import_tonnes: "No data",
             balance_euro: "No data",
         };
+
+    console.log("Le pays", country);
     const countryData = usefullData.filter((entry) => {
         const countryIndex = Object.values(countryConversion).findIndex(
             (c) => c.en === country || c.fr === country,
         );
         return entry[0] === countryIndex;
     });
+    console.log("Données pays", countryData);
     const exportDataEuro = countryData.find((entry) => entry[1] === 2);
     const importDataEuro = countryData.find((entry) => entry[1] === 3);
     const exportTonnes = countryData.find((entry) => entry[1] === 0);
@@ -167,6 +168,8 @@ function calculateData(
         exportDataEuro && importDataEuro
             ? exportDataEuro[4] - importDataEuro[4]
             : "No data";
+
+    console.log("Données export euro", exportDataEuro);
     return {
         export_euro: exportDataEuro ? exportDataEuro[4] : "No data",
         import_euro: importDataEuro ? importDataEuro[4] : "No data",

@@ -35,11 +35,12 @@ export function WorldMap({
     const [worldMapCountry, setWorldMapCountry] = useState<any>(null);
     const [projectionMap, setProjectionMap] = useState<any>(null);
     const [tooltipData, setTooltipData] = useState<{
+        appear: boolean;
         year: number;
         month: number;
         country: string;
         value: number;
-    } | null>(null);
+    }>({ appear: false, year: 0, month: 0, country: "", value: 0 });
     const [tooltipPosition, setTooltipPosition] = useState<{
         x: number;
         y: number;
@@ -96,17 +97,35 @@ export function WorldMap({
                     .attr("width", width)
                     .attr("height", height)
                     .attr("viewBox", `0 0 ${width} ${height}`)
-                    .attr("style", "max-width: 100%; height: auto;");
+                    .attr("style", "max-width: 100%; height: auto;")
+                    .style("cursor", "grab");
+
+                const mapLayer = mapSvg.append("g").attr("class", "map-layer");
+
+                const zoom = d3
+                    .zoom<SVGSVGElement, unknown>()
+                    .scaleExtent([1, 8])
+                    .on("zoom", (event) => {
+                        mapLayer.attr("transform", event.transform);
+                    })
+                    .on("start", () => {
+                        mapSvg.style("cursor", "grabbing");
+                    })
+                    .on("end", () => {
+                        mapSvg.style("cursor", "grab");
+                    });
+
+                mapSvg.call(zoom as any);
 
                 // Draw background
-                mapSvg
+                mapLayer
                     .append("rect")
                     .attr("width", width)
                     .attr("height", height)
                     .attr("fill", "#e6f2ff");
 
                 // Draw countries
-                mapSvg
+                mapLayer
                     .selectAll(".country")
                     .data(
                         countries.type === "FeatureCollection"
@@ -127,7 +146,11 @@ export function WorldMap({
                     .attr("data-name", (d: any) => d.properties.name)
                     .attr("stroke", "#999")
                     .attr("stroke-width", 0.5)
-                    .style("cursor", "pointer")
+                    .style("cursor", (d: any) =>
+                        pays_values.includes(d.properties.name)
+                            ? "pointer"
+                            : "default",
+                    )
                     .on("mouseover", (event: any) => {
                         d3.select(event.currentTarget)
                             .attr("stroke-width", (d: any) => {
@@ -152,7 +175,7 @@ export function WorldMap({
                     });
 
                 // Draw ocean borders
-                mapSvg
+                mapLayer
                     .append("path")
                     .datum(
                         topojson.mesh(
@@ -164,7 +187,8 @@ export function WorldMap({
                     .attr("fill", "none")
                     .attr("stroke", "#999")
                     .attr("stroke-width", 0.5)
-                    .attr("d", pathGenerator as any);
+                    .attr("d", pathGenerator as any)
+                    .style("cursor", "pointer");
             } catch (error) {
                 console.error("Error loading map:", error);
                 d3.select(svg)
@@ -180,6 +204,8 @@ export function WorldMap({
     }, [windowSize.height, windowSize.width]);
 
     useEffect(() => {
+        if (!allData) return;
+
         const newLectureData = allData[year]?.filter((entry) => {
             const productMatch =
                 productsSelected.length === 0 ||
@@ -194,7 +220,9 @@ export function WorldMap({
             const svg = svgRef.current;
             if (!svg || !usefulData) return;
 
-            const mapSvg = d3.select(svg);
+            const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
+            console.log("Updating map with data:", mapLayer);
+            if (mapLayer.empty()) return;
 
             // Aggregate data by country
             const dataByCountry: { [key: string]: number } = {};
@@ -221,13 +249,14 @@ export function WorldMap({
                     ? worldMapCountry.features
                     : [worldMapCountry];
 
-            mapSvg
+            mapLayer
                 .selectAll(".country")
                 .on("mouseover", (event) => {
                     const currentCountryName =
                         event.target.__data__.properties.name;
                     if (!dataByCountry[currentCountryName]) return;
                     setTooltipData({
+                        appear: true,
                         year,
                         month,
                         country: currentCountryName,
@@ -239,8 +268,10 @@ export function WorldMap({
                     });
                 })
                 .on("mouseout", () => {
-                    setTooltipData(null);
+                    setTooltipData((prev) => ({ ...prev, appear: false }));
                 });
+
+            mapLayer.selectAll(".data-point").remove();
 
             countryFeatures.forEach((feature: any) => {
                 const countryName = feature.properties.name;
@@ -250,7 +281,7 @@ export function WorldMap({
                     const projectedCentroid = projectionMap(centroid);
 
                     if (projectedCentroid) {
-                        mapSvg
+                        mapLayer
                             .append("circle")
                             .attr("class", "data-point")
                             .attr("cx", projectedCentroid[0])
@@ -283,10 +314,10 @@ export function WorldMap({
             <TooltipMap
                 usefullData={lectureData}
                 position={tooltipPosition}
-                country={tooltipData?.country}
-                year={tooltipData?.year}
-                month={tooltipData?.month}
-                appear={tooltipData !== null}
+                country={tooltipData.country}
+                year={tooltipData.year}
+                month={tooltipData.month}
+                appear={tooltipData.appear}
             />
         </div>
     );
