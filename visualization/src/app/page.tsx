@@ -59,7 +59,20 @@ export default function HomePage(): JSX.Element {
             <main>
                 <h1 className="title">Echanges internationaux de bois</h1>
             </main>
-            <ConfigBar />
+            <ConfigBar
+                typeData={typeData}
+                currentYear={currentYear}
+                currentMonth={currentMonth}
+                productsSelected={productsSelected}
+                countriesSelected={countriesSelected}
+                isMultipleMode={isMultipleMode}
+                setTypeData={setTypeData}
+                setCurrentYear={setCurrentYear}
+                setCurrentMonth={setCurrentMonth}
+                setProductsSelected={setProductsSelected}
+                setCountriesSelected={setCountriesSelected}
+                setIsMultipleMode={setIsMultipleMode}
+            />
         </Fragment>
     );
 }

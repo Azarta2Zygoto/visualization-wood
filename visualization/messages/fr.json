@@ -10,5 +10,18 @@
         "text1": "Il semble y avoir un problème avec votre demande.",
         "retry": "Réessayer",
         "back-to-home": "Retourner à l'accueil"
+    },
+    "DefaultTexts": {
+        "selectAnOption": "Sélectionnez une option",
+        "select": "Sélectionner un ou des langages de programmation",
+        "search": "Rechercher...",
+        "all": "Tous",
+        "clear": "Effacer",
+        "close": "Fermer",
+        "more": "{count, plural, =1 {option} other {options}}",
+        "clear-all": "Effacer toutes les sélections",
+        "aria-search": "Champ de recherche",
+        "dropdown-explain": "Sélecteur déroulant à plusieurs choix. Utilisez les flèches haut et bas pour naviguer, la barre d'espace pour sélectionner ou désélectionner une option, et la touche Échap pour fermer le sélecteur.",
+        "filter-explain": "Ecrivez pour filtrer les options disponibles. Utilisez les flèches haut et bas pour naviguer dans les options filtrées."
     }
 }
