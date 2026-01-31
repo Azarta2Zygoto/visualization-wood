@@ -136,6 +136,15 @@ export default function TooltipMap({
     );
 }
 
+const defaultNoData = "No data";
+const AllNoData = {
+    export_euro: defaultNoData,
+    import_euro: defaultNoData,
+    export_tonnes: defaultNoData,
+    import_tonnes: defaultNoData,
+    balance_euro: defaultNoData,
+};
+
 function calculateData(
     usefullData: {
         [key: string]: Record<keyof typeof type_data, number>;
@@ -148,16 +157,11 @@ function calculateData(
     import_tonnes: number | string;
     balance_euro: number | string;
 } {
-    if (!country)
-        return {
-            export_euro: "No data",
-            import_euro: "No data",
-            export_tonnes: "No data",
-            import_tonnes: "No data",
-            balance_euro: "No data",
-        };
+    if (!country) return AllNoData;
 
     const countryData = usefullData[country];
+    if (!countryData) return AllNoData;
+
     const exportDataEuro = countryData["2"];
     const importDataEuro = countryData["3"];
     const exportTonnes = countryData["0"];
@@ -165,13 +169,13 @@ function calculateData(
     const balanceDataEuro =
         exportDataEuro && importDataEuro
             ? exportDataEuro - importDataEuro
-            : "No data";
+            : defaultNoData;
 
     return {
-        export_euro: exportDataEuro ?? "No data",
-        import_euro: importDataEuro ?? "No data",
-        export_tonnes: exportTonnes ?? "No data",
-        import_tonnes: importTonnes ?? "No data",
+        export_euro: exportDataEuro ?? defaultNoData,
+        import_euro: importDataEuro ?? defaultNoData,
+        export_tonnes: exportTonnes ?? defaultNoData,
+        import_tonnes: importTonnes ?? defaultNoData,
         balance_euro: balanceDataEuro,
     };
 }

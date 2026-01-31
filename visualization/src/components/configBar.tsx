@@ -92,7 +92,7 @@ export default function ConfigBar({
                 style={{ gap: 0 }}
             >
                 <button
-                    className={`btn ${typeData === 0 || typeData === 2 ? "btn-selected" : ""}`}
+                    className={`btn ${typeData === 0 || typeData === 2 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(0, isVolume)}
                     style={{
@@ -105,7 +105,7 @@ export default function ConfigBar({
                     Exportation
                 </button>
                 <button
-                    className={`btn ${typeData === 1 || typeData === 3 ? "btn-selected" : ""}`}
+                    className={`btn ${typeData === 1 || typeData === 3 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(1, isVolume)}
                     style={{
@@ -117,7 +117,7 @@ export default function ConfigBar({
                     Importation
                 </button>
                 <button
-                    className={`btn ${typeData === 4 ? "btn-selected" : ""}`}
+                    className={`btn ${typeData === 4 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(4, isVolume)}
                     style={{
@@ -136,7 +136,7 @@ export default function ConfigBar({
                 style={{ gap: 0 }}
             >
                 <button
-                    className={`btn ${typeData === 0 || typeData === 1 ? "btn-selected" : ""}`}
+                    className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
                     type="button"
                     disabled={typeData === 4}
                     onClick={() => handleTypeDataChange(typeData, true)}
@@ -151,7 +151,7 @@ export default function ConfigBar({
                     Volume (tonnes)
                 </button>
                 <button
-                    className={`btn ${typeData === 2 || typeData === 3 ? "btn-selected" : ""}`}
+                    className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(typeData, false)}
                     style={{
