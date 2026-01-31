@@ -74,7 +74,7 @@ export default function ConfigBar({
     }
 
     return (
-        <div className="config-bar">
+        <div className={`config-bar ${isOpen ? "" : "closed"}`}>
             <button
                 className="btn btn-close-config"
                 type="button"
@@ -84,6 +84,7 @@ export default function ConfigBar({
             >
                 {isOpen ? "×" : "⚙️"}
             </button>
+
             <h2 className="h2-primary">Configuration</h2>
             <p>Type de données :</p>
             <div
@@ -162,7 +163,7 @@ export default function ConfigBar({
                         borderBottomLeftRadius: 0,
                     }}
                 >
-                    Valeur (1k €)
+                    Valeur k€
                 </button>
             </div>
 
@@ -243,7 +244,7 @@ export default function ConfigBar({
                     value: key,
                 }))}
                 onValueChange={handleNewProductsSelected}
-                style={{ width: "360px" }}
+                style={{ maxWidth: "360px" }}
             />
             <p>Pays sélectionnés :</p>
             <Checkbox

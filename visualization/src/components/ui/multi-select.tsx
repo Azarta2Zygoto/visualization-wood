@@ -895,8 +895,8 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                             )}
                             style={{
                                 ...widthConstraints,
-                                minWidth: `clamp(275px, ${widthConstraints.minWidth}, 8rem)`,
-                                maxWidth: `min(${widthConstraints.maxWidth}, 30rem)`,
+                                minWidth: `360px`,
+                                maxWidth: `360px`,
                             }}
                         >
                             {selectedValues.length > 0 ? (

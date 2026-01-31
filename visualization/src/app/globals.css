@@ -207,6 +207,10 @@ main {
     padding: 0.5rem 1rem;
     box-shadow: 0 4px 8px var(--color-mat);
     z-index: 10;
+    transition: right 0.3s ease-in-out;
+}
+.config-bar.closed {
+    right: -395px;
 }
 
 .tooltip-map {
@@ -240,15 +244,17 @@ main {
 .btn-close-config {
     position: absolute;
     top: 0.25rem;
-    right: 0.25rem;
-    width: 1.5rem;
-    height: 1.5rem;
+    left: -2rem;
+    width: 2rem;
+    height: 2rem;
     padding: 0;
     font-size: 1.5rem;
     line-height: 1.5rem;
     text-align: center;
-    background: transparent;
-    border: none;
+    background: var(--on-map);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
     cursor: pointer;
-    color: var(--fg);
 }
