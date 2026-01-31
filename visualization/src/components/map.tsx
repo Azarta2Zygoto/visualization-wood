@@ -5,12 +5,13 @@ import { type JSX, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
-import pays from "@/data/country.json";
+import type_data from "@/data/N027_LIB.json";
+import pays from "@/data/country_extended.json";
 
 import { useGlobal } from "./globalProvider";
 import TooltipMap from "./tooltipMap";
 
-const pays_values = Object.values(pays);
+const pays_english = Object.values(pays).map((country) => country.en);
 
 interface WorldMapProps {
     allData: { [key: string]: number[][] };
@@ -45,7 +46,17 @@ export function WorldMap({
         x: number;
         y: number;
     }>({ x: 0, y: 0 });
-    const [lectureData, setLectureData] = useState<number[][]>([]);
+    const [lectureData, setLectureData] = useState<{
+        [key: string]: Record<keyof typeof type_data, number>;
+    }>({});
+    const [dataPointOnMap, setDataPointOnMap] = useState<
+        Array<{
+            countryName: string;
+            x: number;
+            y: number;
+        }>
+    >([]);
+    const [countryList, setCountryList] = useState<string[]>([]);
     const { windowSize } = useGlobal();
 
     useEffect(() => {
@@ -54,9 +65,7 @@ export function WorldMap({
             if (!svg) return;
 
             // Set dimensions
-            const normalWidth = 960;
-            const normalHeight = 600;
-            const rapport = normalWidth / normalHeight;
+            const rapport = 1.6;
 
             const height = Math.min(
                 windowSize.height,
@@ -67,7 +76,7 @@ export function WorldMap({
             // Create projection and path
             const projection = d3
                 .geoNaturalEarth1()
-                .scale(300)
+                .scale(310)
                 .translate([width / 2, height / 2]);
             setProjectionMap(() => projection);
 
@@ -91,6 +100,23 @@ export function WorldMap({
                 ) as any;
                 setWorldMapCountry(countries);
 
+                // Get country features
+                const countryFeatures =
+                    countries.type === "FeatureCollection"
+                        ? countries.features
+                        : [countries];
+
+                const newCountryList = countryFeatures
+                    .map((feature: any) => {
+                        if (!feature.properties || !feature.properties.name)
+                            return null;
+
+                        if (pays_english.includes(feature.properties.name))
+                            return feature.properties.name;
+                    })
+                    .filter(Boolean) as string[];
+                setCountryList(Array.from(new Set(newCountryList)).sort());
+
                 // Create SVG
                 const mapSvg = d3
                     .select(svg)
@@ -104,34 +130,17 @@ export function WorldMap({
 
                 const zoom = d3
                     .zoom<SVGSVGElement, unknown>()
-                    .scaleExtent([1, 8])
+                    .scaleExtent([0.5, 10])
                     .on("zoom", (event) => {
                         mapLayer.attr("transform", event.transform);
-                    })
-                    .on("start", () => {
-                        mapSvg.style("cursor", "grabbing");
-                    })
-                    .on("end", () => {
-                        mapSvg.style("cursor", "grab");
                     });
 
-                mapSvg.call(zoom as any);
-
-                // Draw background
-                mapLayer
-                    .append("rect")
-                    .attr("width", width)
-                    .attr("height", height)
-                    .attr("fill", "#e6f2ff");
+                mapSvg.call(zoom);
 
                 // Draw countries
                 mapLayer
                     .selectAll(".country")
-                    .data(
-                        countries.type === "FeatureCollection"
-                            ? countries.features
-                            : [countries],
-                    )
+                    .data(countryFeatures)
                     .enter()
                     .append("path")
                     .attr("class", "country")
@@ -139,56 +148,60 @@ export function WorldMap({
                     .attr("fill", (d: any) => {
                         return d.properties.name === "France"
                             ? "#ff6b6b"
-                            : pays_values.includes(d.properties.name)
+                            : pays_english.includes(d.properties.name)
                               ? "#87ceeb"
                               : "#d3d3d3";
                     })
-                    .attr("data-name", (d: any) => d.properties.name)
                     .attr("stroke", "#999")
                     .attr("stroke-width", 0.5)
                     .style("cursor", (d: any) =>
-                        pays_values.includes(d.properties.name)
+                        pays_english.includes(d.properties.name)
                             ? "pointer"
                             : "default",
-                    )
-                    .on("mouseover", (event: any) => {
-                        d3.select(event.currentTarget)
-                            .attr("stroke-width", (d: any) => {
-                                return pays_values.includes(
-                                    d.properties.name,
-                                ) || d.properties.name === "France"
-                                    ? 1
-                                    : 0.5;
-                            })
-                            .attr("opacity", (d: any) => {
-                                return pays_values.includes(
-                                    d.properties.name,
-                                ) || d.properties.name === "France"
-                                    ? 0.8
-                                    : 1;
-                            });
-                    })
-                    .on("mouseout", (event: any) => {
-                        d3.select(event.currentTarget)
-                            .attr("stroke-width", 0.5)
-                            .attr("opacity", 1);
-                    });
+                    );
 
-                // Draw ocean borders
-                mapLayer
-                    .append("path")
-                    .datum(
-                        topojson.mesh(
-                            worldData,
-                            worldData.objects.countries,
-                            (a: any, b: any) => a !== b,
-                        ),
-                    )
-                    .attr("fill", "none")
-                    .attr("stroke", "#999")
-                    .attr("stroke-width", 0.5)
-                    .attr("d", pathGenerator as any)
-                    .style("cursor", "pointer");
+                // Build a list of points with projected positions
+                const pointData = countryFeatures
+                    .map((feature: any) => {
+                        const countryName = feature.properties.name;
+
+                        const centroid = d3.geoCentroid(feature);
+                        const projectedCentroid = projection(centroid);
+                        if (!projectedCentroid) return null;
+
+                        return {
+                            countryName,
+                            x: projectedCentroid[0],
+                            y: projectedCentroid[1],
+                        };
+                    })
+                    .filter(Boolean) as Array<{
+                    countryName: string;
+                    x: number;
+                    y: number;
+                }>;
+                setDataPointOnMap(pointData);
+
+                const circles = mapLayer
+                    .selectAll<
+                        SVGCircleElement,
+                        (typeof pointData)[number]
+                    >(".data-point")
+                    .data(pointData, (d) => d.countryName);
+
+                circles
+                    .append("circle")
+                    .attr("class", "data-point")
+                    .attr("cx", (d) => d.x)
+                    .attr("cy", (d) => d.y)
+                    .attr("r", 0)
+                    .attr("fill", "#ff9800")
+                    .attr("opacity", 0.7)
+                    .attr("stroke", "#e65100")
+                    .attr("stroke-width", 1)
+                    .style("cursor", "pointer")
+                    .transition()
+                    .duration(400);
             } catch (error) {
                 console.error("Error loading map:", error);
                 d3.select(svg)
@@ -203,109 +216,204 @@ export function WorldMap({
         loadMap();
     }, [windowSize.height, windowSize.width]);
 
+    // Effect 2: Filter and store lecture data based on month and products
     useEffect(() => {
-        if (!allData) return;
+        if (!allData || !allData[year]) return;
 
-        const newLectureData = allData[year]?.filter((entry) => {
-            const productMatch =
-                productsSelected.length === 0 ||
-                productsSelected.includes(entry[3]);
-            const monthMatch = entry[2] === month;
-            return productMatch && monthMatch;
-        });
-        setLectureData(newLectureData || []);
-        const usefulData = newLectureData?.filter((entry) => entry[1] === type);
+        const yearData = allData[year];
+        const dataByCountry: {
+            [key: string]: Record<string, number>;
+        } = {};
 
-        const updateMap = () => {
-            const svg = svgRef.current;
-            if (!svg || !usefulData) return;
+        // Convert to Set for O(1) lookup (faster than array.includes)
+        const productsSet =
+            productsSelected.length > 0 ? new Set(productsSelected) : null;
+        const L = yearData.length;
 
-            const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
-            console.log("Updating map with data:", mapLayer);
-            if (mapLayer.empty()) return;
+        // Single pass: filter and aggregate in one loop (no intermediate array)
+        for (let i = 0; i < L; i++) {
+            const entry = yearData[i];
 
-            // Aggregate data by country
-            const dataByCountry: { [key: string]: number } = {};
-            usefulData.forEach((entry: any) => {
-                const countryIndex = entry[0];
-                const countryName = pays[countryIndex as keyof typeof pays];
-                const value = entry[4] || 0; // Assuming index 4 contains the value
-                if (countryName) {
-                    dataByCountry[countryName] =
-                        (dataByCountry[countryName] || 0) + value;
-                }
-            });
+            // Early exit: check month first (fastest check)
+            if (entry[2] !== month) continue;
 
-            // Find max value for scaling
-            const maxValue = Math.max(...usefulData.map((data) => data[4]), 1);
-            const radiusScale = d3
-                .scaleLinear()
-                .domain([0, maxValue])
-                .range([2, 20]);
+            // Check product match
+            const productMatch = productsSet
+                ? productsSet.has(entry[3])
+                : entry[3] === 0;
+            if (!productMatch) continue;
 
-            // Calculate country centroids and draw circles
-            const countryFeatures =
-                worldMapCountry.type === "FeatureCollection"
-                    ? worldMapCountry.features
-                    : [worldMapCountry];
+            // Get country name and skip if not found
+            const countryName =
+                pays[entry[0].toString() as keyof typeof pays]?.en;
+            if (!countryName) continue;
 
-            mapLayer
-                .selectAll(".country")
-                .on("mouseover", (event) => {
-                    const currentCountryName =
-                        event.target.__data__.properties.name;
-                    if (!dataByCountry[currentCountryName]) return;
-                    setTooltipData({
-                        appear: true,
-                        year,
-                        month,
-                        country: currentCountryName,
-                        value: dataByCountry[currentCountryName],
-                    });
-                    setTooltipPosition({
-                        x: event.pageX,
-                        y: event.pageY,
-                    });
+            const typeIndex = entry[1].toString();
+            const value = entry[4] || 0;
+
+            // Initialize country object if needed
+            if (!dataByCountry[countryName]) {
+                dataByCountry[countryName] = {};
+            }
+
+            // Aggregate values (sum if multiple entries per country/type)
+            dataByCountry[countryName][typeIndex] =
+                (dataByCountry[countryName][typeIndex] || 0) + value;
+        }
+
+        setLectureData(dataByCountry);
+    }, [allData, year, month, productsSelected]);
+
+    // Effect 4: Update data visualization (circles) based on filtered data
+    useEffect(() => {
+        if (
+            !lectureData ||
+            Object.keys(lectureData).length === 0 ||
+            !worldMapCountry ||
+            !projectionMap
+        )
+            return;
+
+        const svg = svgRef.current;
+        if (!svg) return;
+
+        const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
+        if (mapLayer.empty()) return;
+
+        // Set up tooltip handler with memoized dataByCountry reference
+        const handleCountryMouseover = (event: any) => {
+            // Visual feedback
+            d3.select(event.currentTarget)
+                .attr("stroke-width", (d: any) => {
+                    return pays_english.includes(d.properties.name) ||
+                        d.properties.name === "France"
+                        ? 1.5
+                        : 0.5;
                 })
-                .on("mouseout", () => {
-                    setTooltipData((prev) => ({ ...prev, appear: false }));
+                .attr("opacity", (d: any) => {
+                    return pays_english.includes(d.properties.name) ||
+                        d.properties.name === "France"
+                        ? 0.6
+                        : 1;
                 });
 
-            mapLayer.selectAll(".data-point").remove();
+            // Tooltip data
+            const currentCountryName = event.target.__data__.properties.name;
+            if (!lectureData[currentCountryName]) return;
 
-            countryFeatures.forEach((feature: any) => {
-                const countryName = feature.properties.name;
-                if (dataByCountry[countryName]) {
-                    // Calculate centroid using d3.geoCentroid
-                    const centroid = d3.geoCentroid(feature);
-                    const projectedCentroid = projectionMap(centroid);
-
-                    if (projectedCentroid) {
-                        mapLayer
-                            .append("circle")
-                            .attr("class", "data-point")
-                            .attr("cx", projectedCentroid[0])
-                            .attr("cy", projectedCentroid[1])
-                            .attr("r", radiusScale(dataByCountry[countryName]))
-                            .attr("fill", "#ff9800")
-                            .attr("opacity", 0.7)
-                            .attr("stroke", "#e65100")
-                            .attr("stroke-width", 1)
-                            .style("cursor", "pointer");
-                    }
-                }
+            setTooltipData({
+                appear: true,
+                year,
+                month,
+                country: currentCountryName,
+                value:
+                    lectureData[currentCountryName][
+                        type.toString() as keyof typeof type_data
+                    ] || 0,
+            });
+            setTooltipPosition({
+                x: event.pageX,
+                y: event.pageY,
             });
         };
 
-        updateMap();
+        const handleCountryMouseout = (event: any) => {
+            d3.select(event.currentTarget)
+                .attr("stroke-width", 0.5)
+                .attr("opacity", 1);
+            setTooltipData((prev) => ({ ...prev, appear: false }));
+        };
+
+        // Attach tooltip handlers
+        mapLayer
+            .selectAll(".country")
+            .on("mouseover", handleCountryMouseover)
+            .on("mouseout", handleCountryMouseout);
+
+        // Find max value for scaling
+        const maxValue = Math.max(
+            ...Object.keys(lectureData).map((key) => {
+                if (countryList.length > 0 && !countryList.includes(key)) {
+                    return 0;
+                }
+                return (
+                    lectureData[key][
+                        type.toString() as keyof typeof type_data
+                    ] || 0
+                );
+            }),
+            1,
+        );
+        const radiusScale = d3
+            .scaleLinear()
+            .domain([0, maxValue])
+            .range([0, 20]);
+
+        // Build a list of points with projected positions
+
+        const pointData = dataPointOnMap
+            .map((point) => {
+                const countryName = point.countryName;
+                if (!lectureData[countryName]) return null;
+                const value =
+                    lectureData[countryName][
+                        type.toString() as keyof typeof type_data
+                    ];
+                if (!value) return null;
+                return {
+                    countryName,
+                    value,
+                    x: point.x,
+                    y: point.y,
+                };
+            })
+            .filter(Boolean) as Array<{
+            countryName: string;
+            value: number;
+            x: number;
+            y: number;
+        }>;
+
+        const circles = mapLayer
+            .selectAll<
+                SVGCircleElement,
+                (typeof pointData)[number]
+            >(".data-point")
+            .data(pointData, (d) => d.countryName);
+
+        circles.exit().transition().duration(800).attr("r", 0).remove();
+
+        circles
+            .enter()
+            .append("circle")
+            .attr("class", "data-point")
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y)
+            .attr("r", 0)
+            .attr("fill", "#ff9800")
+            .attr("opacity", 0.7)
+            .attr("stroke", "#e65100")
+            .attr("stroke-width", 1)
+            .style("cursor", "pointer")
+            .transition()
+            .duration(800)
+            .attr("r", (d) => radiusScale(d.value));
+
+        circles
+            .transition()
+            .duration(800)
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y)
+            .attr("r", (d) => radiusScale(d.value));
     }, [
-        allData,
-        month,
-        productsSelected,
-        projectionMap,
+        lectureData,
         type,
         worldMapCountry,
+        projectionMap,
         year,
+        month,
+        dataPointOnMap,
+        countryList,
     ]);
 
     return (

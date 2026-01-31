@@ -5,12 +5,15 @@ import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
+import type_data from "@/data/N027_LIB.json";
 import month_names from "@/data/N053_LIB.json";
 import countryConversion from "@/data/country_extended.json";
 
 interface TooltipMapProps {
     appear: boolean;
-    usefullData: number[][];
+    usefullData: {
+        [key: string]: Record<keyof typeof type_data, number>;
+    };
     year?: number;
     month?: number;
     country?: string;
@@ -134,7 +137,9 @@ export default function TooltipMap({
 }
 
 function calculateData(
-    usefullData: number[][],
+    usefullData: {
+        [key: string]: Record<keyof typeof type_data, number>;
+    },
     country?: string,
 ): {
     export_euro: number | string;
@@ -152,29 +157,21 @@ function calculateData(
             balance_euro: "No data",
         };
 
-    console.log("Le pays", country);
-    const countryData = usefullData.filter((entry) => {
-        const countryIndex = Object.values(countryConversion).findIndex(
-            (c) => c.en === country || c.fr === country,
-        );
-        return entry[0] === countryIndex;
-    });
-    console.log("Données pays", countryData);
-    const exportDataEuro = countryData.find((entry) => entry[1] === 2);
-    const importDataEuro = countryData.find((entry) => entry[1] === 3);
-    const exportTonnes = countryData.find((entry) => entry[1] === 0);
-    const importTonnes = countryData.find((entry) => entry[1] === 1);
+    const countryData = usefullData[country];
+    const exportDataEuro = countryData["2"];
+    const importDataEuro = countryData["3"];
+    const exportTonnes = countryData["0"];
+    const importTonnes = countryData["1"];
     const balanceDataEuro =
         exportDataEuro && importDataEuro
-            ? exportDataEuro[4] - importDataEuro[4]
+            ? exportDataEuro - importDataEuro
             : "No data";
 
-    console.log("Données export euro", exportDataEuro);
     return {
-        export_euro: exportDataEuro ? exportDataEuro[4] : "No data",
-        import_euro: importDataEuro ? importDataEuro[4] : "No data",
-        export_tonnes: exportTonnes ? exportTonnes[4] : "No data",
-        import_tonnes: importTonnes ? importTonnes[4] : "No data",
+        export_euro: exportDataEuro ?? "No data",
+        import_euro: importDataEuro ?? "No data",
+        export_tonnes: exportTonnes ?? "No data",
+        import_tonnes: importTonnes ?? "No data",
         balance_euro: balanceDataEuro,
     };
 }
