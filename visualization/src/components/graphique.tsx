@@ -20,6 +20,14 @@ type Country = {
   fr: string;
 };
 
+interface DataPoint {
+  date: Date;
+  pays?: string;
+  produit?: string;
+  type?: string;
+  value: number;
+}
+
 
 export default function Graphique({
   allData,
@@ -33,6 +41,7 @@ export default function Graphique({
   const knownSymbolsRef = useRef<Set<string>>(new Set());//l'ensemble des symboles pour la légende
   //countriesSelected = [34] //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
   const data_plot = filterData(allData, { type, productsSelected, countriesSelected })
+  console.log(data_plot)
   const groupedData = d3.group(data_plot, d => d.type, d => d.pays, d => d.produit);
   const groupedData_plot = Array.from(groupedData, ([key, values]) => ({
     symbol: key,       // le nom de la série
@@ -54,7 +63,7 @@ export default function Graphique({
   // --- Mise à jour du graphique quand les données changent
   useEffect(() => {
     if (!svgRef.current || flatten_data_plot.length === 0) return;
-
+    console.log(flatten_data_plot)
     updateMultiLines(
       flatten_data_plot,
       svgRef.current, // c'est déjà une D3 selection
@@ -80,25 +89,15 @@ function filterData(
     productsSelected: number[];
     countriesSelected: number[];
   },
-): number[][] {
+): DataPoint[] {
   if (!allData || Object.keys(allData).length === 0) {
     return [];
   }
   const parseDateMonth = d3.timeParse("%m %Y");
-  const monthToJSMonth = [{//on converti chaque id de mois dans l'ordre, le 0 est supprimé
-    6: 0,
-    11: 1,
-    1: 2,
-    12: 3,
-    5: 4,
-    10: 5,
-    4: 6,
-    8: 7,
-    2: 8,
-    3: 9,
-    9: 10,
-    7: 11
-  }][0]
+  const monthToJSMonth: Record<number, number> = {//conversion de l'id en mois réel
+    6: 0, 11: 1, 1: 2, 12: 3, 5: 4, 10: 5, 4: 6, 8: 7, 2: 8, 3: 9, 9: 10, 7: 11
+  };
+
 
   const countryMap = new Map<string, Country>(
     Object.entries(pays)
@@ -107,7 +106,7 @@ function filterData(
   const produitMap: Record<string, string> = list_products;
   return Object.entries(allData)//il faut ajouter l'attribut year pour chaque année
     .flatMap(([year, yearData]) =>
-      yearData.map(d => ({
+      yearData.map((d: any) => ({
         ...d,
         year: +year // ajoute l'année
       }))
@@ -135,22 +134,29 @@ function filterData(
       }
 
       return true;
-    }).map(d => ({//une fois que on a filtré on ajoute les champs calculés 
-      // calcul de la date
-      date: parseDateMonth(`${monthToJSMonth[String(d[2])]} ${d.year}`),
-      pays: countryMap.get(String(d[0]))?.fr,
-      produit: produitMap[String(d[3])],
-      type: typeMap[String(d[1])],
-      value: +d[4]
-    })).filter(d => !isNaN(d.value)).sort((a, b) => a.date - b.date);
+    })
+    .map(d => {
+      // convertir le mois en objet Date
+      const parsedDate = parseDateMonth(`${monthToJSMonth[d[2] as keyof typeof monthToJSMonth]} ${d.year}`);
+
+      return {
+        date: parsedDate ?? new Date(0), // si parseDateMonth retourne null, on met 1er Jan 1970
+        pays: countryMap.get(String(d[0]))?.fr,
+        produit: produitMap[String(d[3])],
+        type: typeMap[String(d[1])],
+        value: +d[4]
+      } as DataPoint;
+    })
+
+    .filter(d => !isNaN(d.value)).sort((a: any, b: any) => a.date - b.date);
 }
 
 function flattenGroupedData3(groupedData: any[]) {
   //utilisé pour flatten un groupe avec 3 éléments
-  const flattened = [];
+  const flattened: { symbol: string; type: any; zone: any; product: any; values: any; }[] = [];
 
   groupedData.forEach(d => {
-    d.values.forEach((productMap, country) => {
+    d.values.forEach((productMap: any[], country: any) => {
       productMap.forEach((values, product) => {
         flattened.push({
           symbol: `${country} - ${product} - ${d.symbol}`,
@@ -166,10 +172,10 @@ function flattenGroupedData3(groupedData: any[]) {
   return flattened;
 }
 
-function cssSafe(str) {
+function cssSafe(str: string) {
   return str.replace(/[^a-zA-Z0-9_-]/g, "_");
 }
-function updateColorDomain(color_graphique, knownSymbols, stocks) {
+function updateColorDomain(color_graphique: d3.ScaleOrdinal<string, string, never>, knownSymbols: Set<string>, stocks: any[]) {
   stocks.forEach(s => knownSymbols.add(s.symbol));
   color_graphique.domain([...knownSymbols]);
 }
@@ -178,13 +184,13 @@ function updateColorDomain(color_graphique, knownSymbols, stocks) {
 
 
 function updateMultiLines(//c'est la fonction pour mettre a jour de svg 
-  stocks,
-  svg_animated,//svg global
-  knownSymbols,//ensemble de symboles que on a déjà vu
+  stocks: { symbol: string; type: any; zone: any; product: any; values: any; }[],
+  svg_animated: d3.Selection<SVGSVGElement, unknown, null, undefined>,//svg global
+  knownSymbols: Set<string>,//ensemble de symboles que on a déjà vu
 
   {
-    x = d => d.date,
-    y = d => d.value
+    x = (d: DataPoint) => d.date,
+    y = (d: DataPoint) => d.value
 
   } = {}
 ) {
@@ -197,7 +203,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
   const plotHeight = height - margin.top - margin.bottom;
 
   // créer le groupe plot principal si inexistant
-  let g = svg_animated.select("g.plot");
+  let g = svg_animated.select<SVGGElement>("g.plot");
   if (g.empty()) {
     g = svg_animated.append("g")
       .attr("class", "plot")
@@ -211,22 +217,22 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
   // scales
   const xScale = d3.scaleTime()
     .domain([
-      d3.min(stocks, s => d3.min(s.values, d => x(d))),
-      d3.max(stocks, s => d3.max(s.values, d => x(d)))
+      d3.min(stocks, s => d3.min(s.values, (d: any) => x(d)))!,
+      d3.max(stocks, s => d3.max(s.values, (d: any) => x(d)))!
     ])
     .range([0, plotWidth]);
 
   const yScale = d3.scaleLinear()
     .domain([
       0,
-      d3.max(stocks, s => d3.max(s.values, d => y(d)))
+      d3.max(stocks, s => d3.max(s.values, (d: any) => y(d)))!
     ])
     .nice()
     .range([plotHeight, 0]);
   let xScaleZoom = xScale;
   let yScaleZoom = yScale
   // axes
-  let gX = g.select("g.xAxis");
+  let gX = g.select<SVGGElement>("g.xAxis");
   if (gX.empty()) {
     gX = g.append("g")
       .attr("class", "xAxis")
@@ -234,7 +240,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
   }
   gX.transition().duration(800).call(d3.axisBottom(xScale));
 
-  let gY = g.select("g.yAxis");
+  let gY = g.select<SVGGElement>("g.yAxis");
   if (gY.empty()) {
     gY = g.append("g")
       .attr("class", "yAxis");
@@ -245,7 +251,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
   const clipId = "clip-" + Math.random().toString(36).slice(2); // ou un nom unique
 
   // créer defs si inexistant
-  let defs = svg_animated.select("defs");
+  let defs = svg_animated.select<SVGGElement>("defs");
   if (defs.empty()) defs = svg_animated.append("defs");
 
   defs.append("clipPath")
@@ -255,7 +261,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
     .attr("height", plotHeight);
 
 
-  let plotArea = g.select("g.plot-area");
+  let plotArea = g.select<SVGGElement>("g.plot-area");
   if (plotArea.empty()) {
     plotArea = g.append("g")
       .attr("class", "plot-area")
@@ -264,7 +270,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
 
 
   // générateur de ligne
-  let lineGen = d3.line()
+  let lineGen = d3.line<any>()
     .x(d => xScaleZoom(x(d)))
     .y(d => yScaleZoom(y(d)));
 
@@ -273,7 +279,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
   // -------------------------------
   // JOIN des lignes avec clé symbol
   const t = plotArea.selectAll(".line")
-    .data(stocks, d => d.symbol)
+    .data(stocks, (d: any) => d.symbol)
     .join(
       enter => enter.append("path")
         .attr("class", "line")
@@ -306,7 +312,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
 
   // -------------------------------
   // Légende
-  let legend = svg_animated.select("g.legend");
+  let legend = svg_animated.select<SVGGElement>("g.legend");
   if (legend.empty()) {
     legend = svg_animated.append("g")
       .attr("class", "legend")
@@ -314,7 +320,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
   }
 
   legend.selectAll("g")
-    .data(stocks, d => d.symbol)
+    .data(stocks, (d: any) => d.symbol)
     .join(
       enter => {
         const gEnter = enter.append("g")
@@ -327,6 +333,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
           .attr("x", 20)
           .attr("y", 12)
           .text(d => d.symbol);
+        return gEnter;
       },
       update => update
         .call(update =>
@@ -343,7 +350,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
         )
     );
   // Tooltip et cercle
-  let tooltip = plotArea.select("g.tooltip");
+  let tooltip = plotArea.select<SVGGElement>("g.tooltip");
 
   if (tooltip.empty()) {
     tooltip = plotArea.append("g")
@@ -362,9 +369,9 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
       .attr("font-size", 12)
       .attr("font-weight", "bold");
   }
-  const tooltipText = tooltip.select("text.tooltip-text");
+  const tooltipText = tooltip.select<SVGGElement>("text.tooltip-text");
   // Zone pour capter la souris
-  let mouseRect = plotArea.select("rect.mouse-capture");
+  let mouseRect = plotArea.select<SVGRectElement>("rect.mouse-capture");
 
   if (mouseRect.empty()) {
     mouseRect = plotArea.append("rect")
@@ -378,8 +385,8 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
     const [mx, my] = d3.pointer(event);
     const x0 = xScaleZoom.invert(mx);
 
-    let closestStock = null;
-    let closestValue = null;
+    let closestStock: any = null;
+    let closestValue: any = null;
     let minDist = Infinity;
 
     stocks.forEach(stock => {
@@ -393,8 +400,9 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
       const d0 = i > 0 ? stock.values[i - 1] : d1;
 
       // comparer les distances horizontales à x0
-      const dx0 = Math.abs(x(d0) - x0);
-      const dx1 = Math.abs(x(d1) - x0);
+      const dx0 = Math.abs((x(d0) as Date).getTime() - x0.getTime());
+      const dx1 = Math.abs((x(d1) as Date).getTime() - x0.getTime());
+
 
       const closestPoint = dx0 < dx1 ? d0 : d1;
 
@@ -406,15 +414,15 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
       }
     });
 
-    if (!closestStock) return;
+    if (!closestStock || !closestValue) return;
 
     tooltip.style("display", null)
-      .attr("transform", `translate(${xScaleZoom(x(closestValue))},${yScaleZoom(y(closestValue))})`);
+      .attr("transform", `translate(${xScaleZoom(x(closestValue!))},${yScaleZoom(y(closestValue!))})`);
 
     tooltip.select("circle")
       .attr("fill", color(closestStock.symbol));
 
-    tooltipText.text(`${closestStock.symbol}: ${y(closestValue)}`);
+    tooltipText.text(`${closestStock.symbol}: ${y(closestValue!)}`);
   })
     .on("mouseleave", () => tooltip.style("display", "none"));
 
@@ -430,19 +438,22 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
 
       // mettre à jour les lignes
       plotArea.selectAll(".line")
-        .attr("d", d =>
+        .attr("d", (d: any) =>
           d3.line()
-            .x(d => xScaleZoom(x(d)))
-            .y(d => yScaleZoom(y(d)))
+            .x((d: any) => xScaleZoom(x(d)))
+            .y((d: any) => yScaleZoom(y(d)))
             (d.values)
         );
 
       // mettre à jour les axes
-      gX.call(d3.axisBottom(xScaleZoom).tickFormat(d3.timeFormat("%b %Y")));
+      (gX as any).call(
+        (d3.axisBottom(xScaleZoom) as any).tickFormat(d3.timeFormat("%b %Y"))
+      );
       gY.call(d3.axisLeft(yScaleZoom));
     });
 
-  svg_animated.call(zoom);
+  (svg_animated as any).call(zoom);
+
 
 
   return svg_animated.node();
