@@ -25,18 +25,22 @@
     border-radius: 4px;
     background: var(--on-map);
 }
+
 ::-webkit-scrollbar-thumb {
     background: var(--color-special);
     border-radius: 4px;
 }
+
 * {
     box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: var(--color-special) var(--color-page);
 }
+
 html {
     height: 100%;
 }
+
 body {
     display: flex;
     flex-direction: column;
@@ -52,6 +56,7 @@ body {
     overscroll-behavior: contain;
     position: relative;
 }
+
 main {
     position: relative;
     z-index: 1;
@@ -75,18 +80,21 @@ main {
     text-align: center;
     pointer-events: auto;
 }
+
 .h-secondary {
     margin: 1rem 0;
     font-size: clamp(1rem, 2vw, 1.5rem);
     font-weight: 600;
     color: var(--fg);
 }
+
 .rows {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: clamp(0.5rem, 2vw, 1rem);
 }
+
 .btn {
     position: relative;
     display: flex;
@@ -107,22 +115,27 @@ main {
         border-color 0.3s,
         box-shadow 0.3s;
 }
+
 .btn:hover {
     border-color: var(--color-special);
     box-shadow: 0 4px 8px var(--color-mat);
 }
+
 .btn:focus-visible {
     outline: none;
     border-color: var(--color-special);
     box-shadow: 0 0 0 3px var(--color-special);
 }
+
 .btn.btn-select {
     text-align: left;
     justify-content: space-between;
 }
+
 .btn.btn-select[aria-expanded="true"] {
     border-color: var(--color-special-shadow);
 }
+
 .btn.btn-option {
     justify-content: flex-start;
     width: 100%;
@@ -132,38 +145,46 @@ main {
     text-align: left;
     color: var(--fg);
 }
+
 .btn.btn-option:hover:not(.btn-option-selected) {
     background: var(--hover-bg);
     box-shadow: none;
 }
+
 .btn.btn-option:focus-visible:not(.btn-option-selected) {
     background: var(--hover-bg);
     box-shadow: 0 0 0 3px var(--color-special-shadow);
 }
+
 .btn.btn-option-selected,
 .btn.btn-option-selected:hover {
     background-color: var(--selected-bg);
     box-shadow: none;
 }
+
 .btn.btn-option[data-selected="true"] {
     background-color: var(--hover-bg);
     box-shadow: none;
 }
+
 .btn.active {
     background-color: var(--selected-bg);
     border-color: var(--color-special-shadow);
     box-shadow: 0 4px 8px var(--selected-bg);
 }
+
 .btn.active:hover {
     border-color: var(--color-special-shadow);
     box-shadow: 0 4px 8px var(--color-special-shadow);
 }
+
 .btn.active:focus-visible,
 .btn.btn-option-selected:focus-visible {
     outline: none;
     border-color: var(--color-special);
     box-shadow: 0 0 0 3px var(--color-special);
 }
+
 .select-menu-options {
     display: flex;
     flex-direction: column;
@@ -174,15 +195,17 @@ main {
     overflow-y: auto;
     overflow-x: hidden;
 }
+
 .world-map-container {
     z-index: 0;
-    position: absolute;
+    position: relative;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     pointer-events: auto;
 }
+
 .title {
     background-color: var(--on-map);
     font-size: clamp(1.3rem, 4vw, 2.5rem);
@@ -191,6 +214,7 @@ main {
     padding: 0.5rem 1rem;
     border-radius: 8px;
 }
+
 .h2-primary {
     font-size: clamp(1.2rem, 3vw, 1.6rem);
     font-weight: 700;
@@ -210,6 +234,7 @@ main {
     z-index: 10;
     transition: right 0.3s ease-in-out;
 }
+
 .config-bar.closed {
     right: -395px;
 }
@@ -229,6 +254,7 @@ main {
         top 0.3s,
         left 0.3s;
 }
+
 .tooltip-country {
     width: 42px;
     height: 28px;
@@ -236,12 +262,15 @@ main {
     border-radius: 4px;
     margin-bottom: 0.5rem;
 }
+
 .data-point {
     pointer-events: none;
 }
+
 .select-months-options {
     background-color: var(--on-map);
 }
+
 .btn-close-config {
     position: absolute;
     top: 0.25rem;
@@ -259,6 +288,7 @@ main {
     border-top-right-radius: 0;
     cursor: pointer;
 }
+
 .map-layer {
     max-width: 100%;
     height: auto;

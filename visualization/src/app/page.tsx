@@ -4,6 +4,7 @@ import { Fragment, type JSX, useEffect, useState } from "react";
 
 import ConfigBar from "@/components/configBar";
 import { WorldMap } from "@/components/map";
+import Graphique from "@/components/graphique";
 import metadata_app from "@/data/metadata.json";
 import { readNpz } from "@/utils/read";
 
@@ -47,6 +48,7 @@ export default function HomePage(): JSX.Element {
 
     return (
         <Fragment>
+
             <WorldMap
                 allData={allData}
                 type={typeData}
@@ -56,6 +58,15 @@ export default function HomePage(): JSX.Element {
                 countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
             />
+
+
+            <Graphique
+                allData={allData}
+                type={[typeData]} //ya que 1 seul nombre pour le moment
+                productsSelected={productsSelected}
+                countriesSelected={countriesSelected}
+            />
+
             <main>
                 <h1 className="title">Echanges internationaux de bois</h1>
             </main>
