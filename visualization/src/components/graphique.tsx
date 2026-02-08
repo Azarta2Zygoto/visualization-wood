@@ -568,6 +568,9 @@ function updateMultiLines_with_icons(//c'est la fonction pour mettre a jour de s
             .y((d: any) => yScaleZoom(y(d)))
             (d.values)
         );
+      // Mettre à jour les icônes lors du zoom
+      iconsGroup.selectAll(".event-icon")
+        .attr("x", (d: any) => xScaleZoom(d.dateParsed) - iconSize / 2);
 
       // mettre à jour les axes
       (gX as any).call(
