@@ -397,7 +397,8 @@ function updateMultiLines_with_icons(//c'est la fonction pour mettre a jour de s
   if (iconsGroup.empty()) {
     iconsGroup = g.append("g")
       .attr("class", "icons")
-      .attr("transform", `translate(0, 0)`);
+      .attr("transform", `translate(0, 0)`)
+      .attr("clip-path", `url(#${clipId})`);
   }
 
   iconsGroup
