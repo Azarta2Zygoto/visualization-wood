@@ -6,6 +6,7 @@ import { type JSX, useEffect, useRef, useState } from "react";
 import type_data from "@/data/N027_LIB.json";
 import pays from "@/data/country_extended.json";
 import list_products from "@/data/N890_LIB.json";
+import all_icons from "@/data/symboles.json";
 
 
 interface GraphiqueProps {
@@ -13,6 +14,8 @@ interface GraphiqueProps {
   type: number[];
   productsSelected: number[];
   countriesSelected: number[];
+  iconSelected: String[];
+  all_events: any;
 }
 type Country = {
   code: string;
@@ -34,6 +37,8 @@ export default function Graphique({
   type,
   productsSelected,
   countriesSelected,
+  iconSelected,
+  all_events,
 }: GraphiqueProps): JSX.Element {
   const { windowSize } = useGlobal();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -41,15 +46,22 @@ export default function Graphique({
   const knownSymbolsRef = useRef<Set<string>>(new Set());//l'ensemble des symboles pour la légende
   //countriesSelected = [34] //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
   const data_plot = filterData(allData, { type, productsSelected, countriesSelected })
-  console.log(data_plot)
   const groupedData = d3.group(data_plot, d => d.type, d => d.pays, d => d.produit);
   const groupedData_plot = Array.from(groupedData, ([key, values]) => ({
     symbol: key,       // le nom de la série
     values: values     // array d'objets {date, VALEUR, ...}
   }));
   const flatten_data_plot = flattenGroupedData3(groupedData_plot)
-  console.log(flatten_data_plot)
-
+  //on importe la map des icones que on filtre
+  const typeMap: Record<string, any> = all_icons;
+  const map_icons: Record<string, any> =
+    Object.fromEntries(
+      Object.entries(typeMap)
+        .filter(([key]) => iconSelected.includes(key))
+    );
+  const events_filtered = filterevents(all_events, map_icons)
+  console.log("events")
+  console.log(events_filtered)
   //init du SVG
   useEffect(() => {
     if (!svgRef.current && containerRef.current) {
@@ -63,14 +75,15 @@ export default function Graphique({
   // --- Mise à jour du graphique quand les données changent
   useEffect(() => {
     if (!svgRef.current || flatten_data_plot.length === 0) return;
-    console.log(flatten_data_plot)
-    updateMultiLines(
+    updateMultiLines_with_icons(
       flatten_data_plot,
       svgRef.current, // c'est déjà une D3 selection
       knownSymbolsRef.current,
+      map_icons,
+      events_filtered,
       { x: d => d.date, y: d => d.value }
     );
-  }, [flatten_data_plot]);
+  }, [flatten_data_plot, map_icons, events_filtered]);
 
 
 
@@ -151,6 +164,41 @@ function filterData(
     .filter(d => !isNaN(d.value)).sort((a: any, b: any) => a.date - b.date);
 }
 
+function filterevents(events: any[], map_icons: Record<string, any>) {
+  //données traités pour avoir les infos des icones
+  const parseDate1 = d3.timeParse("%Y-%m-%d"); // parsing date pour les icones
+  const parseDate2 = d3.timeParse("%Y-%m");
+  const eventsWithIcons = events
+    .map(event => {
+      // parse de la date
+      const dateParsed = parseDate1(event.date) ? parseDate1(event.date) : parseDate2(event.date) ? parseDate2(event.date) : null;
+      if (!dateParsed) return null;
+
+      // catégorie / icône
+      let category = "";
+      let icon = null;
+
+      if (event.catégorie) {
+        const typeList = event.catégorie.split(" / ");
+        category = typeList.find((t: any) => t in map_icons) || "";
+        icon = map_icons[category] || null;
+      } else {
+        icon = map_icons[category] || null;
+      }
+
+      if (!icon) return null;
+      const id = `icon-${category.toLowerCase().replace(/\s+/g, '-')}`;
+      return {
+        ...event,          // on garde toutes les infos originales
+        dateParsed,        // date prête à l’emploi
+        category,          // catégorie finale
+        id                  //id associée
+      };
+    })
+    .filter(d => d !== null); // on enlève les events invalides
+  return eventsWithIcons
+}
+
 function flattenGroupedData3(groupedData: any[]) {
   //utilisé pour flatten un groupe avec 3 éléments
   const flattened: { symbol: string; type: any; zone: any; product: any; values: any; }[] = [];
@@ -183,10 +231,12 @@ function updateColorDomain(color_graphique: d3.ScaleOrdinal<string, string, neve
 
 
 
-function updateMultiLines(//c'est la fonction pour mettre a jour de svg 
+function updateMultiLines_with_icons(//c'est la fonction pour mettre a jour de svg 
   stocks: { symbol: string; type: any; zone: any; product: any; values: any; }[],
   svg_animated: d3.Selection<SVGSVGElement, unknown, null, undefined>,//svg global
   knownSymbols: Set<string>,//ensemble de symboles que on a déjà vu
+  map_icons: Record<string, any> | ArrayLike<unknown>,//le mapping nom -> élément svg
+  events: unknown[] | Iterable<unknown> | d3.ValueFn<d3.BaseType, unknown, unknown[] | Iterable<unknown>>,//la liste des évènement qui a été filtré, on a ajouté la date parsé, la catégorie, et l'iconid associé
 
   {
     x = (d: DataPoint) => d.date,
@@ -197,7 +247,7 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
 
   const width = 1200;
   const height = 500;
-
+  const iconSize = 30; // taille d'affichage des icones
   const margin = { top: 40, right: 100, bottom: 40, left: 50 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
@@ -248,17 +298,50 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
   gY.transition().duration(800).call(d3.axisLeft(yScale));
 
 
-  const clipId = "clip-" + Math.random().toString(36).slice(2); // ou un nom unique
+  const clipId = "clip-mouse-rect"  // ou un nom unique
 
   // créer defs si inexistant
   let defs = svg_animated.select<SVGGElement>("defs");
   if (defs.empty()) defs = svg_animated.append("defs");
 
-  defs.append("clipPath")
-    .attr("id", clipId)
-    .append("rect")
-    .attr("width", plotWidth)
-    .attr("height", plotHeight);
+  // vérifier si le clipPath existe déjà
+  let clip = defs.select<SVGClipPathElement>(`#${clipId}`);
+
+  if (clip.empty()) {
+    clip = defs.append("clipPath")
+      .attr("id", clipId);
+
+    clip.append("rect")
+      .attr("width", plotWidth)
+      .attr("height", plotHeight);
+  }
+
+
+  // Pour chaque catégorie d'icône, ajouter une définition si inexistante
+  Object.entries(map_icons).forEach(([category, icon]) => {
+    const id = `icon-${category.toLowerCase().replace(/\s+/g, '-')}`;
+
+    // tester si l'icône existe déjà
+    let iconDef = defs.select<SVGSVGElement>(`#${id}`);
+
+    if (iconDef.empty()) {
+      iconDef = defs.append("svg")
+        .attr("id", id)
+        .attr("viewBox", icon.viewBox)
+        .attr("width", icon.viewBox.split(" ")[2])   // taille par défaut
+        .attr("height", icon.viewBox.split(" ")[3]);
+
+      iconDef.append("path")
+        .attr("d", icon.path)
+        .attr("fill", icon.fill)
+        .attr("stroke", icon.stroke)
+        .attr("stroke-width", icon["stroke-width"])
+        .attr("stroke-linecap", icon.linecap)
+        .attr("stroke-linejoin", icon.linejoin)
+        .attr("transform", icon.transform || null);
+    }
+  });
+
 
 
   let plotArea = g.select<SVGGElement>("g.plot-area");
@@ -310,6 +393,47 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
     );
 
 
+  let iconsGroup = g.select<SVGGElement>("g.icons");
+  if (iconsGroup.empty()) {
+    iconsGroup = g.append("g")
+      .attr("class", "icons")
+      .attr("transform", `translate(0, 0)`);
+  }
+
+  iconsGroup
+    .selectAll("use.event-icon")
+    .data(events, (d: any) => d.titre)
+    .join(
+      enter => enter.append("use")
+        .attr("class", "event-icon")
+        .attr("xlink:href", (d: any) => `#${d.id}`)
+        .attr("x", (d: any) => xScaleZoom(d.dateParsed) - iconSize / 2)
+        .attr("y", 0)
+        .attr("width", iconSize)
+        .attr("height", iconSize)
+        .style("opacity", 0) // départ invisible
+        .call(enter => enter.transition()
+          .duration(500)
+          .style("opacity", 1) // apparition progressive
+          .attr("y", 10)), // glisse vers y = 10
+      update => update.transition()
+        .duration(500)
+        .attr("xlink:href", (d: any) => `#${d.id}`)
+        .attr("x", (d: any) => xScaleZoom(d.dateParsed) - iconSize / 2)
+        .attr("y", 10)
+        .style("opacity", 1), // s'assure que l'icône est visible
+      exit => exit.transition()
+        .duration(300)
+        .attr("y", -20)
+        .style("opacity", 0) // disparition progressive
+        .remove()
+    )
+    .on("mouseover", (e, d: any) => {
+      tooltip.style("display", null)
+        .attr("transform", `translate(${xScaleZoom(d.dateParsed) + 20}, ${20})`);
+      tooltipText.text(d.titre);
+    })
+    .on("mouseout", () => tooltip.style("display", "none"))
   // -------------------------------
   // Légende
   let legend = svg_animated.select<SVGGElement>("g.legend");
@@ -452,7 +576,16 @@ function updateMultiLines(//c'est la fonction pour mettre a jour de svg
       gY.call(d3.axisLeft(yScaleZoom));
     });
 
-  (svg_animated as any).call(zoom);
+  // Vérifier si un zoom est déjà appliqué
+  const hasZoom = svg_animated.property("__zoom") !== undefined;
+  if (!hasZoom) {
+    (svg_animated as any).call(zoom);
+  }
+  else {
+    svg_animated.property("__zoom", null);
+    (svg_animated as any).call(zoom);
+  }
+
 
 
 
