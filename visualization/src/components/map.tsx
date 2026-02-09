@@ -74,6 +74,12 @@ export function WorldMap({
         null,
         undefined
     > | null>(null);
+    const [legendLayer, setLegendLayer] = useState<d3.Selection<
+        SVGGElement,
+        unknown,
+        null,
+        undefined
+    > | null>(null);
     const { windowSize } = useGlobal();
 
     useEffect(() => {
@@ -176,7 +182,11 @@ export function WorldMap({
                     );
 
                 const mapLayer = mapSvg.append("g").attr("class", "map-layer");
+                const legendLayer = mapSvg
+                    .append("g")
+                    .attr("class", "legend-layer");
                 setLayer(mapLayer);
+                setLegendLayer(legendLayer);
 
                 const zoom = d3
                     .zoom<SVGSVGElement, unknown>()
@@ -390,7 +400,8 @@ export function WorldMap({
         if (!svg) return;
 
         const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
-        if (mapLayer.empty()) return;
+        const legendLayer = d3.select(svg).select<SVGGElement>(".legend-layer");
+        if (mapLayer.empty() || legendLayer.empty()) return;
 
         // Attach handlers (handlers are stable and read from ref)
         mapLayer
@@ -442,6 +453,40 @@ export function WorldMap({
             .scaleLinear()
             .domain([0, maxValue])
             .range([0, 20]);
+
+        if (legendLayer) {
+            const legendRadius = radiusScale(maxValue);
+            const legend = legendLayer
+                .attr("transform", "translate(16, 16)")
+                .attr("pointer-events", "none");
+
+            legend.selectAll("*").remove();
+            legend
+                .append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", 140)
+                .attr("height", 60)
+                .attr("rx", 8)
+                .attr("fill", "#ffffffcc")
+                .attr("stroke", "#999");
+            legend
+                .append("circle")
+                .attr("cx", 24)
+                .attr("cy", 30)
+                .attr("r", legendRadius)
+                .attr("fill", "#ff9800")
+                .attr("opacity", 0.7)
+                .attr("stroke", "#e65100")
+                .attr("stroke-width", 1);
+            legend
+                .append("text")
+                .attr("x", 52)
+                .attr("y", 34)
+                .attr("fill", "#333")
+                .attr("font-size", 12)
+                .text(`Max: ${Math.round(maxValue)}`);
+        }
 
         // Bind data to circles (only countries with data)
         const circles = mapLayer
