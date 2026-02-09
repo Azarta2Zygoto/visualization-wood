@@ -17,12 +17,14 @@ interface ConfigBarProps {
     productsSelected: number[];
     countriesSelected: number[];
     isMultipleMode: boolean;
+    isCountryMode: boolean;
     setTypeData: (type: number) => void;
     setCurrentYear: (year: number) => void;
     setCurrentMonth: (month: number) => void;
     setProductsSelected: (products: number[]) => void;
     setCountriesSelected: (countries: number[]) => void;
     setIsMultipleMode: (isMultiple: boolean) => void;
+    setIsCountryMode: (isCountryMode: boolean) => void;
 }
 
 export default function ConfigBar({
@@ -32,12 +34,14 @@ export default function ConfigBar({
     productsSelected,
     countriesSelected,
     isMultipleMode,
+    isCountryMode,
     setTypeData,
     setCurrentYear,
     setCurrentMonth,
     setProductsSelected,
     setCountriesSelected,
     setIsMultipleMode,
+    setIsCountryMode,
 }: ConfigBarProps): JSX.Element {
     const [isVolume, setIsVolume] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -86,6 +90,37 @@ export default function ConfigBar({
             </button>
 
             <h2 className="h2-primary">Configuration</h2>
+            <p>Echelle d&apos;étude :</p>
+            <div
+                className="rows"
+                style={{ gap: 0 }}
+            >
+                <button
+                    className={`btn ${isCountryMode ? "active" : ""}`}
+                    type="button"
+                    onClick={() => setIsCountryMode(true)}
+                    style={{
+                        width: "180px",
+                        borderTopRightRadius: 0,
+                        borderBottomRightRadius: 0,
+                    }}
+                >
+                    Pays
+                </button>
+                <button
+                    className={`btn ${!isCountryMode ? "active" : ""}`}
+                    type="button"
+                    onClick={() => setIsCountryMode(false)}
+                    style={{
+                        width: "180px",
+                        borderLeft: "none",
+                        borderTopLeftRadius: 0,
+                        borderBottomLeftRadius: 0,
+                    }}
+                >
+                    Continent
+                </button>
+            </div>
             <p>Type de données :</p>
             <div
                 className="rows"
