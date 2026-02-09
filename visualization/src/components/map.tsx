@@ -14,15 +14,12 @@ import * as topojson from "topojson-client";
 
 import type_data from "@/data/N027_LIB.json";
 import continent from "@/data/continent.json";
-import continent from "@/data/continent.json";
 import pays from "@/data/country_extended.json";
-import type { CountryData } from "@/data/types";
 import type { CountryData } from "@/data/types";
 
 import { useGlobal } from "./globalProvider";
 import TooltipMap from "./tooltipMap";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const pays_english = new Set(Object.values(pays).map((country) => country.en));
 const animationDuration = 800;
@@ -36,7 +33,6 @@ interface WorldMapProps {
     countriesSelected: number[];
     isMultipleMode: boolean;
     isCountryMode: boolean;
-    isCountryMode: boolean;
 }
 
 export function WorldMap({
@@ -47,7 +43,6 @@ export function WorldMap({
     productsSelected,
     countriesSelected,
     isMultipleMode,
-    isCountryMode = false,
     isCountryMode = false,
 }: WorldMapProps): JSX.Element {
     const svgRef = useRef<SVGSVGElement>(null);
@@ -96,8 +91,6 @@ export function WorldMap({
                 if (!worldData) {
                     const url = `${basePath}/world/world-110m.json`;
                     const response = await fetch(url);
-                    const url = `${basePath}/world/world-110m.json`;
-                    const response = await fetch(url);
                     if (!response.ok)
                         throw new Error("Failed to load world data");
                     worldData = await response.json();
@@ -105,64 +98,6 @@ export function WorldMap({
                 }
 
                 // Extract country features (topojson.feature always returns FeatureCollection)
-
-                let features: CountryData[] = [];
-
-                if (isCountryMode) {
-                    features = (
-                        topojson.feature(
-                            worldData,
-                            worldData.objects.countries,
-                        ) as any
-                    ).features;
-                } else {
-                    console.log("Merging countries by continent");
-
-                    Object.keys(continent).forEach((cont) => {
-                        const countriesInContinent =
-                            continent[cont as keyof typeof continent];
-
-                        const countriesSet = new Set(
-                            Object.entries(countriesInContinent).map(
-                                ([, value]) => value.en,
-                            ),
-                        );
-
-                        const geometriesToMerge =
-                            worldData.objects.countries.geometries.filter(
-                                (g: any) => countriesSet.has(g.properties.name),
-                            );
-
-                        if (!geometriesToMerge.length) return;
-
-                        const mergedGeometry = topojson.merge(
-                            worldData,
-                            geometriesToMerge,
-                        );
-
-                        const continentName = Object.keys(pays).find(
-                            (value) => {
-                                return (
-                                    pays[value as keyof typeof pays].code ===
-                                    cont
-                                );
-                            },
-                        );
-
-                        const mergedFeature: CountryData = {
-                            type: "Feature",
-                            properties: {
-                                name:
-                                    pays[continentName as keyof typeof pays]
-                                        .en || cont,
-                            },
-                            geometry: mergedGeometry,
-                        };
-
-                        features.push(mergedFeature);
-                    });
-                }
-
                 let features: CountryData[] = [];
 
                 if (isCountryMode) {
@@ -254,22 +189,14 @@ export function WorldMap({
                             ? pays_english.has(d.properties.name)
                             : true;
                         return know ? "country known-country" : "country";
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
-                        return know ? "country known-country" : "country";
                     })
                     .attr("d", pathGenerator as any)
                     .attr("fill", (d: any) => {
                         const know = isCountryMode
                             ? pays_english.has(d.properties.name)
                             : true;
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
                         return d.properties.name === "France"
                             ? "#ff6b6b"
-                            : know
                             : know
                               ? "#87ceeb"
                               : "#d3d3d3";
@@ -281,7 +208,7 @@ export function WorldMap({
                             ? pays_english.has(d.properties.name)
                             : true;
                         return know ? "pointer" : "default";
-                    });
+                    })
                     .style("cursor", (d: any) => {
                         const know = isCountryMode
                             ? pays_english.has(d.properties.name)
@@ -290,7 +217,6 @@ export function WorldMap({
                     });
 
                 // Build a list of points with projected positions
-                const pointData = features
                 const pointData = features
                     .map((feature: any) => {
                         const countryName = feature.properties.name;
@@ -329,7 +255,6 @@ export function WorldMap({
         };
 
         loadMap();
-    }, [isCountryMode, windowSize.height, windowSize.width]);
     }, [isCountryMode, windowSize.height, windowSize.width]);
 
     // Effect 2: Filter and aggregate data using useMemo (no extra render)
@@ -391,18 +316,8 @@ export function WorldMap({
                           d.properties.name === "France"
                         : true;
                     return know ? 1.5 : 0.5;
-                    const know = isCountryMode
-                        ? pays_english.has(d.properties.name) ||
-                          d.properties.name === "France"
-                        : true;
-                    return know ? 1.5 : 0.5;
                 })
                 .attr("opacity", (d: any) => {
-                    const know = isCountryMode
-                        ? pays_english.has(d.properties.name) ||
-                          d.properties.name === "France"
-                        : true;
-                    return know ? 0.6 : 1;
                     const know = isCountryMode
                         ? pays_english.has(d.properties.name) ||
                           d.properties.name === "France"
@@ -488,7 +403,6 @@ export function WorldMap({
                 );
                 console.log(countryName, lectureData[countryName]);
                 const value = lectureData[countryName]?.[typeKey];
-
 
                 if (!value) return null;
                 return {
