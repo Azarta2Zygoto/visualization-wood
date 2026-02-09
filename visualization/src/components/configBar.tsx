@@ -77,6 +77,11 @@ export default function ConfigBar({
         setProductsSelected(numericProducts);
     }
 
+    function handleCountryModeChange(isCountryMode: boolean) {
+        setIsCountryMode(isCountryMode);
+        setCountriesSelected([]); // reset selected countries when changing mode
+    }
+
     return (
         <div className={`config-bar ${isOpen ? "" : "closed"}`}>
             <button
@@ -98,7 +103,7 @@ export default function ConfigBar({
                 <button
                     className={`btn ${isCountryMode ? "active" : ""}`}
                     type="button"
-                    onClick={() => setIsCountryMode(true)}
+                    onClick={() => handleCountryModeChange(true)}
                     style={{
                         width: "180px",
                         borderTopRightRadius: 0,
@@ -110,7 +115,7 @@ export default function ConfigBar({
                 <button
                     className={`btn ${!isCountryMode ? "active" : ""}`}
                     type="button"
-                    onClick={() => setIsCountryMode(false)}
+                    onClick={() => handleCountryModeChange(false)}
                     style={{
                         width: "180px",
                         borderLeft: "none",
@@ -221,6 +226,7 @@ export default function ConfigBar({
                         borderBottomRightRadius: 0,
                         borderBottomLeftRadius: 0,
                     }}
+                    disabled={currentYear <= metadata.bois.start_year}
                     onClick={() => handleYearChange(currentYear - 1)}
                 >
                     {"<"}
@@ -253,6 +259,7 @@ export default function ConfigBar({
                     aria-label="Increase year"
                     title="Increase year"
                     onClick={() => handleYearChange(currentYear + 1)}
+                    disabled={currentYear >= metadata.bois.end_year}
                     style={{
                         height: "40px",
                         width: "40px",

@@ -116,15 +116,18 @@ main {
         border-color 0.3s,
         box-shadow 0.3s;
 }
-
-.btn:hover {
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.btn:hover:not(:disabled) {
     border-color: var(--color-special);
     box-shadow: 0 4px 8px var(--color-mat);
 }
 
-.btn:focus-visible {
+.btn:focus-visible:not(:disabled) {
     outline: none;
-    border-color: var(--color-special);
+    border: 1px solid var(--color-special);
     box-shadow: 0 0 0 3px var(--color-special);
 }
 

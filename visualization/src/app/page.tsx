@@ -1,6 +1,6 @@
 "use client";
 
-import { type JSX, useEffect, useState } from "react";
+import { Fragment, type JSX, useEffect, useState } from "react";
 
 import Papa from "papaparse";
 
@@ -11,7 +11,7 @@ import { WorldMap } from "@/components/map";
 import metadata_app from "@/data/metadata.json";
 import { readNpz } from "@/utils/read";
 
-const adding_automatic_all_years = true; // Permet de charger les années les unes après les autres ou à chaque demande
+const adding_automatic_all_years = false; // Permet de charger les années les unes après les autres ou à chaque demande
 
 export default function HomePage(): JSX.Element {
     const [allData, setAllData] = useState<{ [key: string]: number[][] }>({});
@@ -27,11 +27,10 @@ export default function HomePage(): JSX.Element {
     const [countriesSelected, setCountriesSelected] = useState<number[]>([]);
     const [isMultipleMode, setIsMultipleMode] = useState<boolean>(false);
     const [isCountryMode, setIsCountryMode] = useState<boolean>(true);
-    const [isLoading, setIsLoading] = useState<number | null>(null);
+    const [loadingYears, setLoadingYears] = useState<Set<number>>(new Set());
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
-        console.log("🔹 CSV useEffect monté");
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
         const url = `${basePath}/data/liste_evenements_allemagne.csv`;
 
@@ -74,7 +73,7 @@ export default function HomePage(): JSX.Element {
         async function fetchData(year: number) {
             if (allData[year]) return;
 
-            setIsLoading(year);
+            setLoadingYears((prev) => new Set(prev).add(year));
             try {
                 const data = await readNpz(year);
 
@@ -94,15 +93,23 @@ export default function HomePage(): JSX.Element {
             } catch (error) {
                 console.error(`Error loading data for year ${year}:`, error);
             } finally {
-                setIsLoading(null);
+                setLoadingYears((prev) => {
+                    const next = new Set(prev);
+                    next.delete(year);
+                    return next;
+                });
             }
         }
 
         fetchData(currentYear);
     }, [currentYear]);
 
+    useEffect(() => {
+        console.log(countriesSelected);
+    }, [countriesSelected]);
+
     return (
-        <main>
+        <Fragment>
             <h1 className="title">Echanges internationaux de bois</h1>
             <WorldMap
                 allData={allData}
@@ -113,6 +120,7 @@ export default function HomePage(): JSX.Element {
                 countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
+                setCountriesSelected={setCountriesSelected}
             />
 
             <ConfigBar
@@ -131,7 +139,7 @@ export default function HomePage(): JSX.Element {
                 setIsMultipleMode={setIsMultipleMode}
                 setIsCountryMode={setIsCountryMode}
             />
-            <Loading year={isLoading} />
-        </main>
+            <Loading yearLoading={loadingYears} />
+        </Fragment>
     );
 }

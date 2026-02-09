@@ -33,6 +33,7 @@ interface WorldMapProps {
     countriesSelected: number[];
     isMultipleMode: boolean;
     isCountryMode: boolean;
+    setCountriesSelected: (countries: number[]) => void;
 }
 
 export function WorldMap({
@@ -44,6 +45,7 @@ export function WorldMap({
     countriesSelected,
     isMultipleMode,
     isCountryMode = false,
+    setCountriesSelected,
 }: WorldMapProps): JSX.Element {
     const svgRef = useRef<SVGSVGElement>(null);
     const worldDataCache = useRef<any>(null);
@@ -66,9 +68,16 @@ export function WorldMap({
             y: number;
         }>
     >([]);
+    const [layer, setLayer] = useState<d3.Selection<
+        SVGGElement,
+        unknown,
+        null,
+        undefined
+    > | null>(null);
     const { windowSize } = useGlobal();
 
     useEffect(() => {
+        console.log("Loading map with isCountryMode =", isCountryMode);
         const loadMap = async () => {
             const svg = svgRef.current;
             if (!svg) return;
@@ -167,6 +176,7 @@ export function WorldMap({
                     );
 
                 const mapLayer = mapSvg.append("g").attr("class", "map-layer");
+                setLayer(mapLayer);
 
                 const zoom = d3
                     .zoom<SVGSVGElement, unknown>()
@@ -180,7 +190,6 @@ export function WorldMap({
                 // Draw countries
                 mapLayer
                     .selectAll(".country")
-                    .data(features)
                     .data(features)
                     .enter()
                     .append("path")
@@ -221,7 +230,6 @@ export function WorldMap({
                     .map((feature: any) => {
                         const countryName = feature.properties.name;
                         if (
-                            isCountryMode &&
                             isCountryMode &&
                             !pays_english.has(countryName) &&
                             countryName !== "France"
@@ -304,6 +312,30 @@ export function WorldMap({
 
         return dataByCountry;
     }, [allData, year, month, productsSelected]);
+    useEffect(() => {
+        if (!layer) return;
+
+        layer.selectAll(".country").on("click", (_: any, d: any) => {
+            console.log("Country clicked:", d.properties.name);
+
+            const countryName = d.properties.name;
+            const countryCode = Object.keys(pays).find(
+                (key) => pays[key as keyof typeof pays].en === countryName,
+            );
+            if (!countryCode) return;
+
+            if (isMultipleMode) {
+                const newSelection: number[] = countriesSelected.includes(
+                    Number(countryCode),
+                )
+                    ? countriesSelected.filter(
+                          (code: number) => code !== Number(countryCode),
+                      )
+                    : [...countriesSelected, Number(countryCode)];
+                setCountriesSelected(newSelection);
+            } else setCountriesSelected([Number(countryCode)]);
+        });
+    }, [countriesSelected, isMultipleMode, layer, setCountriesSelected]);
 
     // Memoized event handlers (stable references to prevent re-attaching)
     const handleCountryMouseover = useCallback(
@@ -328,8 +360,6 @@ export function WorldMap({
             // Tooltip data (read from ref to get current data)
             const currentCountryName = event.target.__data__.properties.name;
             if (!lectureData[currentCountryName] && isCountryMode) return;
-            console.log("Hovered country:", currentCountryName, lectureData);
-            if (!lectureData[currentCountryName] && isCountryMode) return;
 
             const typeKey = type.toString() as keyof typeof type_data;
             setTooltipData({
@@ -344,7 +374,7 @@ export function WorldMap({
                 y: event.pageY,
             });
         },
-        [lectureData, type, year, month],
+        [lectureData, isCountryMode, type, year, month],
     );
 
     const handleCountryMouseout = useCallback((event: any) => {
@@ -362,7 +392,6 @@ export function WorldMap({
         const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
         if (mapLayer.empty()) return;
 
-        console.log("Attaching event handlers to countries");
         // Attach handlers (handlers are stable and read from ref)
         mapLayer
             .selectAll(".known-country")
@@ -372,7 +401,6 @@ export function WorldMap({
 
     // Effect 4: Update data circles based on filtered data
     useEffect(() => {
-        console.log("Updating data points on map for type:", isCountryMode);
         if (
             !lectureData ||
             Object.keys(lectureData).length === 0 ||
@@ -387,21 +415,10 @@ export function WorldMap({
         if (mapLayer.empty()) return;
 
         const typeKey = type.toString() as keyof typeof type_data;
-
-        console.log(
-            "Updating data points on map for type:",
-            isCountryMode,
-            typeKey,
-        );
         // Build point data ONLY for countries with values
-        console.log("Data points on map:", dataPointOnMap, lectureData);
         const pointData = dataPointOnMap
             .map((point) => {
                 const countryName = point.countryName;
-                console.log(
-                    "-------------------------------------------------------------------------------------------------------------------",
-                );
-                console.log(countryName, lectureData[countryName]);
                 const value = lectureData[countryName]?.[typeKey];
 
                 if (!value) return null;
