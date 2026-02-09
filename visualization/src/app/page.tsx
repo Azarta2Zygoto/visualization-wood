@@ -32,7 +32,7 @@ export default function HomePage(): JSX.Element {
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-        const url = `${basePath}/data/liste_evenements_allemagne.csv`;
+        const url = `${basePath}/data/all_event_wood.csv`;
 
         fetch(url)
             .then((res) => {
@@ -122,6 +122,15 @@ export default function HomePage(): JSX.Element {
                 isCountryMode={isCountryMode}
                 setCountriesSelected={setCountriesSelected}
             />
+            <Graphique
+                allData={allData}
+                type={[typeData]} //ya que 1 seul nombre pour le moment
+                productsSelected={productsSelected}
+                countriesSelected={countriesSelected}
+                iconSelected={["Politique", "Économie", "Géopolitique"]}
+                all_events={allEvents}
+            />
+
 
             <ConfigBar
                 typeData={typeData}
