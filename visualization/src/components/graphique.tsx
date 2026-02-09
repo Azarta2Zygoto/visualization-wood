@@ -59,7 +59,7 @@ export default function Graphique({
       Object.entries(typeMap)
         .filter(([key]) => iconSelected.includes(key))
     );
-  const events_filtered = filterevents(all_events, map_icons)
+  const events_filtered = filterevents(all_events, map_icons, countriesSelected)
   console.log("events")
   console.log(events_filtered)
   //init du SVG
@@ -164,27 +164,50 @@ function filterData(
     .filter(d => !isNaN(d.value)).sort((a: any, b: any) => a.date - b.date);
 }
 
-function filterevents(events: any[], map_icons: Record<string, any>) {
+function filterevents(events: any[], map_icons: Record<string, any>, contrySelected: number[]) {
   //données traités pour avoir les infos des icones
   const parseDate1 = d3.timeParse("%Y-%m-%d"); // parsing date pour les icones
   const parseDate2 = d3.timeParse("%Y-%m");
+  const paysMap: Record<string, any> = pays;
+
+  // construire la liste des valeurs possibles depuis la sélection
+  const selectedValues = contrySelected.flatMap(id => {
+    const v = paysMap[id];
+    if (!v) return [];
+    return [
+      v.code,
+      v.en,
+      v.fr,
+      v.event_name
+    ].filter(Boolean);
+  });
   const eventsWithIcons = events
     .map(event => {
       // parse de la date
-      const dateParsed = parseDate1(event.date) ? parseDate1(event.date) : parseDate2(event.date) ? parseDate2(event.date) : null;
+
+
+      const dateParsed = parseDate1(event.date_debut) ? parseDate1(event.date_debut) : parseDate2(event.date_debut) ? parseDate2(event.date_debut) : null;
       if (!dateParsed) return null;
 
       // catégorie / icône
       let category = "";
       let icon = null;
-
-      if (event.catégorie) {
-        const typeList = event.catégorie.split(" / ");
+      let contry = null;
+      if (event.categorie) {
+        const typeList = event.categorie.split("/");
         category = typeList.find((t: any) => t in map_icons) || "";
         icon = map_icons[category] || null;
       } else {
         icon = map_icons[category] || null;
       }
+      //filtrage par pays event.pays
+      // valeurs du event (split + trim)
+      const eventValues = event.pays.split("/").map((p: any) => p.trim());
+
+      const filterContry = eventValues.some((ev: any) =>
+        selectedValues.includes(ev)
+      );
+      if (!filterContry) return null
 
       if (!icon) return null;
       const id = `icon-${category.toLowerCase().replace(/\s+/g, '-')}`;
@@ -403,7 +426,7 @@ function updateMultiLines_with_icons(//c'est la fonction pour mettre a jour de s
 
   iconsGroup
     .selectAll("use.event-icon")
-    .data(events, (d: any) => d.titre)
+    .data(events, (d: any) => d.titre_court)
     .join(
       enter => enter.append("use")
         .attr("class", "event-icon")
@@ -432,7 +455,7 @@ function updateMultiLines_with_icons(//c'est la fonction pour mettre a jour de s
     .on("mouseover", (e, d: any) => {
       tooltip.style("display", null)
         .attr("transform", `translate(${xScaleZoom(d.dateParsed) + 20}, ${20})`);
-      tooltipText.text(d.titre);
+      tooltipText.text(d.titre_court);
     })
     .on("mouseout", () => tooltip.style("display", "none"))
   // -------------------------------

@@ -7,12 +7,14 @@
     "1": {
         "code": "EU",
         "en": "EU 16-27",
-        "fr": "UE 16-27"
+        "fr": "UE 16-27",
+        "event_name": "EU27"
     },
     "2": {
         "code": "EU",
         "en": "EU 15",
-        "fr": "UE 15"
+        "fr": "UE 15",
+        "event_name": "UE15"
     },
     "3": {
         "code": "CN",
@@ -37,7 +39,8 @@
     "7": {
         "code": "SA",
         "en": "Saudi Arabia",
-        "fr": "Arabie saoudite"
+        "fr": "Arabie saoudite",
+        "event_name": "Arabie Saoudite"
     },
     "8": {
         "code": "PL",
@@ -102,7 +105,8 @@
     "20": {
         "code": "ASISO",
         "en": "Southwest Asia",
-        "fr": "Asie du Sud-Ouest"
+        "fr": "Asie du Sud-Ouest",
+        "event_name": "Asie"
     },
     "21": {
         "code": "INTERNATION",
@@ -132,7 +136,8 @@
     "26": {
         "code": "EU",
         "en": "European Union",
-        "fr": "Union européenne"
+        "fr": "Union européenne",
+        "event_name": "Europe"
     },
     "27": {
         "code": "XX",
@@ -187,7 +192,8 @@
     "37": {
         "code": "ASINE",
         "en": "Northeast Asia",
-        "fr": "Asie du Nord-Est"
+        "fr": "Asie du Nord-Est",
+        "event_name": "Asie"
     },
     "38": {
         "code": "BE",
@@ -332,7 +338,8 @@
     "66": {
         "code": "ASISE",
         "en": "Southeast Asia",
-        "fr": "Asie du Sud-Est"
+        "fr": "Asie du Sud-Est",
+        "event_name": "Asie"
     },
     "67": {
         "code": "CL",
@@ -492,7 +499,8 @@
     "98": {
         "code": "AM",
         "en": "Armenia",
-        "fr": "Arménie"
+        "fr": "Arménie",
+        "event_name": "ARM"
     },
     "99": {
         "code": "MT",

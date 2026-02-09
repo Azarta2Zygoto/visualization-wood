@@ -28,7 +28,7 @@ export default function HomePage(): JSX.Element {
     useEffect(() => {
         console.log("🔹 CSV useEffect monté");
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-        const url = `${basePath}/data/liste_evenements_allemagne.csv`;
+        const url = `${basePath}/data/all_event_wood.csv`;
 
         fetch(url)
             .then((res) => {
@@ -103,7 +103,7 @@ export default function HomePage(): JSX.Element {
                 type={[typeData]} //ya que 1 seul nombre pour le moment
                 productsSelected={productsSelected}
                 countriesSelected={countriesSelected}
-                iconSelected={["Politique", "Commerce"]}
+                iconSelected={["Politique", "Économie", "Géopolitique"]}
                 all_events={allEvents}
             />
 
