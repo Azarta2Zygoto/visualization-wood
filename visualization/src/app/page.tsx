@@ -123,12 +123,14 @@ export default function HomePage(): JSX.Element {
                 countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
+                isCountryMode={isCountryMode}
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
                 setCurrentMonth={setCurrentMonth}
                 setProductsSelected={setProductsSelected}
                 setCountriesSelected={setCountriesSelected}
                 setIsMultipleMode={setIsMultipleMode}
+                setIsCountryMode={setIsCountryMode}
                 setIsCountryMode={setIsCountryMode}
             />
             <Loading year={isLoading} />
