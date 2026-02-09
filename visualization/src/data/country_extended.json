@@ -5,12 +5,12 @@
         "fr": "Tunisie"
     },
     "1": {
-        "code": "EU",
+        "code": "EU-16",
         "en": "EU 16-27",
         "fr": "UE 16-27"
     },
     "2": {
-        "code": "EU",
+        "code": "EU-15",
         "en": "EU 15",
         "fr": "UE 15"
     },

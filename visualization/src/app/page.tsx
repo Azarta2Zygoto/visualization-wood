@@ -1,13 +1,17 @@
 "use client";
 
-import { Fragment, type JSX, useEffect, useState } from "react";
+import { type JSX, useEffect, useState } from "react";
+
 import Papa from "papaparse";
 
 import ConfigBar from "@/components/configBar";
-import { WorldMap } from "@/components/map";
 import Graphique from "@/components/graphique";
+import Loading from "@/components/loading";
+import { WorldMap } from "@/components/map";
 import metadata_app from "@/data/metadata.json";
 import { readNpz } from "@/utils/read";
+
+const adding_automatic_all_years = true; // Permet de charger les années les unes après les autres ou à chaque demande
 
 export default function HomePage(): JSX.Element {
     const [allData, setAllData] = useState<{ [key: string]: number[][] }>({});
@@ -22,7 +26,8 @@ export default function HomePage(): JSX.Element {
     const [productsSelected, setProductsSelected] = useState<number[]>([0]);
     const [countriesSelected, setCountriesSelected] = useState<number[]>([]);
     const [isMultipleMode, setIsMultipleMode] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isCountryMode, setIsCountryMode] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<number | null>(null);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -39,20 +44,25 @@ export default function HomePage(): JSX.Element {
                 return res.text();
             })
             .then((csvText) => {
-                console.log(`📝 CSV chargé, longueur=${csvText.length} caractères`);
+                console.log(
+                    `📝 CSV chargé, longueur=${csvText.length} caractères`,
+                );
 
                 // Parser le CSV avec PapaParse
                 Papa.parse(csvText, {
-                    header: true,             // première ligne = noms de colonnes
+                    worker: true, // utiliser un worker pour ne pas bloquer le thread principal
+                    header: true, // première ligne = noms de colonnes
                     skipEmptyLines: true,
                     dynamicTyping: true,
                     complete: (result: any) => {
-                        console.log(`✅ CSV parsé, ${result.data.length} lignes`);
+                        console.log(
+                            `✅ CSV parsé, ${result.data.length} lignes`,
+                        );
                         setAllEvents(result.data);
                     },
                     error: (err: any) => {
                         console.error("❌ Erreur PapaParse:", err);
-                    }
+                    },
                 });
             })
             .catch((err) => {
@@ -60,24 +70,31 @@ export default function HomePage(): JSX.Element {
             });
     }, []);
 
-    // Lazy load data only for the current year
     useEffect(() => {
         async function fetchData(year: number) {
-            // Check if data is already loaded
-            if (allData[year]) {
-                return;
-            }
+            if (allData[year]) return;
 
-            setIsLoading(true);
+            setIsLoading(year);
             try {
                 const data = await readNpz(year);
-                // Only keep current year data to prevent memory buildup
-                setAllData({ [year]: data });
+
+                // Add the new data to the existing allData state
+                setAllData((prevData) => ({
+                    ...prevData,
+                    [year]: data,
+                }));
                 console.log(`Data loaded for year ${year}`);
+
+                // Ajout automatique de toutes les données de toute sles années
+                if (
+                    adding_automatic_all_years &&
+                    year < metadata_app.bois.end_year
+                )
+                    fetchData(year + 1);
             } catch (error) {
                 console.error(`Error loading data for year ${year}:`, error);
             } finally {
-                setIsLoading(false);
+                setIsLoading(null);
             }
         }
 
@@ -85,8 +102,8 @@ export default function HomePage(): JSX.Element {
     }, [currentYear]);
 
     return (
-        <Fragment>
-
+        <main>
+            <h1 className="title">Echanges internationaux de bois</h1>
             <WorldMap
                 allData={allData}
                 type={typeData}
@@ -95,21 +112,9 @@ export default function HomePage(): JSX.Element {
                 productsSelected={productsSelected}
                 countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
+                isCountryMode={isCountryMode}
             />
 
-
-            <Graphique
-                allData={allData}
-                type={[typeData]} //ya que 1 seul nombre pour le moment
-                productsSelected={productsSelected}
-                countriesSelected={countriesSelected}
-                iconSelected={["Politique", "Commerce"]}
-                all_events={allEvents}
-            />
-
-            <main>
-                <h1 className="title">Echanges internationaux de bois</h1>
-            </main>
             <ConfigBar
                 typeData={typeData}
                 currentYear={currentYear}
@@ -117,13 +122,16 @@ export default function HomePage(): JSX.Element {
                 productsSelected={productsSelected}
                 countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
+                isCountryMode={isCountryMode}
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
                 setCurrentMonth={setCurrentMonth}
                 setProductsSelected={setProductsSelected}
                 setCountriesSelected={setCountriesSelected}
                 setIsMultipleMode={setIsMultipleMode}
+                setIsCountryMode={setIsCountryMode}
             />
-        </Fragment>
+            <Loading year={isLoading} />
+        </main>
     );
 }

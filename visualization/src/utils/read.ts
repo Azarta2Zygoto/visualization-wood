@@ -1,5 +1,6 @@
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export async function readNpz(year: number): Promise<number[][]> {
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
     const url = `${basePath}/data/data_${year}.npz`;
     const res = await fetch(url);
     if (!res.ok) {

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "bootstrap-icons/font/bootstrap-icons";
 
 :root {
     --bg: #ffffff;
@@ -198,7 +199,7 @@ main {
 
 .world-map-container {
     z-index: 0;
-    position: relative;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -207,6 +208,11 @@ main {
 }
 
 .title {
+    z-index: 5;
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
     background-color: var(--on-map);
     font-size: clamp(1.3rem, 4vw, 2.5rem);
     font-weight: 700;
@@ -293,4 +299,69 @@ main {
     max-width: 100%;
     height: auto;
     cursor: grab;
+}
+.loading-container {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--on-map);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+}
+.loading-container.load::after {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-special);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+.loading-container.underline {
+    border: none;
+    border-radius: 0;
+}
+.loading-container.underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 3px;
+    background-color: var(--color-special);
+    animation: underlineAnim 3s linear;
+}
+@keyframes underlineAnim {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--fg);
+    cursor: pointer;
+}
+.btn-icon:hover {
+    cursor: pointer;
+    color: var(--color-special);
 }
