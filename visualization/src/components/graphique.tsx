@@ -1,6 +1,6 @@
 "use client";
 
-import { type JSX, useEffect, useRef, useState } from "react";
+import { type JSX, useEffect, useRef, useState, useMemo } from "react";
 
 import * as d3 from "d3";
 
@@ -50,31 +50,101 @@ export default function Graphique({
     undefined
   > | null>(null);
   const knownSymbolsRef = useRef<Set<string>>(new Set()); //l'ensemble des symboles pour la légende
-  countriesSelected = [34]; //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
-  const data_plot = filterData(allData, {
-    type,
-    productsSelected,
-    countriesSelected,
+  //countriesSelected = [34]; //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
+  const previousFilterRef = useRef({
+    data: [] as any, // dernière donnée filtrée
+    filters: {
+      type: [] as number[],
+      productsSelected: [] as number[],
+      countriesSelected: [] as number[],
+    },
   });
-  const groupedData = d3.group(
-    data_plot,
-    (d) => d.type,
-    (d) => d.pays,
-    (d) => d.produit,
-  );
-  const groupedData_plot = Array.from(groupedData, ([key, values]) => ({
-    symbol: key, // le nom de la série
-    values: values, // array d'objets {date, VALEUR, ...}
-  }));
-  const flatten_data_plot = flattenGroupedData3(groupedData_plot);
+
+  const data_plot = useMemo(() => {
+    console.log("filter_data");
+
+    // cas 1 : allData a changé → full filter
+    if (previousFilterRef.current.data !== allData) {
+      console.log("filter_allData_changed");
+      const filtered = filterData(allData, { type, productsSelected, countriesSelected });
+      previousFilterRef.current = {
+        data: allData,
+        filters: { type, productsSelected, countriesSelected },
+      };
+      return filtered;
+    }
+
+    // cas 2 : allData identique → filtrer sur le précédent résultat si c'est un "ajout"
+    const prevFilters = previousFilterRef.current.filters;
+
+    // On peut seulement optimiser si les nouveaux filtres sont un sous-ensemble de l'ancien
+    const isSubset = (prev: any[], current: any[]) =>
+      prev.every((v) => current.includes(v));
+
+    let baseData = allData; // par défaut on filtrera sur tout
+    if (
+      isSubset(prevFilters.type, type) &&
+      isSubset(prevFilters.productsSelected, productsSelected) &&
+      isSubset(prevFilters.countriesSelected, countriesSelected)
+    ) {
+      console.log("filter_smart");
+      baseData = previousFilterRef.current.data;
+    }
+    else { console.log("filter_pas smart"); }
+
+    const filtered = filterData(baseData, { type, productsSelected, countriesSelected });
+
+    // on met à jour les filtres utilisés
+    previousFilterRef.current.filters = { type, productsSelected, countriesSelected };
+    previousFilterRef.current.data = baseData;
+
+    return filtered;
+  }, [allData, type, productsSelected, countriesSelected]);
+
+  const groupedData_plot = useMemo(() => {
+    console.log("group data")
+    const groupedData = d3.group(
+      data_plot,
+      d => d.type,
+      d => d.pays,
+      d => d.produit,
+    );
+
+    return Array.from(groupedData, ([key, values]) => ({
+      symbol: key,// le nom de la série
+      values,// array d'objets {date, VALEUR, ...}
+    }));
+  }, [data_plot]);
+
+
+
+  const flatten_data_plot = useMemo(() => {
+    console.log("flatten data")
+    return flattenGroupedData3(groupedData_plot);
+  }, [groupedData_plot]);
+
   //on importe la map des icones que on filtre
-  const typeMap: Record<string, any> = all_icons;
-  const map_icons: Record<string, any> = Object.fromEntries(
-    Object.entries(typeMap).filter(([key]) => iconSelected.includes(key)),
-  );
-  const events_filtered = filterevents(all_events, map_icons, countriesSelected)
-  console.log("events")
-  console.log(events_filtered)
+  const map_icons = useMemo(() => {
+    console.log("load icon data")
+    return Object.fromEntries(
+      Object.entries(all_icons).filter(([key]) =>
+        iconSelected.includes(key)
+      )
+    );
+  }, [iconSelected]);
+
+  const events_filtered = useMemo(() => {
+    console.log("filter event")
+    return filterevents(all_events, map_icons, countriesSelected);
+  }, [all_events, map_icons, countriesSelected]);
+
+  useEffect(() => console.log("allData changed", allData), [allData]);
+  useEffect(() => console.log("productsSelected changed", productsSelected), [productsSelected]);
+  useEffect(() => console.log("countriesSelected changed", countriesSelected), [countriesSelected]);
+  useEffect(() => console.log("iconSelected changed", iconSelected), [iconSelected]);
+  useEffect(() => console.log("type changed", type), [type]);
+
+
   //init du SVG
   useEffect(() => {
     if (!svgRef.current && containerRef.current) {
