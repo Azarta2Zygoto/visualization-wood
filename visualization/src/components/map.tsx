@@ -174,7 +174,6 @@ export function WorldMap({
                 const mapSvg = d3
                     .select(svg)
                     .attr("width", windowSize.width - 20)
-                    .attr("width", windowSize.width)
                     .attr("height", windowSize.height)
                     .attr(
                         "viewBox",
