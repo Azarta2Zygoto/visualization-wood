@@ -244,6 +244,29 @@ main {
     transition: right 0.3s ease-in-out;
 }
 
+.scroll-arrows {
+    position: fixed;
+    right: 5rem;
+    bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.scroll-arrow-btn {
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    border-radius: 4px;
+}
+
+.scroll-arrow-btn i {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
 .config-bar.closed {
     right: -395px;
 }

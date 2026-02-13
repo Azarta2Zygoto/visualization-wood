@@ -4,6 +4,7 @@ import { Fragment, type JSX, useEffect, useState } from "react";
 
 import Papa from "papaparse";
 
+import ArrowUpDown from "@/components/ArrowUpDown";
 import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/graphique";
 import Loading from "@/components/loading";
@@ -131,7 +132,6 @@ export default function HomePage(): JSX.Element {
                 all_events={allEvents}
             />
 
-
             <ConfigBar
                 typeData={typeData}
                 currentYear={currentYear}
@@ -148,6 +148,7 @@ export default function HomePage(): JSX.Element {
                 setIsMultipleMode={setIsMultipleMode}
                 setIsCountryMode={setIsCountryMode}
             />
+            <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
         </Fragment>
     );

@@ -28,5 +28,9 @@
         "loading": "Chargement des données de {year}...",
         "loaded": "Données de {year} chargées !",
         "close": "Fermer"
+    },
+    "ArrowUpDown": {
+        "scroll-up": "Défiler vers le haut",
+        "scroll-down": "Défiler vers le bas"
     }
 }

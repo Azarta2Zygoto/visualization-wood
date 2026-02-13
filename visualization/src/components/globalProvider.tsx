@@ -10,11 +10,15 @@ const GlobalContext = createContext<{
     setLocale: (v: string) => void;
     windowSize: { width: number; height: number };
     setWindowSize: (size: { width: number; height: number }) => void;
+    allowArrowScroll: boolean;
+    setAllowArrowScroll: (v: boolean) => void;
 }>({
     locale: defaultLocale,
     setLocale: () => {},
     windowSize: { width: 0, height: 0 },
     setWindowSize: () => {},
+    allowArrowScroll: true,
+    setAllowArrowScroll: () => {},
 });
 
 export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -45,6 +49,7 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return { width: window.innerWidth, height: window.innerHeight };
     });
+    const [allowArrowScroll, setAllowArrowScroll] = useState(true);
 
     useEffect(() => {
         localStorage.setItem("locale", locale);
@@ -70,6 +75,8 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
                 setLocale,
                 windowSize,
                 setWindowSize,
+                allowArrowScroll,
+                setAllowArrowScroll,
             }}
         >
             {children}
