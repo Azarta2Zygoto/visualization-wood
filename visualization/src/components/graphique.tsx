@@ -34,6 +34,18 @@ interface DataPoint {
     value: number;
 }
 
+type NestedMap3 = Map<
+    number, // countryId
+    Map<
+        number, // productId
+        Map<
+            number, // typeId
+            { date: Date; value: number }[]
+        >
+    >
+>;
+
+
 export default function Graphique({
     allData,
     type,
@@ -54,6 +66,11 @@ export default function Graphique({
         undefined
     > | null>(null);
     const knownSymbolsRef = useRef<Set<string>>(new Set()); //l'ensemble des symboles pour la légende
+    // map globale : country → product → type → array de {date, value}
+    // chaque année est contenue dans le tableau de chaque entrée
+    const globalNestedMap = useRef<NestedMap3>(new Map());//la big map
+    const processedYears = useRef<Set<string>>(new Set()); // années déjà calculées
+    const [dataVersion, setDataVersion] = useState(0);//cette variable sert a trigger le nouveau graphique quand les données changent
     //countriesSelected = [34]; //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
     const previousFilterRef = useRef({
         data: [] as any, // dernière donnée filtrée
@@ -64,62 +81,34 @@ export default function Graphique({
         },
     });
     const current_graph = useRef<Number>(0)
-    const data_plot = useMemo(() => {
+    // ajouter toutes les nouvelles années dans la map
+    useEffect(() => {
+        let updated = false;
 
-        // cas 1 : allData a changé → full filter
-        if (previousFilterRef.current.data !== allData) {
-            console.time("filterData");
-            const filtered = filterData(allData, {
-                type,
-                productsSelected,
-                countriesSelected,
-            });
-            console.timeEnd("filterData");
-            previousFilterRef.current = {
-                data: allData,
-                filters: { type, productsSelected, countriesSelected },
-            };
-            return filtered;
-        }
+        Object.keys(allData).forEach((year) => {
+            const before = processedYears.current.size;
 
-        // cas 2 : allData identique → filtrer sur le précédent résultat si c'est un "ajout"
-        const prevFilters = previousFilterRef.current.filters;
+            addYearToNestedMap(allData, year, globalNestedMap, processedYears);
 
-        // On peut seulement optimiser si les nouveaux filtres sont un sous-ensemble de l'ancien
-        const isSubset = (prev: any[], current: any[]) =>
-            prev.every((v) => current.includes(v));
-
-        let baseData = allData; // par défaut on filtrera sur tout
-        if (
-            isSubset(prevFilters.type, type) &&
-            isSubset(prevFilters.productsSelected, productsSelected) &&
-            isSubset(prevFilters.countriesSelected, countriesSelected)
-        ) {
-            console.log("filter_smart");
-            baseData = previousFilterRef.current.data;
-        } else {
-            console.log("filter_pas smart");
-        }
-        console.time("filterData");
-
-        const filtered = filterData(baseData, {
-            type,
-            productsSelected,
-            countriesSelected,
+            if (processedYears.current.size > before) {
+                updated = true;
+            }
         });
-        console.timeEnd("filterData");
 
+        if (updated) {
+            setDataVersion(v => v + 1);
+        }
+    }, [allData]);
 
-        // on met à jour les filtres utilisés
-        previousFilterRef.current.filters = {
+    const data_plot = useMemo(() => {
+        return flattenGlobalMap(
+            globalNestedMap,
             type,
             productsSelected,
-            countriesSelected,
-        };
-        previousFilterRef.current.data = baseData;
+            countriesSelected
+        );
+    }, [type, productsSelected, countriesSelected, dataVersion]);//on utilise dataVersion pour trigger le changement
 
-        return filtered;
-    }, [allData, type, productsSelected, countriesSelected]);
 
     const groupedData_plot = useMemo(() => {
         console.log("group data");
@@ -159,20 +148,6 @@ export default function Graphique({
         return filterevents(all_events, map_icons, countriesSelected);
     }, [all_events, map_icons, countriesSelected]);
 
-    useEffect(() => console.log("allData changed", allData), [allData]);
-    useEffect(
-        () => console.log("productsSelected changed", productsSelected),
-        [productsSelected],
-    );
-    useEffect(
-        () => console.log("countriesSelected changed", countriesSelected),
-        [countriesSelected],
-    );
-    useEffect(
-        () => console.log("iconSelected changed", iconSelected),
-        [iconSelected],
-    );
-    useEffect(() => console.log("type changed", type), [type]);
 
     //init du SVG
     useEffect(() => {
@@ -217,6 +192,91 @@ export default function Graphique({
         />
     );
 }
+function addYearToNestedMap(
+    allData: { [key: string]: number[][] },
+    year: string,
+    nestedMapRef: RefObject<NestedMap3>,
+    processedYearsRef: RefObject<Set<string>>
+) {
+    if (!allData[year] || processedYearsRef.current.has(year)) return;
+
+    const parseDateMonth = d3.timeParse("%m %Y");
+    const monthToJSMonth: Record<number, number> = {
+        6: 0, 11: 1, 1: 2, 12: 3, 5: 4, 10: 5, 4: 6, 8: 7, 2: 8, 3: 9, 9: 10, 7: 11,
+    };
+
+    const yearData = allData[year];
+
+    for (const d of yearData) {
+        const countryId = d[0];
+        const typeId = d[1];
+        const monthId = d[2];
+        const productId = d[3];
+        const value = +d[4];
+
+        if (monthId === 0 || isNaN(value)) continue;
+
+        const date =
+            parseDateMonth(`${monthToJSMonth[monthId as keyof typeof monthToJSMonth]} ${year}`) ?? new Date(0);
+
+        const nestedMap = nestedMapRef.current;
+
+        // niveau 1 : country
+        if (!nestedMap.has(countryId)) nestedMap.set(countryId, new Map());
+        const productMap = nestedMap.get(countryId)!;
+
+        // niveau 2 : product
+        if (!productMap.has(productId)) productMap.set(productId, new Map());
+        const typeMap = productMap.get(productId)!;
+
+        // niveau 3 : type
+        if (!typeMap.has(typeId)) typeMap.set(typeId, []);
+        const entries = typeMap.get(typeId)!;
+
+        entries.push({ date, value });
+    }
+
+    processedYearsRef.current.add(year);
+}
+
+function flattenGlobalMap(
+    nestedMapRef: RefObject<NestedMap3>,
+    type: number[],
+    productsSelected: number[],
+    countriesSelected: number[],
+): DataPoint[] {
+    const countryMap = new Map<string, Country>(Object.entries(pays));
+    const typeMap: Record<string, string> = type_data;
+    const produitMap: Record<string, string> = list_products;
+
+    const result: DataPoint[] = [];
+    const nestedMap = nestedMapRef.current;
+
+    for (const [countryId, productMap] of nestedMap) {
+        if (countriesSelected.length && !countriesSelected.includes(countryId)) continue;
+
+        for (const [productId, typeMapLevel] of productMap) {
+            if (productsSelected.length && !productsSelected.includes(productId)) continue;
+
+            for (const [typeId, entries] of typeMapLevel) {
+                if (type.length && !type.includes(typeId)) continue;
+
+                for (const e of entries) {
+                    result.push({
+                        date: e.date,
+                        pays: countryMap.get(String(countryId))?.fr,
+                        produit: produitMap[String(productId)],
+                        type: typeMap[String(typeId)],
+                        value: e.value,
+                    });
+                }
+            }
+        }
+    }
+
+    return result.sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
 
 function filterData(
     allData: { [key: string]: number[][] },
