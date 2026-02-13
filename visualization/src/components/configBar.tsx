@@ -4,6 +4,7 @@ import { type JSX, useState } from "react";
 
 import list_products from "@/data/N890_LIB.json";
 import metadata from "@/data/metadata.json";
+import icon_symbol from "@/data/symboles.json";
 
 import Checkbox from "./personal.tsx/checkbox";
 import MonthSelector from "./personal.tsx/monthSelector";
@@ -14,8 +15,6 @@ interface ConfigBarProps {
     typeData: number;
     currentYear: number;
     currentMonth: number;
-    productsSelected: number[];
-    countriesSelected: number[];
     isMultipleMode: boolean;
     isCountryMode: boolean;
     setTypeData: (type: number) => void;
@@ -25,14 +24,13 @@ interface ConfigBarProps {
     setCountriesSelected: (countries: number[]) => void;
     setIsMultipleMode: (isMultiple: boolean) => void;
     setIsCountryMode: (isCountryMode: boolean) => void;
+    setIconSelected: (icons: string[]) => void;
 }
 
 export default function ConfigBar({
     typeData,
     currentYear,
     currentMonth,
-    productsSelected,
-    countriesSelected,
     isMultipleMode,
     isCountryMode,
     setTypeData,
@@ -42,6 +40,7 @@ export default function ConfigBar({
     setCountriesSelected,
     setIsMultipleMode,
     setIsCountryMode,
+    setIconSelected,
 }: ConfigBarProps): JSX.Element {
     const [isVolume, setIsVolume] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -80,6 +79,10 @@ export default function ConfigBar({
     function handleCountryModeChange(isCountryMode: boolean) {
         setIsCountryMode(isCountryMode);
         setCountriesSelected([]); // reset selected countries when changing mode
+    }
+
+    function handleNewIconSelected(newIcons: string[]) {
+        setIconSelected(newIcons);
     }
 
     return (
@@ -281,6 +284,7 @@ export default function ConfigBar({
 
             <p>Produits individuels :</p>
             <MultiSelect
+                id="lang"
                 options={Object.entries(list_products).map(([key, value]) => ({
                     label: value,
                     value: key,
@@ -294,6 +298,17 @@ export default function ConfigBar({
                 label="Mode de sélection multiple"
                 checked={isMultipleMode}
                 onChange={(e) => setIsMultipleMode(e.target.checked)}
+            />
+
+            <p>Evènements historiques :</p>
+            <MultiSelect
+                id="icon"
+                options={Object.keys(icon_symbol).map((key) => ({
+                    label: key,
+                    value: key,
+                }))}
+                onValueChange={handleNewIconSelected}
+                style={{ maxWidth: "360px" }}
             />
         </div>
     );

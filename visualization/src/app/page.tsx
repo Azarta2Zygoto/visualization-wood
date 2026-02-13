@@ -29,6 +29,7 @@ export default function HomePage(): JSX.Element {
     const [isMultipleMode, setIsMultipleMode] = useState<boolean>(false);
     const [isCountryMode, setIsCountryMode] = useState<boolean>(true);
     const [loadingYears, setLoadingYears] = useState<Set<number>>(new Set());
+    const [iconSelected, setIconSelected] = useState<string[]>([]);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -128,7 +129,7 @@ export default function HomePage(): JSX.Element {
                 type={[typeData]} //ya que 1 seul nombre pour le moment
                 productsSelected={productsSelected}
                 countriesSelected={countriesSelected}
-                iconSelected={["Politique", "Économie", "Géopolitique"]}
+                iconSelected={iconSelected}
                 all_events={allEvents}
             />
 
@@ -136,8 +137,6 @@ export default function HomePage(): JSX.Element {
                 typeData={typeData}
                 currentYear={currentYear}
                 currentMonth={currentMonth}
-                productsSelected={productsSelected}
-                countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
                 setTypeData={setTypeData}
@@ -147,6 +146,7 @@ export default function HomePage(): JSX.Element {
                 setCountriesSelected={setCountriesSelected}
                 setIsMultipleMode={setIsMultipleMode}
                 setIsCountryMode={setIsCountryMode}
+                setIconSelected={setIconSelected}
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />

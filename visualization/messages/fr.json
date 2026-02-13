@@ -13,7 +13,8 @@
     },
     "DefaultTexts": {
         "selectAnOption": "Sélectionnez une option",
-        "select": "Sélectionner un ou des langages de programmation",
+        "select-lang": "Sélectionner un ou des langages de programmation",
+        "select-icon": "Sélectionner un ou des types d'événements",
         "search": "Rechercher...",
         "all": "Tous",
         "clear": "Effacer",

@@ -8,6 +8,7 @@ import { type VariantProps, cva } from "class-variance-authority";
 import {
     CheckIcon,
     ChevronDown,
+    IdCard,
     WandSparkles,
     XCircle,
     XIcon,
@@ -31,6 +32,8 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+
+import MakeIcon from "../personal.tsx/makeIcon";
 
 /**
  * Animation types and configurations
@@ -316,6 +319,7 @@ export interface MultiSelectRef {
 export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     (
         {
+            id,
             options,
             onValueChange,
             defaultValue = [],
@@ -884,7 +888,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                             aria-describedby={`${triggerDescriptionId} ${selectedCountId}`}
                             aria-label={`Multi-select: ${selectedValues.length} of ${
                                 getAllOptions().length
-                            } options selected. ${t("select")}`}
+                            } options selected. ${t(`select${id}`)}}`}
                             className={cn(
                                 "flex p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto btn btn-select",
                                 autoSize ? "w-auto" : "w-full",
@@ -998,6 +1002,15 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                             )}
                                                         >
                                                             {option.label}
+                                                            {id === "icon" && (
+                                                                <MakeIcon
+                                                                    name={
+                                                                        option.label
+                                                                    }
+                                                                    width={15}
+                                                                    height={15}
+                                                                />
+                                                            )}
                                                         </span>
                                                         <div
                                                             role="button"
@@ -1125,7 +1138,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                             ) : (
                                 <div className="flex items-center justify-between w-full mx-auto">
                                     <span className="text-muted-foreground mx-3 overflow-hidden text-ellipsis whitespace-nowrap">
-                                        {t("select")}
+                                        {t(`select-${id}`)}
                                     </span>
                                     <ChevronDown
                                         className={`h-4 mx-2 cursor-pointer text-muted-foreground transition-transform duration-200 ${
@@ -1292,6 +1305,15 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                             />
                                                         )}
                                                         {option.label}
+                                                        {id === "icon" && (
+                                                            <MakeIcon
+                                                                name={
+                                                                    option.label
+                                                                }
+                                                                width={15}
+                                                                height={15}
+                                                            />
+                                                        )}
                                                     </CommandItem>
                                                 );
                                             })}
@@ -1349,6 +1371,13 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                         />
                                                     )}
                                                     {option.label}
+                                                    {id === "icon" && (
+                                                        <MakeIcon
+                                                            name={option.label}
+                                                            width={15}
+                                                            height={15}
+                                                        />
+                                                    )}
                                                 </CommandItem>
                                             );
                                         })}
