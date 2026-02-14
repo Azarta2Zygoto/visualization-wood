@@ -139,6 +139,29 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
         .y((d) => yScaleZoom(y(d)));
 
     // -------------------------------
+    // Tooltip HTML global
+    let Tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> =
+        d3.select("body").select(".line-chart-tooltip");
+
+    if (Tooltip.empty()) {
+        Tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "line-chart-tooltip")
+            .style("position", "absolute")
+            .style("background", "#fff")
+            .style("padding", "8px")
+            .style("border", "1px solid #999")
+            .style("border-radius", "6px")
+            .style("font-size", "12px")
+            .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)")
+            .style("pointer-events", "none")
+            .style("opacity", 0)
+            .style("max-width", "250px")          // largeur max
+            .style("white-space", "normal")      // permet le retour à la ligne
+            .style("overflow-wrap", "break-word"); // coupe les mots trop longs
+    }
+
+    // -------------------------------
     // JOIN des lignes avec clé symbol
     const t = plotArea
         .selectAll(".line")
@@ -178,7 +201,6 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             .attr("transform", `translate(0, 0)`)
             .attr("clip-path", `url(#${clipId})`);
     }
-
     iconsGroup
         .selectAll("use.event-icon")
         .data(events, (d: any) => d.titre_court)
@@ -222,16 +244,25 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .style("opacity", 0) // disparition progressive
                     .remove(),
         )
-        .on("mouseover", (e, d: any) => {
-            tooltip
-                .style("display", null)
-                .attr(
-                    "transform",
-                    `translate(${xScaleZoom(d.dateParsed) + 20}, ${20})`,
-                );
-            tooltipText.text(d.titre_court);
+        .on("mouseover", function (event, d: any) {
+            Tooltip
+                .style("opacity", 1)
+                .html(`
+            <strong>Titre :</strong> ${d.titre_court}<br>
+            <strong>Description : </strong>${d.description_rapide}<br>
+            <strong>Date :</strong> ${d3.timeFormat("%Y-%m-%d")(d.dateParsed)}
+        `);
         })
-        .on("mouseout", () => tooltip.style("display", "none"));
+        .on("mousemove", function (event) {
+            Tooltip
+                .style("left", `${event.pageX + 12}px`)
+                .style("top", `${event.pageY - 40}px`);
+        })
+        .on("mouseleave", function () {
+            Tooltip.style("opacity", 0);
+
+        });
+    ;
     // -------------------------------
     // Légende
     let legend = svg_animated.select<SVGGElement>("g.legend");
@@ -277,30 +308,20 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     exit.transition().duration(500).attr("opacity", 0).remove(),
                 ),
         );
-    // Tooltip et cercle
-    let tooltip = plotArea.select<SVGGElement>("g.tooltip");
+    // Cercle focus (point mobile)
+    let focus = plotArea.select<SVGGElement>("g.focus");
 
-    if (tooltip.empty()) {
-        tooltip = plotArea
+    if (focus.empty()) {
+        focus = plotArea
             .append("g")
-            .attr("class", "tooltip")
+            .attr("class", "focus")
             .style("display", "none");
 
-        tooltip
-            .append("circle")
+        focus.append("circle")
             .attr("r", 5)
             .attr("stroke", "white")
             .attr("stroke-width", 1.5);
-
-        tooltip
-            .append("text")
-            .attr("class", "tooltip-text")
-            .attr("x", 10)
-            .attr("y", -10)
-            .attr("font-size", 12)
-            .attr("font-weight", "bold");
     }
-    const tooltipText = tooltip.select<SVGGElement>("text.tooltip-text");
     // Zone pour capter la souris
     let mouseRect = plotArea.select<SVGRectElement>("rect.mouse-capture");
 
@@ -347,19 +368,40 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             });
 
             if (!closestStock || !closestValue) return;
+            const svgNode = svg_animated.node()!;
+            const point = svgNode.createSVGPoint();
 
-            tooltip
-                .style("display", null)
+            // coordonnées EXACTES du point focus dans le SVG
+            point.x = margin.left + xScaleZoom(x(closestValue!));
+            point.y = margin.top + yScaleZoom(y(closestValue!));
+
+            // transformation vers coordonnées écran
+            const screenPoint = point.matrixTransform(svgNode.getScreenCTM() as any);
+
+
+            Tooltip
+                .style("opacity", 1)
+                .html(`
+        <strong>${closestStock.symbol}</strong><br>
+        Date : ${d3.timeFormat("%Y-%m-%d")(x(closestValue!) as Date)}<br>
+        Valeur : ${y(closestValue!)}`)
+                .style("left", `${screenPoint.x + 10}px`)
+                .style("top", `${screenPoint.y + 600}px`);
+            // Afficher le focus
+            focus.style("display", null);
+
+            focus
                 .attr(
                     "transform",
-                    `translate(${xScaleZoom(x(closestValue!))},${yScaleZoom(y(closestValue!))})`,
+                    `translate(${xScaleZoom(x(closestValue!))},${yScaleZoom(y(closestValue!))})`
                 );
 
-            tooltip.select("circle").attr("fill", color(closestStock.symbol));
+            focus
+                .select("circle")
+                .attr("fill", color(closestStock.symbol));
 
-            tooltipText.text(`${closestStock.symbol}: ${y(closestValue!)}`);
         })
-        .on("mouseleave", () => tooltip.style("display", "none"));
+        .on("mouseleave", () => { Tooltip.style("opacity", 0); focus.style("display", "none"); });
 
     const zoom = d3
         .zoom()

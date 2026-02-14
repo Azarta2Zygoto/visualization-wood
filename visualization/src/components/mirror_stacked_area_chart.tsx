@@ -18,7 +18,6 @@ export default function updateMirrorStackedAreaChart(
 
     const width = 1200;
     const height = 500;
-
     const marginTop = 40;
     const marginRight = 100;
     const marginBottom = 40;
