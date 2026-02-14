@@ -124,14 +124,6 @@ export default function HomePage(): JSX.Element {
                 isCountryMode={isCountryMode}
                 setCountriesSelected={setCountriesSelected}
             />
-            <Graphique
-                allData={allData}
-                type={[typeData]} //ya que 1 seul nombre pour le moment
-                productsSelected={productsSelected}
-                countriesSelected={countriesSelected}
-                iconSelected={iconSelected}
-                all_events={allEvents}
-            />
 
             <ConfigBar
                 typeData={typeData}

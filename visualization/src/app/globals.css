@@ -326,7 +326,7 @@ main {
     cursor: grab;
 }
 .loading-container {
-    position: absolute;
+    position: fixed;
     top: 2rem;
     left: 2rem;
     display: flex;
