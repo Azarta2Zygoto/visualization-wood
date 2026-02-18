@@ -54,7 +54,7 @@ export function WorldMap({
     const { windowSize } = useGlobal();
 
     const correctionSize: [number, number] = [
-        windowSize.width / 2 - 10,
+        windowSize.width / 2 - 1,
         windowSize.height / 2,
     ] as const;
 
@@ -436,11 +436,11 @@ export function WorldMap({
                 // Create SVG
                 const mapSvg = d3
                     .select(svg)
-                    .attr("width", windowSize.width - 20)
+                    .attr("width", windowSize.width - 2)
                     .attr("height", windowSize.height)
                     .attr(
                         "viewBox",
-                        `0 0 ${windowSize.width - 20} ${windowSize.height}`,
+                        `0 0 ${windowSize.width - 2} ${windowSize.height}`,
                     );
 
                 const mapLayer = mapSvg.append("g").attr("class", "map-layer");

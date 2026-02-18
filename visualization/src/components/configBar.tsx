@@ -108,7 +108,7 @@ export default function ConfigBar({
                     type="button"
                     onClick={() => handleCountryModeChange(true)}
                     style={{
-                        width: "180px",
+                        width: "clamp(90px, 15vw, 180px)",
                         borderTopRightRadius: 0,
                         borderBottomRightRadius: 0,
                     }}
@@ -120,7 +120,7 @@ export default function ConfigBar({
                     type="button"
                     onClick={() => handleCountryModeChange(false)}
                     style={{
-                        width: "180px",
+                        width: "clamp(90px, 15vw, 180px)",
                         borderLeft: "none",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
@@ -139,7 +139,7 @@ export default function ConfigBar({
                     type="button"
                     onClick={() => handleTypeDataChange(0, isVolume)}
                     style={{
-                        width: "120px",
+                        width: "clamp(60px, 10vw, 120px)",
                         borderTopRightRadius: 0,
                         borderBottomLeftRadius: 0,
                         borderBottomRightRadius: 0,
@@ -153,7 +153,7 @@ export default function ConfigBar({
                     onClick={() => handleTypeDataChange(1, isVolume)}
                     style={{
                         borderRadius: 0,
-                        width: "120px",
+                        width: "clamp(60px, 10vw, 120px)",
                         borderLeft: "none",
                     }}
                 >
@@ -164,7 +164,7 @@ export default function ConfigBar({
                     type="button"
                     onClick={() => handleTypeDataChange(4, isVolume)}
                     style={{
-                        width: "120px",
+                        width: "clamp(60px, 10vw, 120px)",
                         borderLeft: "none",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
@@ -184,7 +184,7 @@ export default function ConfigBar({
                     disabled={typeData === 4}
                     onClick={() => handleTypeDataChange(typeData, true)}
                     style={{
-                        width: "180px",
+                        width: "clamp(90px, 15vw, 180px)",
                         borderTop: "none",
                         borderTopRightRadius: 0,
                         borderTopLeftRadius: 0,
@@ -198,7 +198,7 @@ export default function ConfigBar({
                     type="button"
                     onClick={() => handleTypeDataChange(typeData, false)}
                     style={{
-                        width: "180px",
+                        width: "clamp(90px, 15vw, 180px)",
                         borderLeft: "none",
                         borderTop: "none",
                         borderTopLeftRadius: 0,
@@ -280,9 +280,8 @@ export default function ConfigBar({
                 currentMonth={currentMonth}
                 setCurrentMonth={setCurrentMonth}
             />
-            <p>Groupe de produits :</p>
 
-            <p>Produits individuels :</p>
+            <p>Choix du produit :</p>
             <MultiSelect
                 id="lang"
                 options={Object.entries(list_products).map(([key, value]) => ({
@@ -290,7 +289,7 @@ export default function ConfigBar({
                     value: key,
                 }))}
                 onValueChange={handleNewProductsSelected}
-                style={{ maxWidth: "360px" }}
+                style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
             />
             <p>Pays sélectionnés :</p>
             <Checkbox
@@ -308,7 +307,7 @@ export default function ConfigBar({
                     value: key,
                 }))}
                 onValueChange={handleNewIconSelected}
-                style={{ maxWidth: "360px" }}
+                style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
             />
         </div>
     );

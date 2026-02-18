@@ -11,7 +11,7 @@ function getScrollState() {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const maxScrollTop =
         document.documentElement.scrollHeight - window.innerHeight;
-    const threshold = 2;
+    const threshold = 10; // Threshold in pixels to consider as "can scroll"
 
     return {
         canScrollUp: scrollTop > threshold,

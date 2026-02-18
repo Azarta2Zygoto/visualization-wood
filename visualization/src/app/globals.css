@@ -11,6 +11,7 @@
     --on-map: #a0d4ffbb;
     --hover-bg: #d0e7ffcc;
     --selected-bg: #cfe2facc;
+    --text-p: clamp(0.7rem, 1.5vw, 1rem);
 }
 
 @media (prefers-reduced-motion) {
@@ -107,6 +108,7 @@ main {
     color: var(--fg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
+    font-size: var(--text-p);
     text-decoration: none;
     cursor: pointer;
     box-shadow: none;
@@ -194,6 +196,7 @@ main {
     flex-direction: column;
     width: fit-content;
     gap: 0.25rem;
+    font-size: var(--text-p);
     max-height: clamp(150px, 40vh, 400px);
     background-color: var(--on-map);
     overflow-y: auto;
@@ -247,7 +250,7 @@ main {
 
 .scroll-arrows {
     position: fixed;
-    right: 5rem;
+    right: clamp(1rem, 2vw, 5rem);
     bottom: 2rem;
     display: flex;
     flex-direction: column;
@@ -269,7 +272,7 @@ main {
 }
 
 .config-bar.closed {
-    right: -395px;
+    right: clamp(-395px, calc(-30vw + -35px), -215px);
 }
 
 .tooltip-map {
@@ -323,6 +326,11 @@ main {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
     cursor: pointer;
+}
+p,
+span,
+label {
+    font-size: var(--text-p);
 }
 .map-layer {
     max-width: 100%;
