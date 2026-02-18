@@ -24,6 +24,7 @@ import TooltipMap from "./tooltipMap";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const pays_english = new Set(Object.values(pays).map((country) => country.en));
 const animationDuration = 800;
+const ParisCoord: [number, number] = [2.3522, 48.8566];
 
 interface WorldMapProps {
     allData: { [key: string]: number[][] };
@@ -48,8 +49,19 @@ export function WorldMap({
     isCountryMode = false,
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
+    const { windowSize } = useGlobal();
+
+    const correctionSize: [number, number] = [
+        windowSize.width / 2 - 10,
+        windowSize.height / 2,
+    ] as const;
+
     const svgRef = useRef<SVGSVGElement>(null);
     const worldDataCache = useRef<any>(null);
+    const projectionRef = useRef<d3.GeoProjection | null>(null);
+    const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
+    const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
+
     const [tooltipData, setTooltipData] = useState<{
         appear: boolean;
         year: number;
@@ -80,9 +92,6 @@ export function WorldMap({
         null,
         undefined
     > | null>(null);
-    const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
-    const zoomScaleRef = useRef(1);
-    const { windowSize } = useGlobal();
 
     const applyLegendZoom = useCallback(
         (
@@ -100,9 +109,41 @@ export function WorldMap({
                 .attr("cy", (d) => baseY - radiusScale(d) * zoomScale)
                 .attr("cx", () => Math.max(100 + 50 * (zoomScale - 1), 100));
 
+            if (isCountryMode)
+                legend
+                    .selectAll<SVGTextElement, number>(".legend-label")
+                    .attr(
+                        "y",
+                        (d) => baseY - radiusScale(d) * zoomScale * 2 + 5,
+                    );
+            else
+                legend
+                    .selectAll<SVGTextElement, number>(".legend-label")
+                    .attr(
+                        "y",
+                        (d, i) =>
+                            45 +
+                            25 * i +
+                            (radiusScale(d) * zoomScale * (i - 2)) / 2,
+                    );
+
             legend
-                .selectAll<SVGTextElement, number>(".legend-label")
-                .attr("y", (d) => baseY - radiusScale(d) * zoomScale * 2 + 5);
+                .selectAll<SVGLineElement, number>(".legend-line")
+                .attr(
+                    "y1",
+                    (d, i) =>
+                        45 +
+                        25 * i +
+                        (radiusScale(d) * zoomScale * (i - 2)) / 2,
+                )
+                .attr(
+                    "y2",
+                    (d, i) =>
+                        45 +
+                        25 * i +
+                        (radiusScale(d) * zoomScale * (i - 2)) / 2,
+                )
+                .attr("stroke-width", (d) => radiusScale(d) * zoomScale);
 
             legend
                 .selectAll<SVGLineElement, number>(".legend-tick")
@@ -126,38 +167,68 @@ export function WorldMap({
                 })
                 .selectAll<SVGTextElement, unknown>(".legend-text");
 
-            const rectWidth = Math.max(Math.min(140 * zoomScale, 300), 140);
-            const rectHeight = Math.max(Math.min(110 * zoomScale, 250), 110);
+            if (isCountryMode) {
+                const rectWidth = Math.max(
+                    Math.min(140 * zoomScale ** 0.75, 300),
+                    140,
+                );
+                const rectHeight = Math.max(
+                    Math.min(130 * zoomScale ** 0.75, 250),
+                    130,
+                );
 
-            element
-                .attr("width", rectWidth)
-                .attr("height", rectHeight)
-                .attr("x", 0)
-                .attr("y", -rectHeight + 110);
-            clipRect
-                .attr("width", rectWidth)
-                .attr("height", rectHeight)
-                .attr("x", 0)
-                .attr("y", -rectHeight + 110);
+                element
+                    .attr("width", rectWidth)
+                    .attr("height", rectHeight)
+                    .attr("x", 0)
+                    .attr("y", -rectHeight + 110);
+                clipRect
+                    .attr("width", rectWidth)
+                    .attr("height", rectHeight)
+                    .attr("x", 0)
+                    .attr("y", -rectHeight + 110);
 
-            legendText.attr("x", 10).attr("y", -rectHeight + 135);
-            console.log("Applied legend zoom with scale:", zoomScale, element);
+                legendText.attr("x", 10).attr("y", -rectHeight + 135);
+            } else {
+                const rectWidth = Math.max(
+                    Math.min(140 * zoomScale ** 0.18, 300),
+                    140,
+                );
+                const rectHeight = Math.max(
+                    Math.min(130 * zoomScale ** 0.18, 250),
+                    130,
+                );
+                element
+                    .attr("width", rectWidth)
+                    .attr("height", rectHeight)
+                    .attr("x", 0)
+                    .attr("y", -rectHeight + 110);
+                clipRect
+                    .attr("width", rectWidth)
+                    .attr("height", rectHeight)
+                    .attr("x", 0)
+                    .attr("y", -rectHeight + 110);
+
+                legendText.attr("x", 10).attr("y", -rectHeight + 135);
+            }
         },
-        [],
+        [isCountryMode],
     );
 
     useEffect(() => {
-        console.log("Loading map with isCountryMode =", isCountryMode);
-
         const loadMap = async () => {
             const svg = svgRef.current;
             if (!svg) return;
+
+            // Save current transform before clearing
+            const savedTransform = currentTransformRef.current;
 
             // Create projection and path
             const projection = d3
                 .geoNaturalEarth1()
                 .scale(310)
-                .translate([windowSize.width / 2 - 10, windowSize.height / 2]);
+                .translate(correctionSize);
+            projectionRef.current = projection;
 
             const pathGenerator = d3.geoPath().projection(projection);
 
@@ -187,11 +258,9 @@ export function WorldMap({
                         ) as any
                     ).features;
                 } else {
-                    console.log("Merging countries by continent");
-
                     Object.keys(continent).forEach((cont) => {
                         const countriesInContinent =
-                            continent[cont as keyof typeof continent];
+                            continent[cont as keyof typeof continent].countries;
 
                         const countriesSet = new Set(
                             Object.entries(countriesInContinent).map(
@@ -229,7 +298,6 @@ export function WorldMap({
                             },
                             geometry: mergedGeometry,
                         };
-
                         features.push(mergedFeature);
                     });
                 }
@@ -245,6 +313,7 @@ export function WorldMap({
                     );
 
                 const mapLayer = mapSvg.append("g").attr("class", "map-layer");
+
                 const legendLayer = mapSvg
                     .append("g")
                     .attr("class", "legend-layer")
@@ -264,11 +333,20 @@ export function WorldMap({
                     .scaleExtent([0.5, 10])
                     .on("zoom", (event) => {
                         mapLayer.attr("transform", event.transform);
-                        zoomScaleRef.current = event.transform.k;
+                        currentTransformRef.current = event.transform;
                         applyLegendZoom(correctLegend, event.transform.k);
                     });
 
                 mapSvg.call(zoom);
+
+                // Restore previous transform
+                if (
+                    (savedTransform && savedTransform.k !== 1) ||
+                    savedTransform.x !== 0 ||
+                    savedTransform.y !== 0
+                ) {
+                    mapSvg.call(zoom.transform, savedTransform);
+                }
 
                 // Draw countries
                 mapLayer
@@ -308,6 +386,9 @@ export function WorldMap({
                         return know ? "pointer" : "default";
                     });
 
+                // Create arrow layer after countries so arrows appear on top
+                mapLayer.append("g").attr("class", "arrow-layer");
+
                 // Build a list of points with projected positions
                 const pointData = features
                     .map((feature: any) => {
@@ -338,13 +419,12 @@ export function WorldMap({
             } catch {
                 d3.select(svg)
                     .append("text")
-                    .attr("x", windowSize.width / 2 - 10)
-                    .attr("y", windowSize.height / 2)
+                    .attr("x", correctionSize[0])
+                    .attr("y", correctionSize[1])
                     .attr("text-anchor", "middle")
                     .text("Error loading map data");
             }
         };
-
         loadMap();
     }, [applyLegendZoom, isCountryMode, windowSize.height, windowSize.width]);
 
@@ -399,8 +479,6 @@ export function WorldMap({
         if (!layer) return;
 
         layer.selectAll(".country").on("click", (_: any, d: any) => {
-            console.log("Country clicked:", d.properties.name);
-
             const countryName = d.properties.name;
             const countryCode = Object.keys(pays).find(
                 (key) => pays[key as keyof typeof pays].en === countryName,
@@ -424,24 +502,51 @@ export function WorldMap({
     const handleCountryMouseover = useCallback(
         (event: any) => {
             // Visual feedback
-            d3.select(event.currentTarget)
-                .attr("stroke-width", (d: any) => {
-                    const know = isCountryMode
-                        ? pays_english.has(d.properties.name) ||
-                          d.properties.name === "France"
-                        : true;
-                    return know ? 1.5 : 0.5;
-                })
-                .attr("opacity", (d: any) => {
+
+            if (event.target.__data__.continentCode) {
+                d3.select(event.currentTarget).attr("opacity", (d: any) => {
                     const know = isCountryMode
                         ? pays_english.has(d.properties.name) ||
                           d.properties.name === "France"
                         : true;
                     return know ? 0.6 : 1;
                 });
+                d3.selectAll(".data-arrow").attr("opacity", (d: any) => {
+                    if (d.continentCode !== event.target.__data__.continentCode)
+                        return 1;
+                    return 0.6;
+                });
+            } else
+                d3.select(event.currentTarget)
+                    .attr("stroke-width", (d: any) => {
+                        const know = isCountryMode
+                            ? pays_english.has(d.properties.name) ||
+                              d.properties.name === "France"
+                            : true;
+                        return know ? 1.5 : 0.5;
+                    })
+                    .attr("opacity", (d: any) => {
+                        const know = isCountryMode
+                            ? pays_english.has(d.properties.name) ||
+                              d.properties.name === "France"
+                            : true;
+                        return know ? 0.6 : 1;
+                    });
 
             // Tooltip data (read from ref to get current data)
-            const currentCountryName = event.target.__data__.properties.name;
+            let currentCountryName = "";
+            if (event.target.__data__.properties) {
+                currentCountryName = event.target.__data__.properties.name;
+            } else if (event.target.__data__.continentCode) {
+                const continentCode = event.target.__data__.continentCode;
+                const continentInt = Object.keys(pays).find(
+                    (key) =>
+                        pays[key as keyof typeof pays].code === continentCode,
+                ) as string;
+                currentCountryName =
+                    pays[continentInt as keyof typeof pays]?.en ||
+                    continentCode;
+            }
             if (!lectureData[currentCountryName] && isCountryMode) return;
 
             const typeKey = type.toString() as keyof typeof type_data;
@@ -461,9 +566,13 @@ export function WorldMap({
     );
 
     const handleCountryMouseout = useCallback((event: any) => {
-        d3.select(event.currentTarget)
-            .attr("stroke-width", 0.5)
-            .attr("opacity", 1);
+        console.log("Mouse out:", event.target.__data__);
+        if (event.target.__data__.continentCode) {
+            d3.selectAll(".data-arrow").attr("opacity", 1);
+        } else
+            d3.select(event.currentTarget)
+                .attr("stroke-width", 0.5)
+                .attr("opacity", 1);
         setTooltipData((prev) => ({ ...prev, appear: false }));
     }, []);
 
@@ -473,14 +582,20 @@ export function WorldMap({
         if (!svg) return;
 
         const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
-        const legendLayer = d3.select(svg).select<SVGGElement>(".legend-layer");
-        if (mapLayer.empty() || legendLayer.empty()) return;
+        if (mapLayer.empty()) return;
 
         // Attach handlers (handlers are stable and read from ref)
         mapLayer
             .selectAll(".known-country")
             .on("mouseover", handleCountryMouseover)
             .on("mouseout", handleCountryMouseout);
+
+        return () => {
+            mapLayer
+                .selectAll(".known-country")
+                .on("mouseover", null)
+                .on("mouseout", null);
+        };
     }, [handleCountryMouseover, handleCountryMouseout]);
 
     // Effect 4: Update data circles based on filtered data
@@ -493,120 +608,85 @@ export function WorldMap({
         const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
         if (mapLayer.empty()) return;
 
-        const typeKey = type.toString() as keyof typeof type_data;
-        // Build point data ONLY for countries with values
-        const pointData = dataPointOnMap
-            .map((point) => {
-                const countryName = point.countryName;
-                const value = lectureData[countryName]?.[typeKey];
+        if (isCountryMode) {
+            const typeKey = type.toString() as keyof typeof type_data;
+            // Build point data ONLY for countries with values
+            const pointData = dataPointOnMap
+                .map((point) => {
+                    const countryName = point.countryName;
+                    const value = lectureData[countryName]?.[typeKey];
 
-                if (!value) return null;
-                return {
-                    countryName,
-                    value,
-                    x: point.x,
-                    y: point.y,
-                };
-            })
-            .filter(Boolean) as Array<{
-            countryName: string;
-            value: number;
-            x: number;
-            y: number;
-        }>;
+                    if (!value) return null;
+                    return {
+                        countryName,
+                        value,
+                        x: point.x,
+                        y: point.y,
+                    };
+                })
+                .filter(Boolean) as Array<{
+                countryName: string;
+                value: number;
+                x: number;
+                y: number;
+            }>;
 
-        // Find max value for scaling
-        const maxValue = Math.max(...pointData.map((d) => d.value), 1);
-        const radiusScale = d3
-            .scaleLinear()
-            .domain([0, maxValue])
-            .range([0, 30]);
+            // Find max value for scaling
+            const maxValue = Math.max(...pointData.map((d) => d.value), 1);
 
-        legendScaleRef.current = radiusScale;
+            legendScaleRef.current = makeCircleProjection(
+                mapLayer,
+                legendLayer,
+                pointData,
+                currentTransformRef.current.k,
+                maxValue,
+                applyLegendZoom,
+                handleCountryMouseover,
+                handleCountryMouseout,
+            );
+        } else {
+            const projection = projectionRef.current;
+            if (!projection) return;
 
-        if (legendLayer) {
-            legendLayer.selectAll("*").remove();
+            const pointData = Object.entries(continent).map(
+                ([cont, values]) => {
+                    const countryCode = Object.keys(pays).find(
+                        (key) => pays[key as keyof typeof pays].code === cont,
+                    );
+                    const countryName =
+                        pays[countryCode as keyof typeof pays]?.en || cont;
 
-            const legendValues = [maxValue, maxValue / 2, maxValue / 4];
+                    return {
+                        countryName: cont,
+                        value:
+                            lectureData[countryName]?.[
+                                type.toString() as keyof typeof type_data
+                            ] || 0,
+                        x:
+                            projection(
+                                values.center as [number, number],
+                            )?.[0] || 0,
+                        y:
+                            projection(
+                                values.center as [number, number],
+                            )?.[1] || 0,
+                    };
+                },
+            );
 
-            legendLayer
-                .selectAll(".legend-circle")
-                .data(legendValues)
-                .enter()
-                .append("circle")
-                .attr("class", "legend-circle")
-                .attr("cx", 100)
-                .attr("cy", (d) => 50 + 30 * 2 - radiusScale(d))
-                .attr("r", (d) => radiusScale(d))
-                .attr("fill", "#ff9800")
-                .attr("opacity", 0.7)
-                .attr("stroke", "#e65100")
-                .attr("stroke-width", 1);
-
-            legendLayer
-                .selectAll(".legend-label")
-                .data(legendValues)
-                .enter()
-                .append("text")
-                .attr("class", "legend-label")
-                .attr("x", 10)
-                .attr("y", (d) => 50 + 30 * 2 - radiusScale(d) * 2 + 5)
-                .attr("fill", "#333")
-                .attr("font-size", 12)
-                .text((d) => (d / 1000).toFixed(0) + "000");
-
-            legendLayer
-                .selectAll(".legend-tick")
-                .data(legendValues)
-                .enter()
-                .append("line")
-                .attr("class", "legend-tick")
-                .attr("x1", 100)
-                .attr("y1", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
-                .attr("x2", 60)
-                .attr("y2", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
-                .attr("stroke", "#333")
-                .attr("stroke-width", 1);
-
-            applyLegendZoom(legendLayer, zoomScaleRef.current);
+            const maxValue = Math.max(...pointData.map((d) => d.value), 1);
+            legendScaleRef.current = makeArrowProjection(
+                mapLayer,
+                legendLayer,
+                projection,
+                pointData,
+                currentTransformRef.current.k,
+                maxValue,
+                applyLegendZoom,
+                handleCountryMouseover,
+                handleCountryMouseout,
+            );
         }
-
-        // Bind data to circles (only countries with data)
-        const circles = mapLayer
-            .selectAll<
-                SVGCircleElement,
-                (typeof pointData)[number]
-            >(".data-point")
-            .data(pointData, (d) => d.countryName);
-
-        circles
-            .exit()
-            .transition()
-            .duration(animationDuration)
-            .attr("r", 0)
-            .remove();
-
-        // Enter + Update
-        circles
-            .enter()
-            .append("circle")
-            .attr("class", "data-point")
-            .attr("cx", (d) => d.x)
-            .attr("cy", (d) => d.y)
-            .attr("r", 0)
-            .attr("fill", "#ff9800")
-            .attr("opacity", 0.7)
-            .attr("stroke", "#e65100")
-            .attr("stroke-width", 1)
-            .style("cursor", "pointer")
-            .transition()
-            .duration(animationDuration)
-            .attr("r", (d) => radiusScale(d.value));
-
-        circles
-            .transition()
-            .duration(animationDuration)
-            .attr("r", (d) => radiusScale(d.value));
     }, [
         applyLegendZoom,
         lectureData,
@@ -614,6 +694,9 @@ export function WorldMap({
         dataPointOnMap,
         legendLayer,
         windowSize.height,
+        isCountryMode,
+        handleCountryMouseover,
+        handleCountryMouseout,
     ]);
 
     return (
@@ -654,7 +737,7 @@ function createLegend(
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", 140)
-        .attr("height", 110)
+        .attr("height", 130)
         .attr("rx", 8)
         .attr("fill", "#ffffffaa")
         .attr("stroke", "#999")
@@ -676,4 +759,320 @@ function createLegend(
         .attr("transform", `translate(0, -10)`);
 
     return innerLegend;
+}
+
+function makeCircleProjection(
+    mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
+    legendLayer: d3.Selection<SVGGElement, unknown, null, undefined> | null,
+    pointData: Array<{
+        countryName: string;
+        value: number;
+        x: number;
+        y: number;
+    }>,
+    zoom: number,
+    maxValue: number,
+    applyZoom: (
+        legend: d3.Selection<SVGGElement, unknown, null, undefined>,
+        zoomScale: number,
+    ) => void,
+    onMouseover: (event: any) => void,
+    onMouseout: (event: any) => void,
+): d3.ScaleLinear<number, number, never> {
+    const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, 30]);
+
+    if (legendLayer) {
+        legendLayer.selectAll("*").remove();
+
+        const legendValues = [maxValue, maxValue / 2, maxValue / 4];
+
+        legendLayer
+            .selectAll(".legend-circle")
+            .data(legendValues)
+            .enter()
+            .append("circle")
+            .attr("class", "legend-circle")
+            .attr("cx", 100)
+            .attr("cy", (d) => 50 + 30 * 2 - radiusScale(d))
+            .attr("r", (d) => radiusScale(d))
+            .attr("fill", "#ff9800")
+            .attr("opacity", 0.7)
+            .attr("stroke", "#e65100")
+            .attr("stroke-width", 1);
+
+        legendLayer
+            .selectAll(".legend-label")
+            .data(legendValues)
+            .enter()
+            .append("text")
+            .attr("class", "legend-label")
+            .attr("x", 10)
+            .attr("y", (d) => 50 + 30 * 2 - radiusScale(d) * 2 + 5)
+            .attr("fill", "#333")
+            .attr("font-size", 12)
+            .text((d) => (d / 1000).toFixed(0) + "000");
+
+        legendLayer
+            .selectAll(".legend-tick")
+            .data(legendValues)
+            .enter()
+            .append("line")
+            .attr("class", "legend-tick")
+            .attr("x1", 100)
+            .attr("y1", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
+            .attr("x2", 60)
+            .attr("y2", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
+            .attr("stroke", "#333")
+            .attr("stroke-width", 1);
+
+        applyZoom(legendLayer, zoom);
+    }
+
+    // Bind data to circles (only countries with data)
+    const circles = mapLayer
+        .selectAll<SVGCircleElement, (typeof pointData)[number]>(".data-point")
+        .data(pointData, (d) => d.countryName);
+
+    circles
+        .exit()
+        .transition()
+        .duration(animationDuration)
+        .attr("r", 0)
+        .remove();
+
+    // Enter + Update
+    circles
+        .enter()
+        .append("circle")
+        .attr("class", "data-point")
+        .attr("cx", (d) => d.x)
+        .attr("cy", (d) => d.y)
+        .attr("r", 0)
+        .attr("fill", "#ff9800")
+        .attr("opacity", 0.7)
+        .attr("stroke", "#e65100")
+        .attr("stroke-width", 1)
+        .style("cursor", "pointer")
+        .transition()
+        .duration(animationDuration)
+        .attr("r", (d) => radiusScale(d.value));
+
+    circles
+        .transition()
+        .duration(animationDuration)
+        .attr("r", (d) => radiusScale(d.value));
+
+    // Attach hover handlers to circles
+    mapLayer
+        .selectAll(".data-point")
+        .on("mouseover", onMouseover)
+        .on("mouseout", onMouseout);
+
+    return radiusScale;
+}
+
+function makeArrowProjection(
+    mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
+    legendLayer: d3.Selection<SVGGElement, unknown, null, undefined> | null,
+    projection: d3.GeoProjection,
+    pointData: Array<{
+        countryName: string;
+        value: number;
+        x: number;
+        y: number;
+    }>,
+    zoom: number,
+    maxValue: number,
+    applyZoom: (
+        legend: d3.Selection<SVGGElement, unknown, null, undefined>,
+        zoomScale: number,
+    ) => void,
+    onMouseover: (event: any) => void,
+    onMouseout: (event: any) => void,
+): d3.ScaleLinear<number, number, never> {
+    const continents = Object.keys(continent);
+
+    // Build arcs and associated data for each continent
+    const arcsData = continents
+        .map((cont) => {
+            const continentInfo = continent[cont as keyof typeof continent];
+            const center = continentInfo.center as [number, number];
+            // Center is in [lat, lon] format, but d3.geoInterpolate needs [lon, lat]
+            const targetGeoCoords: [number, number] = [center[1], center[0]];
+
+            // Find the value for this continent from pointData
+            const pointDataItem = pointData.find((d) => d.countryName === cont);
+            const value = pointDataItem?.value || 0;
+
+            if (!value) return null;
+
+            // Create interpolation in geographic coordinates (lon, lat)
+            const interpolate = d3.geoInterpolate(ParisCoord, targetGeoCoords);
+
+            // Generate arc points by interpolating and then projecting to screen coordinates
+            const arcPoints = d3
+                .range(0, 1.001, 0.05)
+                .map((t) => {
+                    const geoCoords = interpolate(t);
+                    return projection(geoCoords as [number, number]);
+                })
+                .filter((point): point is [number, number] => !!point);
+
+            return {
+                continentCode: cont,
+                arcPoints,
+                value,
+            };
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    const line = d3
+        .line<[number, number]>()
+        .curve(d3.curveBasis)
+        .defined((d) => !!d);
+
+    const strokeScale = d3.scaleLinear().domain([0, maxValue]).range([1.5, 6]);
+
+    const arrowLayer = mapLayer.select<SVGGElement>(".arrow-layer");
+    const arrowPath = arrowLayer
+        .selectAll<SVGPathElement, (typeof arcsData)[number]>(".data-arrow")
+        .data(arcsData, (d) => d.continentCode);
+
+    arrowPath.exit().remove();
+
+    const arrowEnter = arrowPath
+        .enter()
+        .append("path")
+        .attr("class", "data-arrow")
+        .attr("fill", "none")
+        .attr("stroke", "#ff9800")
+        .attr("d", (d) => line(d.arcPoints) || "")
+        .attr("stroke-dasharray", function () {
+            const length = (this as SVGPathElement).getTotalLength();
+            return `${length}`;
+        })
+        .attr("stroke-dashoffset", function () {
+            const length = (this as SVGPathElement).getTotalLength();
+            return `${length}`;
+        });
+
+    arrowEnter
+        .merge(arrowPath)
+        .attr("stroke-width", (d) => strokeScale(d.value))
+        .transition()
+        .duration(animationDuration)
+        .attr("stroke-dashoffset", "0");
+
+    // Create/Update custom arrowheads as separate paths
+    const arrowheads = arrowLayer
+        .selectAll<SVGPathElement, (typeof arcsData)[number]>(".arrow-head")
+        .data(arcsData, (d) => d.continentCode);
+
+    arrowheads.exit().remove();
+
+    const arrowheadSize = 17;
+
+    const arrowheadEnter = arrowheads
+        .enter()
+        .append("path")
+        .attr("class", "arrow-head data-arrow")
+        .attr("fill", "#ff9800")
+        .attr("stroke", "none");
+
+    arrowheadEnter
+        .merge(arrowheads)
+        .attr("d", (d) => {
+            if (d.arcPoints.length < 2) return "";
+
+            const end = d.arcPoints[d.arcPoints.length - 1];
+            const tipX = end[0];
+            const tipY = end[1];
+
+            return `M${tipX},${tipY}L${tipX},${tipY}L${tipX},${tipY}Z`;
+        })
+        .transition()
+        .delay(animationDuration * 0.9) // Start fading in near the end of arrow animation
+        .duration(animationDuration * 0.2)
+        .attr("d", (d) => calculateArrowHead(d, arrowheadSize, maxValue));
+
+    arrowheadEnter
+        .transition()
+        .delay(animationDuration * 0.9) // Start fading in near the end of arrow animation
+        .duration(animationDuration * 0.2)
+        .attr("d", (d) => calculateArrowHead(d, arrowheadSize, maxValue));
+
+    // Attach hover handlers to both arrows and arrowheads
+    mapLayer
+        .selectAll(".data-arrow")
+        .on("mouseover", onMouseover)
+        .on("mouseout", onMouseout);
+
+    if (legendLayer) {
+        legendLayer.selectAll("*").remove();
+
+        const legendValues = [maxValue, maxValue / 2, maxValue / 4];
+        legendLayer
+            .selectAll(".legend-line")
+            .data(legendValues)
+            .enter()
+            .append("line")
+            .attr("class", "legend-line")
+            .attr("x1", 100)
+            .attr("y1", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
+            .attr("x2", 120)
+            .attr("y2", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
+            .attr("stroke", "#ff9800")
+            .attr("stroke-width", (d) => strokeScale(d));
+
+        legendLayer
+            .selectAll(".legend-label")
+            .data(legendValues)
+            .enter()
+            .append("text")
+            .attr("class", "legend-label")
+            .attr("x", 10)
+            .attr("y", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
+            .attr("fill", "#333")
+            .attr("font-size", 12)
+            .text((d) => (d / 1000).toFixed(0) + "000");
+
+        applyZoom(legendLayer, zoom);
+    }
+    return strokeScale;
+}
+
+function calculateArrowHead(
+    d: {
+        arcPoints: [number, number][];
+        value: number;
+    },
+    arrowheadSize: number,
+    maxValue: number,
+): string {
+    if (d.arcPoints.length < 2) return "";
+
+    const end = d.arcPoints[d.arcPoints.length - 1];
+    const prev = d.arcPoints[d.arcPoints.length - 2];
+
+    // Calculate angle for arrowhead rotation
+    const angle = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
+
+    // Create arrowhead triangle points
+    const size = 3 + arrowheadSize * (d.value / maxValue) ** 0.5; // Scale size by value (sqrt for better visual distribution)
+    const tipX = end[0];
+    const tipY = end[1];
+
+    // Point 1: tip of arrow
+    const p1X = tipX + size * Math.cos(angle);
+    const p1Y = tipY + size * Math.sin(angle);
+
+    // Point 2: left side of arrow base
+    const p2X = end[0] - size * Math.cos(angle - Math.PI / 6);
+    const p2Y = end[1] - size * Math.sin(angle - Math.PI / 6);
+
+    // Point 3: right side of arrow base
+    const p3X = end[0] - size * Math.cos(angle + Math.PI / 6);
+    const p3Y = end[1] - size * Math.sin(angle + Math.PI / 6);
+
+    return `M${p1X},${p1Y}L${p2X},${p2Y}L${p3X},${p3Y}Z`;
 }
