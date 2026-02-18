@@ -17,6 +17,8 @@ import type_data from "@/data/N027_LIB.json";
 import continent from "@/data/continent.json";
 import pays from "@/data/country_extended.json";
 import type { CountryData } from "@/data/types";
+import { MakeBalance } from "@/utils/balance";
+import { Legend } from "@/utils/colorLegend";
 
 import { useGlobal } from "./globalProvider";
 import TooltipMap from "./tooltipMap";
@@ -610,8 +612,115 @@ export function WorldMap({
         const svg = svgRef.current;
         if (!svg) return;
 
+        d3.select(svg).selectAll(".color-legend").remove();
         const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
         if (mapLayer.empty()) return;
+
+        const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
+        legend.transition().duration(animationDuration).attr("opacity", "1");
+
+        if (type === 4) {
+            legend
+                .transition()
+                .duration(animationDuration)
+                .attr("opacity", "0");
+
+            const pointData = MakeBalance({
+                lectureData,
+                countries: isCountryMode ? dataPointOnMap : undefined,
+                continent: !isCountryMode ? continent : undefined,
+            });
+
+            const maxValue = Math.max(
+                ...pointData.map((d) => Math.abs(d.value)),
+                1,
+            );
+            const minValue = Math.min(...pointData.map((d) => d.value), 0);
+
+            const arrowLayer = mapLayer.select<SVGGElement>(".arrow-layer");
+            const arrows = arrowLayer.selectAll<
+                SVGPathElement,
+                [number, number][number]
+            >(".data-arrow");
+
+            arrows
+                .transition()
+                .duration(animationDuration)
+                .attr("stroke-dashoffset", function () {
+                    const length = (this as SVGPathElement).getTotalLength();
+                    return `${length}`;
+                });
+
+            const headArrows = arrowLayer.selectAll<
+                SVGPathElement,
+                {
+                    continentCode: string;
+                    arcPoints: [number, number][];
+                    value: number;
+                }
+            >(".arrow-head");
+
+            headArrows
+                .transition()
+                .duration(animationDuration * 0.3)
+                .attr("d", (d) => {
+                    if (d.arcPoints.length < 2) return "";
+
+                    const end = d.arcPoints[d.arcPoints.length - 1];
+                    const tipX = end[0];
+                    const tipY = end[1];
+
+                    return `M${tipX},${tipY}L${tipX},${tipY}L${tipX},${tipY}Z`;
+                });
+
+            const circles = mapLayer.selectAll<
+                SVGCircleElement,
+                (typeof pointData)[number]
+            >(".data-point");
+
+            circles.transition().duration(animationDuration).attr("r", 0);
+
+            const colorScale = MakeHuexBalanceProjection(
+                mapLayer,
+                pointData,
+                maxValue,
+                minValue,
+            );
+            console.log("Color scale domain:", colorScale.domain());
+            const colorLegend = Legend(colorScale, {
+                width: 50,
+                height: windowSize.height * 0.8,
+                ticks: 10,
+                title: "Balance commerciale",
+                marginTop: 60,
+                marginLeft: 25,
+            });
+            d3.select(svg).append(() => colorLegend);
+            return;
+        }
+
+        const countries = mapLayer.selectAll<
+            SVGPathElement,
+            {
+                countryName: string;
+                value: number;
+                x: number;
+                y: number;
+            }
+        >(".country");
+        countries
+            .transition()
+            .duration(animationDuration)
+            .attr("fill", (d: any) => {
+                const know = isCountryMode
+                    ? pays_english.has(d.properties.name)
+                    : true;
+                return d.properties.name === "France"
+                    ? "#ff6b6b"
+                    : know
+                      ? "#87ceeb"
+                      : "#d3d3d3";
+            });
 
         if (isCountryMode) {
             const typeKey = type.toString() as keyof typeof type_data;
@@ -787,7 +896,9 @@ function makeCircleProjection(
     const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, 30]);
 
     if (legendLayer) {
-        legendLayer.selectAll("*").remove();
+        legendLayer
+            .selectAll(".legend-circle, .legend-label, .legend-tick")
+            .remove();
 
         const legendValues = [maxValue, maxValue / 2, maxValue / 4];
 
@@ -943,7 +1054,16 @@ function makeArrowProjection(
         .selectAll<SVGPathElement, (typeof arcsData)[number]>(".data-arrow")
         .data(arcsData, (d) => d.continentCode);
 
-    arrowPath.exit().remove();
+    arrowPath
+        .exit()
+        .transition("exit")
+        .duration(animationDuration)
+        .attr("stroke-dashoffset", function () {
+            console.log("Exiting arc:", d3.select(this).datum());
+            const length = (this as SVGPathElement).getTotalLength();
+            return `${length}`;
+        })
+        .remove();
 
     const arrowEnter = arrowPath
         .enter()
@@ -964,7 +1084,7 @@ function makeArrowProjection(
     arrowEnter
         .merge(arrowPath)
         .attr("stroke-width", (d) => strokeScale(d.value))
-        .transition()
+        .transition("update")
         .duration(animationDuration)
         .attr("stroke-dashoffset", "0");
 
@@ -973,7 +1093,19 @@ function makeArrowProjection(
         .selectAll<SVGPathElement, (typeof arcsData)[number]>(".arrow-head")
         .data(arcsData, (d) => d.continentCode);
 
-    arrowheads.exit().remove();
+    arrowheads
+        .exit()
+        .transition("exit-head")
+        .duration(animationDuration * 0.2)
+        .attr("d", function (this: SVGPathElement) {
+            const d = d3.select(this).datum() as (typeof arcsData)[number];
+            if (d.arcPoints.length < 2) return "";
+            const end = d.arcPoints[d.arcPoints.length - 1];
+            const tipX = end[0];
+            const tipY = end[1];
+            return `M${tipX},${tipY}L${tipX},${tipY}L${tipX},${tipY}Z`;
+        })
+        .remove();
 
     const arrowheadSize = 17;
 
@@ -995,13 +1127,13 @@ function makeArrowProjection(
 
             return `M${tipX},${tipY}L${tipX},${tipY}L${tipX},${tipY}Z`;
         })
-        .transition()
+        .transition("update-head")
         .delay(animationDuration * 0.9) // Start fading in near the end of arrow animation
         .duration(animationDuration * 0.2)
         .attr("d", (d) => calculateArrowHead(d, arrowheadSize, maxValue));
 
     arrowheadEnter
-        .transition()
+        .transition("enter-head")
         .delay(animationDuration * 0.9) // Start fading in near the end of arrow animation
         .duration(animationDuration * 0.2)
         .attr("d", (d) => calculateArrowHead(d, arrowheadSize, maxValue));
@@ -1013,7 +1145,7 @@ function makeArrowProjection(
         .on("mouseout", onMouseout);
 
     if (legendLayer) {
-        legendLayer.selectAll("*").remove();
+        legendLayer.selectAll(".legend-line, .legend-label").remove();
 
         const legendValues = [maxValue, maxValue / 2, maxValue / 4];
         legendLayer
@@ -1080,4 +1212,36 @@ function calculateArrowHead(
     const p3Y = end[1] - size * Math.sin(angle + Math.PI / 6);
 
     return `M${p1X},${p1Y}L${p2X},${p2Y}L${p3X},${p3Y}Z`;
+}
+
+function MakeHuexBalanceProjection(
+    mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
+    pointData: Array<{
+        countryName: string;
+        value: number;
+        x: number;
+        y: number;
+    }>,
+    maxValue: number,
+    minValue: number,
+): d3.ScaleLinear<string, string, never> {
+    const colorScale = d3
+        .scaleLinear<string>()
+        .domain([minValue, 0, maxValue])
+        .range(["#ff0000", "#ffffff", "#0011ff"]);
+
+    const countries = mapLayer.selectAll<
+        SVGPathElement,
+        (typeof pointData)[number]
+    >(".country");
+
+    countries
+        .transition()
+        .duration(animationDuration)
+        .attr("fill", (d: any) => {
+            const countryName = d.properties.name;
+            const point = pointData.find((p) => p.countryName === countryName);
+            return point ? colorScale(point.value) : "#d3d3d3";
+        });
+    return colorScale;
 }
