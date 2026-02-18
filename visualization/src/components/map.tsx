@@ -93,6 +93,55 @@ export function WorldMap({
         undefined
     > | null>(null);
 
+    // Effect 1: Filter and aggregate data using useMemo (no extra render)
+    const lectureData = useMemo(() => {
+        if (!allData || !allData[year]) return {};
+
+        const yearData = allData[year];
+        const dataByCountry: {
+            [key: string]: Record<string, number>;
+        } = {};
+
+        // Convert to Set for O(1) lookup (faster than array.includes)
+        const productsSet =
+            productsSelected.length > 0 ? new Set(productsSelected) : null;
+        const L = yearData.length;
+
+        // Single pass: filter and aggregate in one loop (no intermediate array)
+        for (let i = 0; i < L; i++) {
+            const entry = yearData[i];
+
+            // Early exit: check month first (fastest check)
+            if (entry[2] !== month) continue;
+
+            // Check product match
+            const productMatch = productsSet
+                ? productsSet.has(entry[3])
+                : entry[3] === 0;
+            if (!productMatch) continue;
+
+            // Get country name and skip if not found
+            const countryName =
+                pays[entry[0].toString() as keyof typeof pays]?.en;
+            if (!countryName) continue;
+
+            const typeIndex = entry[1].toString();
+            const value = entry[4] || 0;
+
+            // Initialize country object if needed
+            if (!dataByCountry[countryName]) {
+                dataByCountry[countryName] = {};
+            }
+
+            // Aggregate values (sum if multiple entries per country/type)
+            dataByCountry[countryName][typeIndex] =
+                (dataByCountry[countryName][typeIndex] || 0) + value;
+        }
+
+        return dataByCountry;
+    }, [allData, year, month, productsSelected]);
+
+    // Effect 2: Apply the zoom on the legend (stable reference to prevent re-attaching)
     const applyLegendZoom = useCallback(
         (
             legend: d3.Selection<SVGGElement, unknown, null, undefined>,
@@ -215,6 +264,86 @@ export function WorldMap({
         [isCountryMode],
     );
 
+    // Effect 3: Memoized event handlers (stable references to prevent re-attaching)
+    const handleCountryMouseover = useCallback(
+        (event: any) => {
+            // Visual feedback
+
+            if (event.target.__data__.continentCode) {
+                d3.select(event.currentTarget).attr("opacity", (d: any) => {
+                    const know = isCountryMode
+                        ? pays_english.has(d.properties.name) ||
+                          d.properties.name === "France"
+                        : true;
+                    return know ? 0.6 : 1;
+                });
+                d3.selectAll(".data-arrow").attr("opacity", (d: any) => {
+                    if (d.continentCode !== event.target.__data__.continentCode)
+                        return 1;
+                    return 0.6;
+                });
+            } else
+                d3.select(event.currentTarget)
+                    .attr("stroke-width", (d: any) => {
+                        const know = isCountryMode
+                            ? pays_english.has(d.properties.name) ||
+                              d.properties.name === "France"
+                            : true;
+                        return know ? 1.5 : 0.5;
+                    })
+                    .attr("opacity", (d: any) => {
+                        const know = isCountryMode
+                            ? pays_english.has(d.properties.name) ||
+                              d.properties.name === "France"
+                            : true;
+                        return know ? 0.6 : 1;
+                    });
+
+            // Tooltip data (read from ref to get current data)
+            let currentCountryName = "";
+            if (event.target.__data__.properties) {
+                currentCountryName = event.target.__data__.properties.name;
+            } else if (event.target.__data__.continentCode) {
+                const continentCode = event.target.__data__.continentCode;
+                const continentInt = Object.keys(pays).find(
+                    (key) =>
+                        pays[key as keyof typeof pays].code === continentCode,
+                ) as string;
+                currentCountryName =
+                    pays[continentInt as keyof typeof pays]?.en ||
+                    continentCode;
+            }
+            if (!lectureData[currentCountryName] && isCountryMode) return;
+
+            const typeKey = type.toString() as keyof typeof type_data;
+            setTooltipData({
+                appear: true,
+                year,
+                month,
+                country: currentCountryName,
+                value: lectureData[currentCountryName][typeKey] || 0,
+            });
+            setTooltipPosition({
+                x: event.pageX,
+                y: event.pageY,
+            });
+        },
+        [lectureData, isCountryMode, type, year, month],
+    );
+
+    // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)
+    const handleCountryMouseout = useCallback((event: any) => {
+        console.log("Mouse out:", event.target.__data__);
+        if (event.target.__data__.continentCode) {
+            d3.selectAll(".data-arrow").attr("opacity", 1);
+        } else
+            d3.select(event.currentTarget)
+                .attr("stroke-width", 0.5)
+                .attr("opacity", 1);
+        setTooltipData((prev) => ({ ...prev, appear: false }));
+    }, []);
+
+    // Effect 5: Load map and draw countries (runs once on mount, then only if mode or window size changes)
     useEffect(() => {
         const loadMap = async () => {
             const svg = svgRef.current;
@@ -428,53 +557,7 @@ export function WorldMap({
         loadMap();
     }, [applyLegendZoom, isCountryMode, windowSize.height, windowSize.width]);
 
-    // Effect 2: Filter and aggregate data using useMemo (no extra render)
-    const lectureData = useMemo(() => {
-        if (!allData || !allData[year]) return {};
-
-        const yearData = allData[year];
-        const dataByCountry: {
-            [key: string]: Record<string, number>;
-        } = {};
-
-        // Convert to Set for O(1) lookup (faster than array.includes)
-        const productsSet =
-            productsSelected.length > 0 ? new Set(productsSelected) : null;
-        const L = yearData.length;
-
-        // Single pass: filter and aggregate in one loop (no intermediate array)
-        for (let i = 0; i < L; i++) {
-            const entry = yearData[i];
-
-            // Early exit: check month first (fastest check)
-            if (entry[2] !== month) continue;
-
-            // Check product match
-            const productMatch = productsSet
-                ? productsSet.has(entry[3])
-                : entry[3] === 0;
-            if (!productMatch) continue;
-
-            // Get country name and skip if not found
-            const countryName =
-                pays[entry[0].toString() as keyof typeof pays]?.en;
-            if (!countryName) continue;
-
-            const typeIndex = entry[1].toString();
-            const value = entry[4] || 0;
-
-            // Initialize country object if needed
-            if (!dataByCountry[countryName]) {
-                dataByCountry[countryName] = {};
-            }
-
-            // Aggregate values (sum if multiple entries per country/type)
-            dataByCountry[countryName][typeIndex] =
-                (dataByCountry[countryName][typeIndex] || 0) + value;
-        }
-
-        return dataByCountry;
-    }, [allData, year, month, productsSelected]);
+    // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
     useEffect(() => {
         if (!layer) return;
 
@@ -498,85 +581,7 @@ export function WorldMap({
         });
     }, [countriesSelected, isMultipleMode, layer, setCountriesSelected]);
 
-    // Memoized event handlers (stable references to prevent re-attaching)
-    const handleCountryMouseover = useCallback(
-        (event: any) => {
-            // Visual feedback
-
-            if (event.target.__data__.continentCode) {
-                d3.select(event.currentTarget).attr("opacity", (d: any) => {
-                    const know = isCountryMode
-                        ? pays_english.has(d.properties.name) ||
-                          d.properties.name === "France"
-                        : true;
-                    return know ? 0.6 : 1;
-                });
-                d3.selectAll(".data-arrow").attr("opacity", (d: any) => {
-                    if (d.continentCode !== event.target.__data__.continentCode)
-                        return 1;
-                    return 0.6;
-                });
-            } else
-                d3.select(event.currentTarget)
-                    .attr("stroke-width", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name) ||
-                              d.properties.name === "France"
-                            : true;
-                        return know ? 1.5 : 0.5;
-                    })
-                    .attr("opacity", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name) ||
-                              d.properties.name === "France"
-                            : true;
-                        return know ? 0.6 : 1;
-                    });
-
-            // Tooltip data (read from ref to get current data)
-            let currentCountryName = "";
-            if (event.target.__data__.properties) {
-                currentCountryName = event.target.__data__.properties.name;
-            } else if (event.target.__data__.continentCode) {
-                const continentCode = event.target.__data__.continentCode;
-                const continentInt = Object.keys(pays).find(
-                    (key) =>
-                        pays[key as keyof typeof pays].code === continentCode,
-                ) as string;
-                currentCountryName =
-                    pays[continentInt as keyof typeof pays]?.en ||
-                    continentCode;
-            }
-            if (!lectureData[currentCountryName] && isCountryMode) return;
-
-            const typeKey = type.toString() as keyof typeof type_data;
-            setTooltipData({
-                appear: true,
-                year,
-                month,
-                country: currentCountryName,
-                value: lectureData[currentCountryName][typeKey] || 0,
-            });
-            setTooltipPosition({
-                x: event.pageX,
-                y: event.pageY,
-            });
-        },
-        [lectureData, isCountryMode, type, year, month],
-    );
-
-    const handleCountryMouseout = useCallback((event: any) => {
-        console.log("Mouse out:", event.target.__data__);
-        if (event.target.__data__.continentCode) {
-            d3.selectAll(".data-arrow").attr("opacity", 1);
-        } else
-            d3.select(event.currentTarget)
-                .attr("stroke-width", 0.5)
-                .attr("opacity", 1);
-        setTooltipData((prev) => ({ ...prev, appear: false }));
-    }, []);
-
-    // Effect 3: Attach event handlers once when map loads
+    // Effect 7: Attach event handlers once when map loads
     useEffect(() => {
         const svg = svgRef.current;
         if (!svg) return;
@@ -598,7 +603,7 @@ export function WorldMap({
         };
     }, [handleCountryMouseover, handleCountryMouseout]);
 
-    // Effect 4: Update data circles based on filtered data
+    // Effect 8: Update data circles based on filtered data
     useEffect(() => {
         if (!lectureData || Object.keys(lectureData).length === 0) return;
 
