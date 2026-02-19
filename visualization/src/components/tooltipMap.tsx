@@ -97,28 +97,19 @@ export default function TooltipMap({
                 <li>
                     <strong>{t("export-euro")}</strong>
                     {typeof values.export_euro === "number"
-                        ? values.export_euro.toLocaleString("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                          })
+                        ? values.export_euro.toLocaleString("fr-FR") + " k€"
                         : values.export_euro}
                 </li>
                 <li>
                     <strong>{t("import-euro")}</strong>
                     {typeof values.import_euro === "number"
-                        ? values.import_euro.toLocaleString("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                          })
+                        ? values.import_euro.toLocaleString("fr-FR") + " k€"
                         : values.import_euro}
                 </li>
                 <li>
                     <strong>{t("balance-euro")}</strong>
                     {typeof values.balance_euro === "number"
-                        ? values.balance_euro.toLocaleString("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                          })
+                        ? values.balance_euro.toLocaleString("fr-FR") + " k€"
                         : values.balance_euro}
                 </li>
                 <li>

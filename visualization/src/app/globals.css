@@ -48,7 +48,7 @@
         --border-color: #333;
         --on-map: #141a1fbb;
         --hover-bg: #474c52cc;
-        --selected-bg: #23364bcc;
+        --selected-bg: #495563cc;
         --bg-legend: #363c42cc;
         --valid-country: #116383;
         --invalid-country: #666;
@@ -98,6 +98,9 @@ body {
     overflow: auto;
     overscroll-behavior: contain;
     position: relative;
+    transition:
+        background-color 1s,
+        color 1s;
 }
 
 main {

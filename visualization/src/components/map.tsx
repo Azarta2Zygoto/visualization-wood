@@ -34,6 +34,10 @@ const config = {
     legendWidth: 140,
     legendMaxHeight: 250,
     legendMaxWidth: 300,
+    colorValidCountryLight: "#87ceeb",
+    colorInvalidCountryLight: "#d3d3d3",
+    colorValidCountryDark: "#116383",
+    colorInvalidCountryDark: "#666",
 };
 
 interface WorldMapProps {
@@ -62,7 +66,7 @@ export function WorldMap({
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
     const t = useTranslations("WorldMap");
-    const { windowSize } = useGlobal();
+    const { windowSize, theme } = useGlobal();
 
     const correctionSize: [number, number] = [
         windowSize.width / 2 - 1,
@@ -532,8 +536,12 @@ export function WorldMap({
                         return d.properties.name === "France"
                             ? "#ff6b6b"
                             : know
-                              ? "var(--valid-country)"
-                              : "var(--invalid-country)";
+                              ? theme === "light"
+                                  ? config.colorValidCountryLight
+                                  : config.colorValidCountryDark
+                              : theme === "light"
+                                ? config.colorInvalidCountryLight
+                                : config.colorInvalidCountryDark;
                     })
                     .attr("stroke", "var(--low-border-color)")
                     .attr("data-name", (d: any) => d.properties.name)
@@ -597,6 +605,7 @@ export function WorldMap({
         windowSize.height,
         windowSize.width,
         mapDefinition,
+        theme,
     ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
@@ -747,6 +756,7 @@ export function WorldMap({
                 y: number;
             }
         >(".country");
+
         countries
             .transition()
             .duration(animationDuration)
@@ -757,8 +767,12 @@ export function WorldMap({
                 return d.properties.name === "France"
                     ? "#ff6b6b"
                     : know
-                      ? "var(--valid-country)"
-                      : "var(--invalid-country)";
+                      ? theme === "light"
+                          ? config.colorValidCountryLight
+                          : config.colorValidCountryDark
+                      : theme === "light"
+                        ? config.colorInvalidCountryLight
+                        : config.colorInvalidCountryDark;
             });
 
         if (isCountryMode) {
@@ -850,6 +864,7 @@ export function WorldMap({
         isCountryMode,
         handleCountryMouseover,
         handleCountryMouseout,
+        theme,
     ]);
 
     return (
@@ -1208,7 +1223,7 @@ function makeArrowProjection(
             .attr("class", "legend-label")
             .attr("x", 10)
             .attr("y", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
-            .attr("fill", "#333")
+            .attr("fill", "var(--fg)")
             .attr("font-size", 12)
             .text((d) => (d / 1000).toFixed(0) + "000");
 
@@ -1280,7 +1295,7 @@ function MakeHuexBalanceProjection(
         .attr("fill", (d: any) => {
             const countryName = d.properties.name;
             const point = pointData.find((p) => p.countryName === countryName);
-            return point ? colorScale(point.value) : "#d3d3d3";
+            return point ? colorScale(point.value) : "var(--invalid-country)";
         });
     return colorScale;
 }
