@@ -64,7 +64,14 @@
         "multiple-selection": "Mode de sélection multiple",
         "historic": "Evènements historiques :",
         "value-absolute": "Absolues",
-        "value-relative": "Relatives"
+        "value-relative": "Relatives",
+        "export-desc": "Afficher les exportations",
+        "import-desc": "Afficher les importations",
+        "balance-desc": "Afficher la balance commerciale",
+        "volume-desc": "Afficher les volumes échangés en tonnes",
+        "value-desc": "Afficher les valeurs échangées en milliers d'euros",
+        "value-absolute-desc": "Utiliser les valeurs absolues",
+        "value-relative-desc": "Utiliser les valeurs relatives par rapport au total des échanges"
     },
     "Tooltip": {
         "export-euro": "Export : {value, plural, =-1 {No data} other {{value, number} k€}}",

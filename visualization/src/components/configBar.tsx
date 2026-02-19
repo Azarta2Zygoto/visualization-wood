@@ -128,7 +128,7 @@ export default function ConfigBar({
                     onClick={() => handleCountryModeChange(false)}
                     style={{
                         width: "clamp(90px, 15vw, 180px)",
-                        borderLeft: "none",
+                        borderLeftColor: "transparent",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
                     }}
@@ -145,6 +145,8 @@ export default function ConfigBar({
                     className={`btn ${typeData === 0 || typeData === 2 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(0, isVolume)}
+                    aria-label={t("export-desc")}
+                    title={t("export-desc")}
                     style={{
                         width: "clamp(60px, 10vw, 120px)",
                         borderTopRightRadius: 0,
@@ -158,10 +160,12 @@ export default function ConfigBar({
                     className={`btn ${typeData === 1 || typeData === 3 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(1, isVolume)}
+                    aria-label={t("import-desc")}
+                    title={t("import-desc")}
                     style={{
                         borderRadius: 0,
                         width: "clamp(60px, 10vw, 120px)",
-                        borderLeft: "none",
+                        borderLeft: "transparent",
                     }}
                 >
                     {t("import")}
@@ -170,9 +174,11 @@ export default function ConfigBar({
                     className={`btn ${typeData === 4 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(4, isVolume)}
+                    aria-label={t("balance-desc")}
+                    title={t("balance-desc")}
                     style={{
                         width: "clamp(60px, 10vw, 120px)",
-                        borderLeft: "none",
+                        borderLeftColor: "transparent",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
                         borderBottomRightRadius: 0,
@@ -191,9 +197,11 @@ export default function ConfigBar({
                         type="button"
                         disabled={typeData === 4}
                         onClick={() => handleTypeDataChange(typeData, true)}
+                        aria-label={t("volume-desc")}
+                        title={t("volume-desc")}
                         style={{
                             width: "clamp(90px, 15vw, 180px)",
-                            borderTop: "none",
+                            borderTopColor: "transparent",
                             borderTopRightRadius: 0,
                             borderTopLeftRadius: 0,
                             borderBottomRightRadius: 0,
@@ -205,10 +213,12 @@ export default function ConfigBar({
                         className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
                         type="button"
                         onClick={() => handleTypeDataChange(typeData, false)}
+                        aria-label={t("value-desc")}
+                        title={t("value-desc")}
                         style={{
                             width: "clamp(90px, 15vw, 180px)",
-                            borderLeft: "none",
-                            borderTop: "none",
+                            borderLeftColor: "transparent",
+                            borderTopColor: "transparent",
                             borderTopLeftRadius: 0,
                             borderTopRightRadius: 0,
                             borderBottomLeftRadius: 0,
@@ -226,9 +236,11 @@ export default function ConfigBar({
                         className={`btn ${isAbsolute ? "active" : ""}`}
                         type="button"
                         onClick={() => setIsAbsolute(true)}
+                        aria-label={t("value-absolute-desc")}
+                        title={t("value-absolute-desc")}
                         style={{
                             width: "clamp(90px, 15vw, 180px)",
-                            borderTop: "none",
+                            borderTopColor: "transparent",
                             borderTopRightRadius: 0,
                             borderTopLeftRadius: 0,
                             borderBottomRightRadius: 0,
@@ -240,10 +252,12 @@ export default function ConfigBar({
                         className={`btn ${!isAbsolute ? "active" : ""}`}
                         type="button"
                         onClick={() => setIsAbsolute(false)}
+                        aria-label={t("value-relative-desc")}
+                        title={t("value-relative-desc")}
                         style={{
                             width: "clamp(90px, 15vw, 180px)",
-                            borderLeft: "none",
-                            borderTop: "none",
+                            borderLeftColor: "transparent",
+                            borderTopColor: "transparent",
                             borderTopLeftRadius: 0,
                             borderTopRightRadius: 0,
                             borderBottomLeftRadius: 0,
@@ -267,8 +281,8 @@ export default function ConfigBar({
                     style={{
                         height: "40px",
                         width: "40px",
-                        borderRight: "none",
-                        borderBottom: "none",
+                        borderRightColor: "transparent",
+                        borderBottomColor: "transparent",
                         borderTopRightRadius: 0,
                         borderBottomRightRadius: 0,
                         borderBottomLeftRadius: 0,
@@ -284,7 +298,7 @@ export default function ConfigBar({
                     style={{
                         borderRadius: 0,
                         width: "100px",
-                        borderBottom: "none",
+                        borderBottomColor: "transparent",
                     }}
                     options={Array.from(
                         {
@@ -310,8 +324,8 @@ export default function ConfigBar({
                     style={{
                         height: "40px",
                         width: "40px",
-                        borderLeft: "none",
-                        borderBottom: "none",
+                        borderLeftColor: "transparent",
+                        borderBottomColor: "transparent",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
                         borderBottomRightRadius: 0,

@@ -6,11 +6,12 @@
     --fg: #171717;
     --color-special: #6496fa;
     --color-special-shadow: #6496fa88;
-    --color-mat: #b9d7ff;
+    --color-mat: #b9d7ffbb;
     --color-page: #f3ede6;
     --low-border-color: #666;
     --border-color: #333;
     --on-map: #a0d4ffbb;
+    --disabled: #d3d3d3ee;
     --hover-bg: #d0e7ffcc;
     --selected-bg: #cfe2facc;
     --text-p: clamp(0.7rem, 1.5vw, 1rem);
@@ -42,7 +43,7 @@
         --fg: #ffffff;
         --color-special: #192b50;
         --color-special-shadow: #192b5088;
-        --color-mat: #024091;
+        --color-mat: #061830;
         --color-page: #332d25;
         --low-border-color: #666;
         --border-color: #333;
@@ -157,22 +158,27 @@ main {
     cursor: pointer;
     box-shadow: none;
     text-align: center;
+    outline: 1px solid transparent;
     transition:
         background-color 0.3s,
         border-color 0.3s,
-        box-shadow 0.3s;
+        box-shadow 0.3s,
+        outline 0.3s;
 }
 .btn:disabled {
     opacity: 0.5;
-    background-color: var(--on-map);
+    background-color: var(--disabled);
     cursor: not-allowed;
 }
 .btn:hover:not(:disabled) {
+    z-index: 2;
     border-color: var(--color-special);
-    box-shadow: 0 4px 8px var(--color-mat);
+    outline-color: var(--color-special);
+    box-shadow: 0 4px 8px var(--color-special-shadow);
 }
 
 .btn:focus-visible:not(:disabled) {
+    z-index: 2;
     outline: none;
     border: 1px solid var(--color-special);
     box-shadow: 0 0 0 3px var(--color-special);
@@ -219,19 +225,20 @@ main {
 }
 
 .btn.active {
-    background-color: var(--selected-bg);
-    border-color: var(--color-special-shadow);
-    box-shadow: 0 4px 8px var(--selected-bg);
+    z-index: 1;
+    background-color: var(--color-mat);
 }
 
-.btn.active:hover {
-    border-color: var(--color-special-shadow);
+.btn.active:hover:not(:disabled) {
+    z-index: 2;
+    border-color: var(--color-special);
     box-shadow: 0 4px 8px var(--color-special-shadow);
 }
 
-.btn.active:focus-visible,
+.btn.active:focus-visible:not(:disabled),
 .btn.btn-option-selected:focus-visible {
-    outline: none;
+    z-index: 2;
+    outline: var(--color-special);
     border-color: var(--color-special);
     box-shadow: 0 0 0 3px var(--color-special);
 }

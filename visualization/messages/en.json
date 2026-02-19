@@ -62,7 +62,16 @@
         "country-choose": "Country choice:",
         "continent-choose": "Continent choice:",
         "multiple-selection": "Multiple selection mode",
-        "historic": "Historical events:"
+        "historic": "Historical events:",
+        "value-absolute": "Absolute",
+        "value-relative": "Relative",
+        "export-desc": "Show exports",
+        "import-desc": "Show imports",
+        "balance-desc": "Show trade balance",
+        "volume-desc": "Show traded volumes in tonnes",
+        "value-desc": "Show traded values in thousands of euros",
+        "value-absolute-desc": "Use absolute values",
+        "value-relative-desc": "Use relative values compared to total trade"
     },
     "Tooltip": {
         "export-euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",
