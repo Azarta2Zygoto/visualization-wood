@@ -10,6 +10,8 @@ import type_data from "@/data/N027_LIB.json";
 import month_names from "@/data/N053_LIB.json";
 import countryConversion from "@/data/country_extended.json";
 
+import { useGlobal } from "./globalProvider";
+
 interface TooltipMapProps {
     appear: boolean;
     usefullData: {
@@ -30,6 +32,7 @@ export default function TooltipMap({
     position: { x, y } = { x: 0, y: 0 },
 }: TooltipMapProps): JSX.Element {
     const t = useTranslations("Tooltip");
+    const { windowSize } = useGlobal();
 
     const tooltipRef = useRef<HTMLDivElement>(null);
     const [currentPosition, setCurrentPosition] = useState<{
@@ -49,19 +52,36 @@ export default function TooltipMap({
     useLayoutEffect(() => {
         if (!tooltipRef.current) return;
 
+        console.log("Tooltip position recalculated");
+
         const replaceDots = () => {
             if (!tooltipRef.current) return;
 
             const { width, height } =
                 tooltipRef.current.getBoundingClientRect();
             const left =
-                x + width > window.innerWidth ? x - width / 2 - 10 : x + 10;
+                x + width > windowSize.width
+                    ? windowSize.width - width / 2 - 10
+                    : x < width / 2
+                      ? width / 2 + 10
+                      : x;
+
             const top =
-                y + height > window.innerHeight ? y - height - 10 : y + 20;
+                y + height > windowSize.height
+                    ? Math.min(y, windowSize.height) - height - 10
+                    : y + 20;
+            console.log({
+                left,
+                top,
+                windowSize,
+                tooltipSize: { width, height },
+                position: { x, y },
+            });
             setCurrentPosition({ x: left, y: top });
         };
+
         replaceDots();
-    }, [x, y]);
+    }, [windowSize.height, windowSize.width, x, y]);
 
     return (
         <div
