@@ -36,6 +36,7 @@ export default function HomePage(): JSX.Element {
     const [iconSelected, setIconSelected] = useState<string[]>([]);
     const [isOpenParamBar, setIsOpenParamBar] = useState<boolean>(false);
     const [mapDefinition, setMapDefinition] = useState<string>("low");
+    const [isAbsolute, setIsAbsolute] = useState<boolean>(false);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -146,6 +147,7 @@ export default function HomePage(): JSX.Element {
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
                 mapDefinition={mapDefinition}
+                isAbsolute={isAbsolute}
                 setCountriesSelected={setCountriesSelected}
             />
 
@@ -155,6 +157,7 @@ export default function HomePage(): JSX.Element {
                 currentMonth={currentMonth}
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
+                isAbsolute={isAbsolute}
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
                 setCurrentMonth={setCurrentMonth}
@@ -163,6 +166,7 @@ export default function HomePage(): JSX.Element {
                 setIsMultipleMode={setIsMultipleMode}
                 setIsCountryMode={setIsCountryMode}
                 setIconSelected={setIconSelected}
+                setIsAbsolute={setIsAbsolute}
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />

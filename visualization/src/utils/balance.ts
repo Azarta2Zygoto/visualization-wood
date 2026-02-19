@@ -16,12 +16,14 @@ interface MakeBalanceProps {
             countries: Record<string, { fr: string; en: string }>;
         }
     >;
+    isAbsolute: boolean;
 }
 
 export function MakeBalance({
     lectureData,
     countries,
     continent,
+    isAbsolute,
 }: MakeBalanceProps): {
     countryName: string;
     value: number;
@@ -44,8 +46,9 @@ export function MakeBalance({
             const valueImport = lectureData[country.countryName][3] || 0;
             if (valueExport === 0 && valueImport === 0) return; // Skip countries with no data
 
-            const balance =
-                (valueExport - valueImport) / (valueExport + valueImport); // Calculate balance as a percentage of exports
+            const balance = isAbsolute
+                ? valueExport - valueImport
+                : (valueExport - valueImport) / (valueExport + valueImport); // Calculate balance as a percentage of exports
             balanceData.push({
                 countryName: country.countryName,
                 value: balance,
@@ -65,10 +68,9 @@ export function MakeBalance({
             const valueExport = lectureData[countryName]?.[2] || 0;
             const valueImport = lectureData[countryName]?.[3] || 0;
             if (valueExport === 0 && valueImport === 0) return; // Skip countries with no data
-            const balance =
-                valueExport === 0
-                    ? -1
-                    : (valueExport - valueImport) / (valueExport + valueImport); // Calculate balance as a percentage of exports
+            const balance = isAbsolute
+                ? valueExport - valueImport
+                : (valueExport - valueImport) / (valueExport + valueImport); // Calculate balance as a percentage of exports
 
             balanceData.push({
                 countryName,

@@ -62,7 +62,9 @@
         "country-choose": "Choix du pays :",
         "continent-choose": "Choix du continent :",
         "multiple-selection": "Mode de sélection multiple",
-        "historic": "Evènements historiques :"
+        "historic": "Evènements historiques :",
+        "value-absolute": "Absolues",
+        "value-relative": "Relatives"
     },
     "Tooltip": {
         "export-euro": "Export : {value, plural, =-1 {No data} other {{value, number} k€}}",

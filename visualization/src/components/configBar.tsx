@@ -18,6 +18,7 @@ interface ConfigBarProps {
     currentMonth: number;
     isMultipleMode: boolean;
     isCountryMode: boolean;
+    isAbsolute: boolean;
     setTypeData: (type: number) => void;
     setCurrentYear: (year: number) => void;
     setCurrentMonth: (month: number) => void;
@@ -26,6 +27,7 @@ interface ConfigBarProps {
     setIsMultipleMode: (isMultiple: boolean) => void;
     setIsCountryMode: (isCountryMode: boolean) => void;
     setIconSelected: (icons: string[]) => void;
+    setIsAbsolute: (isAbsolute: boolean) => void;
 }
 
 export default function ConfigBar({
@@ -34,6 +36,7 @@ export default function ConfigBar({
     currentMonth,
     isMultipleMode,
     isCountryMode,
+    isAbsolute,
     setTypeData,
     setCurrentYear,
     setCurrentMonth,
@@ -42,6 +45,7 @@ export default function ConfigBar({
     setIsMultipleMode,
     setIsCountryMode,
     setIconSelected,
+    setIsAbsolute,
 }: ConfigBarProps): JSX.Element {
     const t = useTranslations("ConfigBar");
 
@@ -177,41 +181,78 @@ export default function ConfigBar({
                     {t("balance")}
                 </button>
             </div>
-            <div
-                className="rows"
-                style={{ gap: 0 }}
-            >
-                <button
-                    className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
-                    type="button"
-                    disabled={typeData === 4}
-                    onClick={() => handleTypeDataChange(typeData, true)}
-                    style={{
-                        width: "clamp(90px, 15vw, 180px)",
-                        borderTop: "none",
-                        borderTopRightRadius: 0,
-                        borderTopLeftRadius: 0,
-                        borderBottomRightRadius: 0,
-                    }}
+            {typeData !== 4 ? (
+                <div
+                    className="rows"
+                    style={{ gap: 0 }}
                 >
-                    {t("volume")}
-                </button>
-                <button
-                    className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
-                    type="button"
-                    onClick={() => handleTypeDataChange(typeData, false)}
-                    style={{
-                        width: "clamp(90px, 15vw, 180px)",
-                        borderLeft: "none",
-                        borderTop: "none",
-                        borderTopLeftRadius: 0,
-                        borderTopRightRadius: 0,
-                        borderBottomLeftRadius: 0,
-                    }}
+                    <button
+                        className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
+                        type="button"
+                        disabled={typeData === 4}
+                        onClick={() => handleTypeDataChange(typeData, true)}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderTop: "none",
+                            borderTopRightRadius: 0,
+                            borderTopLeftRadius: 0,
+                            borderBottomRightRadius: 0,
+                        }}
+                    >
+                        {t("volume")}
+                    </button>
+                    <button
+                        className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
+                        type="button"
+                        onClick={() => handleTypeDataChange(typeData, false)}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderLeft: "none",
+                            borderTop: "none",
+                            borderTopLeftRadius: 0,
+                            borderTopRightRadius: 0,
+                            borderBottomLeftRadius: 0,
+                        }}
+                    >
+                        {t("value")}
+                    </button>
+                </div>
+            ) : (
+                <div
+                    className="rows"
+                    style={{ gap: 0 }}
                 >
-                    {t("value")}
-                </button>
-            </div>
+                    <button
+                        className={`btn ${isAbsolute ? "active" : ""}`}
+                        type="button"
+                        onClick={() => setIsAbsolute(true)}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderTop: "none",
+                            borderTopRightRadius: 0,
+                            borderTopLeftRadius: 0,
+                            borderBottomRightRadius: 0,
+                        }}
+                    >
+                        {t("value-absolute")}
+                    </button>
+                    <button
+                        className={`btn ${!isAbsolute ? "active" : ""}`}
+                        type="button"
+                        onClick={() => setIsAbsolute(false)}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderLeft: "none",
+                            borderTop: "none",
+                            borderTopLeftRadius: 0,
+                            borderTopRightRadius: 0,
+                            borderBottomLeftRadius: 0,
+                        }}
+                    >
+                        {t("value-relative")}
+                    </button>
+                </div>
+            )}
 
             <p>{t("date-choose")}</p>
             <div

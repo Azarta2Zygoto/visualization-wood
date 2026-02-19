@@ -60,6 +60,7 @@ interface WorldMapProps {
     isMultipleMode: boolean;
     isCountryMode: boolean;
     mapDefinition: string;
+    isAbsolute: boolean;
     setCountriesSelected: (countries: number[]) => void;
 }
 
@@ -73,6 +74,7 @@ export function WorldMap({
     isMultipleMode,
     isCountryMode = false,
     mapDefinition,
+    isAbsolute,
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
     const t = useTranslations("WorldMap");
@@ -661,6 +663,7 @@ export function WorldMap({
                 lectureData,
                 countries: isCountryMode ? dataPointOnMap : undefined,
                 continent: !isCountryMode ? continent : undefined,
+                isAbsolute,
             });
 
             const maxValue = Math.max(
@@ -841,6 +844,7 @@ export function WorldMap({
         handleCountryMouseover,
         handleCountryMouseout,
         theme,
+        isAbsolute,
     ]);
 
     return (
