@@ -71,7 +71,7 @@
     display: block;
 }
 .checkbox-container input[type="checkbox"]:focus-visible ~ .checkbox-checkmark {
-    outline: 2px solid var(--outline-color, #fefefe);
+    outline: 2px solid var(--color-special-shadow, #fefefe);
     box-shadow: 0 0 3px 4px var(--outline-color-shadow, #fefefe1a);
 }
 .checkbox-container:hover input[type="checkbox"] ~ .checkbox-checkmark {

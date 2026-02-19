@@ -40,11 +40,25 @@ export default function MakeIcon({
         >
             <path
                 d={correct_icon.path}
-                fill={correct_icon.fill}
+                fill="var(--fg)"
                 stroke={correct_icon.stroke ?? undefined}
                 strokeWidth={correct_icon["stroke-width"]}
-                strokeLinecap={correct_icon.linecap as "butt" | "round" | "square" | "inherit" | undefined}
-                strokeLinejoin={correct_icon.linejoin as "miter" | "round" | "bevel" | "inherit" | undefined}
+                strokeLinecap={
+                    correct_icon.linecap as
+                        | "butt"
+                        | "round"
+                        | "square"
+                        | "inherit"
+                        | undefined
+                }
+                strokeLinejoin={
+                    correct_icon.linejoin as
+                        | "miter"
+                        | "round"
+                        | "bevel"
+                        | "inherit"
+                        | undefined
+                }
                 transform={correct_icon.transform}
             />
         </svg>
