@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { type JSX, useState } from "react";
 
 import list_products from "@/data/N890_LIB.json";
@@ -42,6 +43,8 @@ export default function ConfigBar({
     setIsCountryMode,
     setIconSelected,
 }: ConfigBarProps): JSX.Element {
+    const t = useTranslations("ConfigBar");
+
     const [isVolume, setIsVolume] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(true);
 
@@ -90,15 +93,15 @@ export default function ConfigBar({
             <button
                 className="btn btn-close-config"
                 type="button"
-                aria-label="Close configuration bar"
-                title="Close configuration bar"
+                aria-label={isOpen ? t("close-config") : t("open-config")}
+                title={isOpen ? t("close-config") : t("open-config")}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {isOpen ? "×" : "⚙️"}
             </button>
 
-            <h2 className="h2-primary">Configuration</h2>
-            <p>Echelle d&apos;étude :</p>
+            <h2 className="h2-primary">{t("config")}</h2>
+            <p>{t("study-scale")}</p>
             <div
                 className="rows"
                 style={{ gap: 0 }}
@@ -113,7 +116,7 @@ export default function ConfigBar({
                         borderBottomRightRadius: 0,
                     }}
                 >
-                    Pays
+                    {t("country")}
                 </button>
                 <button
                     className={`btn ${!isCountryMode ? "active" : ""}`}
@@ -126,10 +129,10 @@ export default function ConfigBar({
                         borderBottomLeftRadius: 0,
                     }}
                 >
-                    Continent
+                    {t("continent")}
                 </button>
             </div>
-            <p>Type de données :</p>
+            <p>{t("data-type")}</p>
             <div
                 className="rows"
                 style={{ gap: 0 }}
@@ -145,7 +148,7 @@ export default function ConfigBar({
                         borderBottomRightRadius: 0,
                     }}
                 >
-                    Exportation
+                    {t("export")}
                 </button>
                 <button
                     className={`btn ${typeData === 1 || typeData === 3 ? "active" : ""}`}
@@ -157,7 +160,7 @@ export default function ConfigBar({
                         borderLeft: "none",
                     }}
                 >
-                    Importation
+                    {t("import")}
                 </button>
                 <button
                     className={`btn ${typeData === 4 ? "active" : ""}`}
@@ -171,7 +174,7 @@ export default function ConfigBar({
                         borderBottomRightRadius: 0,
                     }}
                 >
-                    Balance
+                    {t("balance")}
                 </button>
             </div>
             <div
@@ -191,7 +194,7 @@ export default function ConfigBar({
                         borderBottomRightRadius: 0,
                     }}
                 >
-                    Volume (tonnes)
+                    {t("volume")}
                 </button>
                 <button
                     className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
@@ -206,11 +209,11 @@ export default function ConfigBar({
                         borderBottomLeftRadius: 0,
                     }}
                 >
-                    Valeur k€
+                    {t("value")}
                 </button>
             </div>
 
-            <p>Choix de la date :</p>
+            <p>{t("date-choose")}</p>
             <div
                 className="rows"
                 style={{ gap: 0 }}
@@ -218,8 +221,8 @@ export default function ConfigBar({
                 <button
                     className="btn"
                     type="button"
-                    aria-label="Decrease year"
-                    title="Decrease year"
+                    aria-label={t("decrease-year")}
+                    title={t("decrease-year")}
                     style={{
                         height: "40px",
                         width: "40px",
@@ -259,8 +262,8 @@ export default function ConfigBar({
                 <button
                     className="btn"
                     type="button"
-                    aria-label="Increase year"
-                    title="Increase year"
+                    aria-label={t("increase-year")}
+                    title={t("increase-year")}
                     onClick={() => handleYearChange(currentYear + 1)}
                     disabled={currentYear >= metadata.bois.end_year}
                     style={{
@@ -281,7 +284,7 @@ export default function ConfigBar({
                 setCurrentMonth={setCurrentMonth}
             />
 
-            <p>Choix du produit :</p>
+            <p>{t("product-choose")}</p>
             <MultiSelect
                 id="lang"
                 options={Object.entries(list_products).map(([key, value]) => ({
@@ -291,15 +294,15 @@ export default function ConfigBar({
                 onValueChange={handleNewProductsSelected}
                 style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
             />
-            <p>Pays sélectionnés :</p>
+            <p>{isCountryMode ? t("country-choose") : t("continent-choose")}</p>
             <Checkbox
                 id="multiple-mode-checkbox"
-                label="Mode de sélection multiple"
+                label={t("multiple-selection")}
                 checked={isMultipleMode}
                 onChange={(e) => setIsMultipleMode(e.target.checked)}
             />
 
-            <p>Evènements historiques :</p>
+            <p>{t("historic")}</p>
             <MultiSelect
                 id="icon"
                 options={Object.keys(icon_symbol).map((key) => ({

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -28,7 +29,8 @@ export default function TooltipMap({
     country,
     position: { x, y } = { x: 0, y: 0 },
 }: TooltipMapProps): JSX.Element {
-    // Smart positioning to prevent tooltip from going off-screen
+    const t = useTranslations("Tooltip");
+
     const tooltipRef = useRef<HTMLDivElement>(null);
     const [currentPosition, setCurrentPosition] = useState<{
         x: number;
@@ -93,7 +95,7 @@ export default function TooltipMap({
             </div>
             <ul>
                 <li>
-                    <strong>Export (euros): </strong>
+                    <strong>{t("export-euro")}</strong>
                     {typeof values.export_euro === "number"
                         ? values.export_euro.toLocaleString("fr-FR", {
                               style: "currency",
@@ -102,7 +104,7 @@ export default function TooltipMap({
                         : values.export_euro}
                 </li>
                 <li>
-                    <strong>Import (euros): </strong>
+                    <strong>{t("import-euro")}</strong>
                     {typeof values.import_euro === "number"
                         ? values.import_euro.toLocaleString("fr-FR", {
                               style: "currency",
@@ -111,7 +113,7 @@ export default function TooltipMap({
                         : values.import_euro}
                 </li>
                 <li>
-                    <strong>Trade balance (euros): </strong>
+                    <strong>{t("balance-euro")}</strong>
                     {typeof values.balance_euro === "number"
                         ? values.balance_euro.toLocaleString("fr-FR", {
                               style: "currency",
@@ -120,13 +122,13 @@ export default function TooltipMap({
                         : values.balance_euro}
                 </li>
                 <li>
-                    <strong>Export (tonnes): </strong>
+                    <strong>{t("export-ton")}</strong>
                     {typeof values.export_tonnes === "number"
                         ? values.export_tonnes.toLocaleString("fr-FR")
                         : values.export_tonnes}
                 </li>
                 <li>
-                    <strong>Import (tonnes): </strong>
+                    <strong>{t("export-ton")}</strong>
                     {typeof values.import_tonnes === "number"
                         ? values.import_tonnes.toLocaleString("fr-FR")
                         : values.import_tonnes}

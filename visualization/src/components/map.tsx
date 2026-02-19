@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
     type JSX,
     useCallback,
@@ -51,6 +52,7 @@ export function WorldMap({
     isCountryMode = false,
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
+    const t = useTranslations("WorldMap");
     const { windowSize } = useGlobal();
 
     const correctionSize: [number, number] = [
@@ -454,7 +456,7 @@ export function WorldMap({
                     )
                     .attr("pointer-events", "none");
 
-                const correctLegend = createLegend(legendLayer);
+                const correctLegend = createLegend(legendLayer, t("legend"));
 
                 setLayer(mapLayer);
                 setLegendLayer(correctLegend);
@@ -553,7 +555,7 @@ export function WorldMap({
                     .attr("x", correctionSize[0])
                     .attr("y", correctionSize[1])
                     .attr("text-anchor", "middle")
-                    .text("Error loading map data");
+                    .text(t("error-data"));
             }
         };
         loadMap();
@@ -691,7 +693,7 @@ export function WorldMap({
                 width: 50,
                 height: windowSize.height * 0.8,
                 ticks: 10,
-                title: "Balance commerciale",
+                title: t("balance"),
                 marginTop: 60,
                 marginLeft: 25,
             });
@@ -830,6 +832,7 @@ export function WorldMap({
 
 function createLegend(
     legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
+    name: string = "Légende :",
 ): d3.Selection<SVGGElement, unknown, null, undefined> {
     const clipId = "legend-clip";
 
@@ -864,7 +867,7 @@ function createLegend(
         .attr("fill", "#333")
         .attr("font-size", 18)
         .attr("class", "legend-text")
-        .text(`Légende :`);
+        .text(name);
 
     const innerLegend = legendLayer
         .append("g")

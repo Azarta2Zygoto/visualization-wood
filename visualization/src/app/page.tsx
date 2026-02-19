@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect, useState } from "react";
 
 import Papa from "papaparse";
@@ -15,6 +16,8 @@ import { readNpz } from "@/utils/read";
 const adding_automatic_all_years = false; // Permet de charger les années les unes après les autres ou à chaque demande
 
 export default function HomePage(): JSX.Element {
+    const t = useTranslations("HomePage");
+
     const [allData, setAllData] = useState<{ [key: string]: number[][] }>({});
     const [allEvents, setAllEvents] = useState<any[]>([]);
     const [typeData, setTypeData] = useState<number>(0);
@@ -112,7 +115,7 @@ export default function HomePage(): JSX.Element {
 
     return (
         <Fragment>
-            <h1 className="title">Echanges internationaux de bois</h1>
+            <h1 className="title">{t("title")}</h1>
             <WorldMap
                 allData={allData}
                 type={typeData}

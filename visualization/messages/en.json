@@ -1,0 +1,74 @@
+{
+    "HomePage": {
+        "title": "Wood international trade with France"
+    },
+    "NotFound": {
+        "title": "404 - Page not found",
+        "text1": "Sorry, the page you are looking for does not exist.",
+        "text2": "Please check the URL or return to the homepage.",
+        "back-to-home": "Back to Home"
+    },
+    "ErrorPage": {
+        "title": "Oops! An error occurred",
+        "text1": "There seems to be a problem with your request.",
+        "retry": "Retry",
+        "back-to-home": "Back to Home"
+    },
+    "DefaultTexts": {
+        "selectAnOption": "Select an option",
+        "select-lang": "Select one or more programming languages",
+        "select-icon": "Select one or more event types",
+        "search": "Search...",
+        "all": "All",
+        "clear": "Clear",
+        "close": "Close",
+        "more": "{count, plural, =1 {option} other {options}}",
+        "clear-all": "Clear all selections",
+        "aria-search": "Search field",
+        "dropdown-explain": "Multi-select dropdown. Use the up and down arrows to navigate, spacebar to select or deselect an option, and escape to close the dropdown.",
+        "filter-explain": "Type to filter available options. Use the up and down arrows to navigate through the filtered options."
+    },
+    "Loading": {
+        "loading": "Load data for {year}...",
+        "loaded": "Data for {year} loaded!",
+        "close": "Close"
+    },
+    "ArrowUpDown": {
+        "scroll-up": "Scroll up",
+        "scroll-down": "Scroll down"
+    },
+    "ConfigBar": {
+        "close-config": "Close configuration bar",
+        "open-config": "Open configuration bar",
+        "config": "Configuration",
+        "study-scale": "Study scale:",
+        "country": "Country",
+        "continent": "Continent",
+        "data-type": "Data type:",
+        "export": "Exports",
+        "import": "Imports",
+        "balance": "Balance",
+        "volume": "Volume (tonnes)",
+        "value": "Value (k€)",
+        "date-choose": "Date choice:",
+        "decrease-year": "Go to previous year",
+        "increase-year": "Go to next year",
+        "product-choose": "Product choice:",
+        "country-choose": "Country choice:",
+        "continent-choose": "Continent choice:",
+        "multiple-selection": "Multiple selection mode",
+        "historic": "Historical events:"
+    },
+    "Tooltip": {
+        "export-euro": "Export (k€): ",
+        "import-euro": "Import (k€): ",
+        "export-ton": "Export (tonnes): ",
+        "import-ton": "Import (tonnes): ",
+        "balance-euro": "Trade balance: "
+    },
+    "WorldMap": {
+        "error-data": "Error loading data",
+        "legend": "Legend:",
+        "balance": "Trade balance"
+    }
+}

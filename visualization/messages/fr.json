@@ -1,4 +1,7 @@
 {
+    "HomePage": {
+        "title": "Echanges internationaux de bois"
+    },
     "NotFound": {
         "title": "404 - Page non trouvée",
         "text1": "Désolé, la page que vous recherchez n'existe pas.",
@@ -33,5 +36,39 @@
     "ArrowUpDown": {
         "scroll-up": "Défiler vers le haut",
         "scroll-down": "Défiler vers le bas"
+    },
+    "ConfigBar": {
+        "close-config": "Fermer la barre de configuration",
+        "open-config": "Ouvrir la barre de configuration",
+        "config": "Configuration",
+        "study-scale": "Echelle d'étude :",
+        "country": "Pays",
+        "continent": "Continent",
+        "data-type": "Type de données :",
+        "export": "Exportations",
+        "import": "Importations",
+        "balance": "Balance",
+        "volume": "Volume (tonnes)",
+        "value": "Valeur (k€)",
+        "date-choose": "Choix de la date :",
+        "decrease-year": "Aller à l'année précédente",
+        "increase-year": "Aller à l'année suivante",
+        "product-choose": "Choix du produit :",
+        "country-choose": "Choix du pays :",
+        "continent-choose": "Choix du continent :",
+        "multiple-selection": "Mode de sélection multiple",
+        "historic": "Evènements historiques :"
+    },
+    "Tooltip": {
+        "export-euro": "Export (k€) : ",
+        "import-euro": "Import (k€) : ",
+        "export-ton": "Export (tonnes) : ",
+        "import-ton": "Import (tonnes) : ",
+        "balance-euro": "Balance commerciale (k€) : "
+    },
+    "WorldMap": {
+        "error-data": "Erreur lors du chargement des données",
+        "legend": "Légende :",
+        "balance": "Balance commerciale"
     }
 }
