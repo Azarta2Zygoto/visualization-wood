@@ -20,6 +20,7 @@ import pays from "@/data/country_extended.json";
 import type { CountryData } from "@/data/types";
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
+import { isKnownCountry } from "@/utils/function";
 
 import { useGlobal } from "./globalProvider";
 import TooltipMap from "./tooltipMap";
@@ -34,10 +35,19 @@ const config = {
     legendWidth: 140,
     legendMaxHeight: 250,
     legendMaxWidth: 300,
-    colorValidCountryLight: "#87ceeb",
-    colorInvalidCountryLight: "#d3d3d3",
-    colorValidCountryDark: "#116383",
-    colorInvalidCountryDark: "#666",
+    light: {
+        validCountry: "#87ceeb",
+        invalidCountry: "#d3d3d3",
+    },
+    dark: {
+        validCountry: "#116383",
+        invalidCountry: "#666",
+    },
+    mapDefinitions: {
+        low: "110m",
+        medium: "50m",
+        high: "10m",
+    },
 };
 
 interface WorldMapProps {
@@ -288,11 +298,9 @@ export function WorldMap({
 
             if (event.target.__data__.continentCode) {
                 d3.select(event.currentTarget).attr("opacity", (d: any) => {
-                    const know = isCountryMode
-                        ? pays_english.has(d.properties.name) ||
-                          d.properties.name === "France"
-                        : true;
-                    return know ? 0.6 : 1;
+                    return isKnownCountry(d.continentCode, isCountryMode)
+                        ? 0.6
+                        : 1;
                 });
                 d3.selectAll(".data-arrow").attr("opacity", (d: any) => {
                     if (d.continentCode !== event.target.__data__.continentCode)
@@ -302,18 +310,14 @@ export function WorldMap({
             } else
                 d3.select(event.currentTarget)
                     .attr("stroke-width", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name) ||
-                              d.properties.name === "France"
-                            : true;
-                        return know ? 1.5 : 0.5;
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? 1.5
+                            : 0.5;
                     })
                     .attr("opacity", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name) ||
-                              d.properties.name === "France"
-                            : true;
-                        return know ? 0.6 : 1;
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? 0.6
+                            : 1;
                     });
 
             // Tooltip data (read from ref to get current data)
@@ -384,27 +388,20 @@ export function WorldMap({
                 console.log("Loading map data...");
                 // Fetch or use cached world topology data
                 let worldData = worldDataCache.current?.map;
-                const cachedSize = worldDataCache.current?.size;
-                if (!worldData || cachedSize !== mapDefinition) {
-                    let size = "110m";
-                    switch (mapDefinition) {
-                        case "low":
-                            size = "110m";
-                            break;
-                        case "medium":
-                            size = "50m";
-                            break;
-                        case "high":
-                            size = "10m";
-                            break;
-                        default:
-                            size = "110m";
-                    }
+                if (
+                    !worldData ||
+                    worldDataCache.current?.size !== mapDefinition
+                ) {
+                    const size =
+                        config.mapDefinitions[
+                            mapDefinition as keyof typeof config.mapDefinitions
+                        ];
                     const url = `${basePath}/world/world-${size}.json`;
                     const response = await fetch(url);
                     if (!response.ok)
                         throw new Error("Failed to load world data");
                     worldData = await response.json();
+
                     worldDataCache.current = {
                         map: worldData,
                         size: mapDefinition,
@@ -523,40 +520,24 @@ export function WorldMap({
                     .enter()
                     .append("path")
                     .attr("class", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
-                        return know ? "country known-country" : "country";
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? "country known-country"
+                            : "country";
                     })
                     .attr("d", pathGenerator as any)
                     .attr("fill", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
                         return d.properties.name === "France"
                             ? "#ff6b6b"
-                            : know
-                              ? theme === "light"
-                                  ? config.colorValidCountryLight
-                                  : config.colorValidCountryDark
-                              : theme === "light"
-                                ? config.colorInvalidCountryLight
-                                : config.colorInvalidCountryDark;
+                            : isKnownCountry(d.properties.name, isCountryMode)
+                              ? config[theme].validCountry
+                              : config[theme].invalidCountry;
                     })
                     .attr("stroke", "var(--low-border-color)")
-                    .attr("data-name", (d: any) => d.properties.name)
                     .attr("stroke-width", 0.5)
                     .style("cursor", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
-                        return know ? "pointer" : "default";
-                    })
-                    .style("cursor", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
-                        return know ? "pointer" : "default";
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? "pointer"
+                            : "default";
                     });
 
                 // Create arrow layer after countries so arrows appear on top
@@ -613,9 +594,9 @@ export function WorldMap({
         if (!layer) return;
 
         layer.selectAll(".country").on("click", (_: any, d: any) => {
-            const countryName = d.properties.name;
             const countryCode = Object.keys(pays).find(
-                (key) => pays[key as keyof typeof pays].en === countryName,
+                (key) =>
+                    pays[key as keyof typeof pays].en === d.properties.name,
             );
             if (!countryCode) return;
 
@@ -632,12 +613,13 @@ export function WorldMap({
         });
     }, [countriesSelected, isMultipleMode, layer, setCountriesSelected]);
 
-    // Effect 7: Attach event handlers once when map loads
+    // Effect 7: Attach event handlers when map layer changes
     useEffect(() => {
         const svg = svgRef.current;
         if (!svg) return;
 
-        const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
+        const mapLayer =
+            layer ?? d3.select(svg).select<SVGGElement>(".map-layer");
         if (mapLayer.empty()) return;
 
         // Attach handlers (handlers are stable and read from ref)
@@ -652,7 +634,7 @@ export function WorldMap({
                 .on("mouseover", null)
                 .on("mouseout", null);
         };
-    }, [handleCountryMouseover, handleCountryMouseout]);
+    }, [handleCountryMouseover, handleCountryMouseout, layer]);
 
     // Effect 8: Update data circles based on filtered data
     useEffect(() => {
@@ -662,7 +644,8 @@ export function WorldMap({
         if (!svg) return;
 
         d3.select(svg).selectAll(".color-legend").remove();
-        const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
+        const mapLayer =
+            layer ?? d3.select(svg).select<SVGGElement>(".map-layer");
         if (mapLayer.empty()) return;
 
         const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
@@ -761,18 +744,11 @@ export function WorldMap({
             .transition()
             .duration(animationDuration)
             .attr("fill", (d: any) => {
-                const know = isCountryMode
-                    ? pays_english.has(d.properties.name)
-                    : true;
                 return d.properties.name === "France"
                     ? "#ff6b6b"
-                    : know
-                      ? theme === "light"
-                          ? config.colorValidCountryLight
-                          : config.colorValidCountryDark
-                      : theme === "light"
-                        ? config.colorInvalidCountryLight
-                        : config.colorInvalidCountryDark;
+                    : isKnownCountry(d.properties.name, isCountryMode)
+                      ? config[theme].validCountry
+                      : config[theme].invalidCountry;
             });
 
         if (isCountryMode) {
