@@ -65,11 +65,11 @@
         "historic": "Historical events:"
     },
     "Tooltip": {
-        "export-euro": "Export (k€): ",
-        "import-euro": "Import (k€): ",
-        "export-ton": "Export (tonnes): ",
-        "import-ton": "Import (tonnes): ",
-        "balance-euro": "Trade balance: "
+        "export-euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "import-euro": "Import: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "export-ton": "Export: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "import-ton": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "balance-euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}"
     },
     "WorldMap": {
         "error-data": "Error loading data",

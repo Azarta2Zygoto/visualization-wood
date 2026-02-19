@@ -52,8 +52,6 @@ export default function TooltipMap({
     useLayoutEffect(() => {
         if (!tooltipRef.current) return;
 
-        console.log("Tooltip position recalculated");
-
         const replaceDots = () => {
             if (!tooltipRef.current) return;
 
@@ -70,13 +68,6 @@ export default function TooltipMap({
                 y + height > windowSize.height
                     ? Math.min(y, windowSize.height) - height - 10
                     : y + 20;
-            console.log({
-                left,
-                top,
-                windowSize,
-                tooltipSize: { width, height },
-                position: { x, y },
-            });
             setCurrentPosition({ x: left, y: top });
         };
 
@@ -115,41 +106,36 @@ export default function TooltipMap({
             </div>
             <ul>
                 <li>
-                    <strong>{t("export-euro")}</strong>
-                    {typeof values.export_euro === "number"
-                        ? values.export_euro.toLocaleString("fr-FR") + " k€"
-                        : values.export_euro}
+                    <strong>
+                        {t("export-euro", { value: values.export_euro })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>{t("import-euro")}</strong>
-                    {typeof values.import_euro === "number"
-                        ? values.import_euro.toLocaleString("fr-FR") + " k€"
-                        : values.import_euro}
+                    <strong>
+                        {t("import-euro", { value: values.import_euro })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>{t("balance-euro")}</strong>
-                    {typeof values.balance_euro === "number"
-                        ? values.balance_euro.toLocaleString("fr-FR") + " k€"
-                        : values.balance_euro}
+                    <strong>
+                        {t("balance-euro", { value: values.balance_euro })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>{t("export-ton")}</strong>
-                    {typeof values.export_tonnes === "number"
-                        ? values.export_tonnes.toLocaleString("fr-FR")
-                        : values.export_tonnes}
+                    <strong>
+                        {t("export-ton", { value: values.export_tonnes })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>{t("export-ton")}</strong>
-                    {typeof values.import_tonnes === "number"
-                        ? values.import_tonnes.toLocaleString("fr-FR")
-                        : values.import_tonnes}
+                    <strong>
+                        {t("import-ton", { value: values.import_tonnes })}
+                    </strong>
                 </li>
             </ul>
         </div>
     );
 }
 
-const defaultNoData = "No data";
+const defaultNoData = -1;
 const AllNoData = {
     export_euro: defaultNoData,
     import_euro: defaultNoData,
