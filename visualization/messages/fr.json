@@ -69,7 +69,8 @@
         "import-euro": "Import : {value, plural, =-1 {No data} other {{value, number} k€}}",
         "export-ton": "Export : {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
         "import-ton": "Import : {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
-        "balance-euro": "Balance commerciale : {value, plural, =-1 {No data} other {{value, number} k€}}"
+        "balance-euro": "Balance commerciale : {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "flag": "Drapeau de {country}"
     },
     "WorldMap": {
         "error-data": "Erreur lors du chargement des données",

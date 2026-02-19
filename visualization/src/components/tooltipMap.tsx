@@ -32,7 +32,7 @@ export default function TooltipMap({
     position: { x, y } = { x: 0, y: 0 },
 }: TooltipMapProps): JSX.Element {
     const t = useTranslations("Tooltip");
-    const { windowSize } = useGlobal();
+    const { windowSize, locale } = useGlobal();
 
     const tooltipRef = useRef<HTMLDivElement>(null);
     const [currentPosition, setCurrentPosition] = useState<{
@@ -40,9 +40,9 @@ export default function TooltipMap({
         y: number;
     }>({ x, y });
 
-    const countryCode = Object.values(countryConversion).find(
+    const countryValue = Object.values(countryConversion).find(
         (c) => c.en === country || c.fr === country,
-    )?.code;
+    );
 
     const values = useMemo(
         () => calculateData(usefullData, country),
@@ -85,18 +85,30 @@ export default function TooltipMap({
             }}
         >
             <div className="rows">
-                {hasFlag(countryCode || "") && countryCode ? (
+                {hasFlag(countryValue?.code || "") && countryValue?.code ? (
                     <Image
                         className="tooltip-country"
-                        alt={country || ""}
-                        aria-label={country}
+                        alt={t("flag", {
+                            country:
+                                locale === "en"
+                                    ? countryValue?.en
+                                    : countryValue?.fr || "unknown",
+                        })}
+                        aria-label={t("flag", {
+                            country:
+                                locale === "en"
+                                    ? countryValue?.en
+                                    : countryValue?.fr || "unknown",
+                        })}
                         width={32}
                         height={24}
-                        src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`}
+                        src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryValue?.code}.svg`}
                     />
                 ) : null}
                 <h3>
-                    {country + " - "}
+                    {locale === "en"
+                        ? countryValue?.en + " - "
+                        : countryValue?.fr + " - "}
                     {month !== 0 &&
                         month_names[
                             month?.toString() as keyof typeof month_names
