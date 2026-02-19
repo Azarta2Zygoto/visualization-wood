@@ -6,6 +6,7 @@ import { Fragment, type JSX, useEffect, useState } from "react";
 import Papa from "papaparse";
 
 import ArrowUpDown from "@/components/ArrowUpDown";
+import ParamBar from "@/components/ParamBar";
 import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/graphique";
 import Loading from "@/components/loading";
@@ -33,6 +34,8 @@ export default function HomePage(): JSX.Element {
     const [isCountryMode, setIsCountryMode] = useState<boolean>(true);
     const [loadingYears, setLoadingYears] = useState<Set<number>>(new Set());
     const [iconSelected, setIconSelected] = useState<string[]>([]);
+    const [isOpenParamBar, setIsOpenParamBar] = useState<boolean>(false);
+    const [mapDefinition, setMapDefinition] = useState<string>("low");
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -116,6 +119,23 @@ export default function HomePage(): JSX.Element {
     return (
         <Fragment>
             <h1 className="title">{t("title")}</h1>
+            <button
+                className="btn btn-param"
+                type="button"
+                aria-label={t("parameters")}
+                title={t("parameters")}
+                onClick={() => setIsOpenParamBar((prev) => !prev)}
+            >
+                {isOpenParamBar ? "×" : "⚙️"}
+            </button>
+
+            <ParamBar
+                open={isOpenParamBar}
+                mapDefinition={mapDefinition}
+                setOpen={setIsOpenParamBar}
+                setMapDefinition={setMapDefinition}
+            />
+
             <WorldMap
                 allData={allData}
                 type={typeData}
@@ -125,6 +145,7 @@ export default function HomePage(): JSX.Element {
                 countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
+                mapDefinition={mapDefinition}
                 setCountriesSelected={setCountriesSelected}
             />
 

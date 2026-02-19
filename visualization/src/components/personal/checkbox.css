@@ -1,0 +1,96 @@
+.checkbox-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: fit-content;
+    margin: 5px 10px;
+    padding-right: 30px;
+    min-height: 25px;
+
+    cursor: pointer;
+    user-select: auto;
+}
+.checkbox-container input[type="checkbox"] {
+    opacity: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+.checkbox-checkmark {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    height: 20px;
+    width: 20px;
+    transform: translateY(-50%);
+    background-color: transparent;
+    border: 2px solid var(--color-special, #00aaff);
+    border-radius: 5px;
+    box-shadow: 0 2px 8px #1167b10f;
+
+    user-select: none;
+    outline: 2px solid transparent;
+    transition:
+        background-color 0.3s ease,
+        box-shadow 0.3s ease,
+        outline 0.3s ease;
+}
+.checkbox-placement {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    margin: 0;
+    padding: 0;
+    transform: translateY(-50%);
+}
+.checkbox-checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+.checkbox-container .checkbox-checkmark:after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+.checkbox-container input[type="checkbox"]:checked ~ .checkbox-checkmark {
+    background-color: var(--color-special, #00aaff);
+}
+.checkbox-container input[type="checkbox"]:checked ~ .checkbox-checkmark:after {
+    display: block;
+}
+.checkbox-container input[type="checkbox"]:focus-visible ~ .checkbox-checkmark {
+    outline: 2px solid var(--outline-color, #fefefe);
+    box-shadow: 0 0 3px 4px var(--outline-color-shadow, #fefefe1a);
+}
+.checkbox-container:hover input[type="checkbox"] ~ .checkbox-checkmark {
+    box-shadow: 0 0 3px 4px var(--border-color-shadow-special, #00aaff40);
+}
+.checkbox-container input[type="checkbox"]:disabled ~ .checkbox-checkmark {
+    background-color: var(--disabled-bg-color, #838080);
+    border-color: var(--disabled-border-color, #838080);
+    box-shadow: none !important;
+}
+.checkbox-container.disabled {
+    cursor: auto;
+}
+
+.checkbox-container.reverse {
+    padding-left: 30px;
+    padding-right: 0;
+}
+.checkbox-container.reverse .checkbox-checkmark {
+    left: 0;
+    right: auto;
+}

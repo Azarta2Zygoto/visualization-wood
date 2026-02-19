@@ -38,6 +38,7 @@ interface WorldMapProps {
     countriesSelected: number[];
     isMultipleMode: boolean;
     isCountryMode: boolean;
+    mapDefinition: string;
     setCountriesSelected: (countries: number[]) => void;
 }
 
@@ -50,6 +51,7 @@ export function WorldMap({
     countriesSelected,
     isMultipleMode,
     isCountryMode = false,
+    mapDefinition,
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
     const t = useTranslations("WorldMap");
@@ -61,7 +63,7 @@ export function WorldMap({
     ] as const;
 
     const svgRef = useRef<SVGSVGElement>(null);
-    const worldDataCache = useRef<any>(null);
+    const worldDataCache = useRef<{ map: any; size: string }>(null);
     const projectionRef = useRef<d3.GeoProjection | null>(null);
     const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
     const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
@@ -369,15 +371,52 @@ export function WorldMap({
             d3.select(svg).selectAll("*").remove();
 
             try {
+                console.log("Loading map data...");
                 // Fetch or use cached world topology data
-                let worldData = worldDataCache.current;
-                if (!worldData) {
-                    const url = `${basePath}/world/world-110m.json`;
+                let worldData = worldDataCache.current?.map;
+                const cachedSize = worldDataCache.current?.size;
+                console.log(
+                    `Map definition requested: ${mapDefinition}, cached definition: ${cachedSize}`,
+                );
+                if (!worldData || cachedSize !== mapDefinition) {
+                    let size = "110m";
+                    switch (mapDefinition) {
+                        case "low":
+                            console.log(
+                                "Low definition selected, using 110m...",
+                            );
+                            size = "110m";
+                            break;
+                        case "medium":
+                            console.log(
+                                "Medium definition selected, using 50m...",
+                            );
+                            size = "50m";
+                            break;
+                        case "high":
+                            console.log(
+                                "High definition selected, using 10m...",
+                            );
+                            size = "10m";
+                            break;
+                        default:
+                            console.log(
+                                `Unknown map definition "${mapDefinition}", defaulting to low (110m)...`,
+                            );
+                            size = "110m";
+                    }
+                    console.log(`Fetching map data for definition: ${size}...`);
+                    console.log(mapDefinition);
+                    const url = `${basePath}/world/world-${size}.json`;
                     const response = await fetch(url);
                     if (!response.ok)
                         throw new Error("Failed to load world data");
                     worldData = await response.json();
-                    worldDataCache.current = worldData;
+                    worldDataCache.current = {
+                        map: worldData,
+                        size: mapDefinition,
+                    };
+                    console.log("Map data loaded and cached:", url);
                 }
 
                 // Extract country features (topojson.feature always returns FeatureCollection)
@@ -501,10 +540,11 @@ export function WorldMap({
                         return d.properties.name === "France"
                             ? "#ff6b6b"
                             : know
-                              ? "#87ceeb"
-                              : "#d3d3d3";
+                              ? "var(--valid-country)"
+                              : "var(--invalid-country)";
                     })
-                    .attr("stroke", "#999")
+                    .attr("stroke", "var(--low-border-color)")
+                    .attr("data-name", (d: any) => d.properties.name)
                     .attr("stroke-width", 0.5)
                     .style("cursor", (d: any) => {
                         const know = isCountryMode
@@ -559,7 +599,13 @@ export function WorldMap({
             }
         };
         loadMap();
-    }, [applyLegendZoom, isCountryMode, windowSize.height, windowSize.width]);
+    }, [
+        applyLegendZoom,
+        isCountryMode,
+        windowSize.height,
+        windowSize.width,
+        mapDefinition,
+    ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
     useEffect(() => {
@@ -720,8 +766,8 @@ export function WorldMap({
                 return d.properties.name === "France"
                     ? "#ff6b6b"
                     : know
-                      ? "#87ceeb"
-                      : "#d3d3d3";
+                      ? "var(--valid-country)"
+                      : "var(--invalid-country)";
             });
 
         if (isCountryMode) {
@@ -845,8 +891,6 @@ function createLegend(
         .attr("width", 140)
         .attr("height", 110)
         .attr("rx", 8)
-        .attr("fill", "#ffffffaa")
-        .attr("stroke", "#999")
         .attr("class", "legend-clip-rect");
 
     legendLayer
@@ -856,15 +900,15 @@ function createLegend(
         .attr("width", 140)
         .attr("height", 130)
         .attr("rx", 8)
-        .attr("fill", "#ffffffaa")
-        .attr("stroke", "#999")
+        .attr("fill", "var(--bg-legend)")
+        .attr("stroke", "var(--border-color)")
         .attr("class", "legend-background");
 
     legendLayer
         .append("text")
         .attr("x", 10)
         .attr("y", 25)
-        .attr("fill", "#333")
+        .attr("fill", "var(--fg)")
         .attr("font-size", 18)
         .attr("class", "legend-text")
         .text(name);
@@ -927,7 +971,7 @@ function makeCircleProjection(
             .attr("class", "legend-label")
             .attr("x", 10)
             .attr("y", (d) => 50 + 30 * 2 - radiusScale(d) * 2 + 5)
-            .attr("fill", "#333")
+            .attr("fill", "var(--fg)")
             .attr("font-size", 12)
             .text((d) => (d / 1000).toFixed(0) + "000");
 
@@ -941,7 +985,7 @@ function makeCircleProjection(
             .attr("y1", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
             .attr("x2", 60)
             .attr("y2", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
-            .attr("stroke", "#333")
+            .attr("stroke", "var(--fg)")
             .attr("stroke-width", 1);
 
         applyZoom(legendLayer, zoom);

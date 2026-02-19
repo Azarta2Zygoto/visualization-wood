@@ -7,9 +7,9 @@ import list_products from "@/data/N890_LIB.json";
 import metadata from "@/data/metadata.json";
 import icon_symbol from "@/data/symboles.json";
 
-import Checkbox from "./personal.tsx/checkbox";
-import MonthSelector from "./personal.tsx/monthSelector";
-import SelectMenu from "./personal.tsx/selectMenu";
+import Checkbox from "./personal/checkbox";
+import MonthSelector from "./personal/monthSelector";
+import SelectMenu from "./personal/selectMenu";
 import { MultiSelect } from "./ui/multi-select";
 
 interface ConfigBarProps {

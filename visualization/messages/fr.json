@@ -1,6 +1,7 @@
 {
     "HomePage": {
-        "title": "Echanges internationaux de bois"
+        "title": "Echanges internationaux de bois",
+        "parameters": "Paramètres de visualisation"
     },
     "NotFound": {
         "title": "404 - Page non trouvée",
@@ -18,15 +19,19 @@
         "selectAnOption": "Sélectionnez une option",
         "select-lang": "Sélectionner un ou des langages de programmation",
         "select-icon": "Sélectionner un ou des types d'événements",
+        "selectLanguage": "Sélectionner une langue",
         "search": "Rechercher...",
         "all": "Tous",
         "clear": "Effacer",
         "close": "Fermer",
+        "switch-theme": "Changer de thème",
         "more": "{count, plural, =1 {option} other {options}}",
         "clear-all": "Effacer toutes les sélections",
         "aria-search": "Champ de recherche",
         "dropdown-explain": "Sélecteur déroulant à plusieurs choix. Utilisez les flèches haut et bas pour naviguer, la barre d'espace pour sélectionner ou désélectionner une option, et la touche Échap pour fermer le sélecteur.",
-        "filter-explain": "Ecrivez pour filtrer les options disponibles. Utilisez les flèches haut et bas pour naviguer dans les options filtrées."
+        "filter-explain": "Ecrivez pour filtrer les options disponibles. Utilisez les flèches haut et bas pour naviguer dans les options filtrées.",
+        "fr": "Français",
+        "en": "Anglais"
     },
     "Loading": {
         "loading": "Chargement des données de {year}...",
@@ -70,5 +75,14 @@
         "error-data": "Erreur lors du chargement des données",
         "legend": "Légende :",
         "balance": "Balance commerciale"
+    },
+    "ParamBar": {
+        "map-definition": "Définition de la carte :",
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Elevée",
+        "close": "Fermer les paramètres",
+        "select-language": "Sélectionner la langue :",
+        "select-theme": "Sélectionner le thème :"
     }
 }

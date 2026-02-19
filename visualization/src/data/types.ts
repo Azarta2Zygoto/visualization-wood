@@ -7,3 +7,5 @@ export interface CountryData {
     };
     geometry: MultiPolygon;
 }
+
+export type Themes = "light" | "dark";

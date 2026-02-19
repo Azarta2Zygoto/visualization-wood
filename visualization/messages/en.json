@@ -1,6 +1,7 @@
 {
     "HomePage": {
-        "title": "Wood international trade with France"
+        "title": "Wood international trade with France",
+        "parameters": "Visualization parameters"
     },
     "NotFound": {
         "title": "404 - Page not found",
@@ -18,15 +19,19 @@
         "selectAnOption": "Select an option",
         "select-lang": "Select one or more programming languages",
         "select-icon": "Select one or more event types",
+        "selectLanguage": "Select a language",
         "search": "Search...",
         "all": "All",
         "clear": "Clear",
         "close": "Close",
+        "switch-theme": "Switch theme",
         "more": "{count, plural, =1 {option} other {options}}",
         "clear-all": "Clear all selections",
         "aria-search": "Search field",
         "dropdown-explain": "Multi-select dropdown. Use the up and down arrows to navigate, spacebar to select or deselect an option, and escape to close the dropdown.",
-        "filter-explain": "Type to filter available options. Use the up and down arrows to navigate through the filtered options."
+        "filter-explain": "Type to filter available options. Use the up and down arrows to navigate through the filtered options.",
+        "fr": "French",
+        "en": "English"
     },
     "Loading": {
         "loading": "Load data for {year}...",
@@ -70,5 +75,14 @@
         "error-data": "Error loading data",
         "legend": "Legend:",
         "balance": "Trade balance"
+    },
+    "ParamBar": {
+        "map-definition": "Map definition:",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "close": "Close parameters",
+        "select-language": "Select language:",
+        "select-theme": "Select theme:"
     }
 }

@@ -1,9 +1,12 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import type { Themes } from "@/data/types";
+
 const defaultLocale = "fr";
-const locales = ["fr"];
+const locales = ["fr", "en"] as const;
 
 const GlobalContext = createContext<{
     locale: string;
@@ -12,6 +15,8 @@ const GlobalContext = createContext<{
     setWindowSize: (size: { width: number; height: number }) => void;
     allowArrowScroll: boolean;
     setAllowArrowScroll: (v: boolean) => void;
+    theme: Themes;
+    setTheme: (v: Themes) => void;
 }>({
     locale: defaultLocale,
     setLocale: () => {},
@@ -19,6 +24,8 @@ const GlobalContext = createContext<{
     setWindowSize: () => {},
     allowArrowScroll: true,
     setAllowArrowScroll: () => {},
+    theme: "light",
+    setTheme: () => {},
 });
 
 export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -49,7 +56,26 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return { width: window.innerWidth, height: window.innerHeight };
     });
+
+    const [theme, setTheme] = useState<Themes>("light");
     const [allowArrowScroll, setAllowArrowScroll] = useState(true);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        const storedTheme = localStorage.getItem("theme") as Themes | null;
+        if (
+            storedTheme &&
+            (storedTheme === "light" || storedTheme === "dark")
+        ) {
+            setTheme(storedTheme);
+            return;
+        }
+        const prefersDark = window.matchMedia(
+            "(prefers-color-scheme: dark)",
+        ).matches;
+        setTheme(prefersDark ? "dark" : "light");
+    }, []);
 
     useEffect(() => {
         localStorage.setItem("locale", locale);
@@ -68,6 +94,11 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
         };
     }, []);
 
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+    }, [theme]);
+
     return (
         <GlobalContext.Provider
             value={{
@@ -77,6 +108,8 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
                 setWindowSize,
                 allowArrowScroll,
                 setAllowArrowScroll,
+                theme,
+                setTheme,
             }}
         >
             {children}
