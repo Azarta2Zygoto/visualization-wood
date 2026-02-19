@@ -29,6 +29,13 @@ const pays_english = new Set(Object.values(pays).map((country) => country.en));
 const animationDuration = 800;
 const ParisCoord: [number, number] = [2.3522, 48.8566];
 
+const config = {
+    legendHeight: 130,
+    legendWidth: 140,
+    legendMaxHeight: 250,
+    legendMaxWidth: 300,
+};
+
 interface WorldMapProps {
     allData: { [key: string]: number[][] };
     type: number;
@@ -152,12 +159,9 @@ export function WorldMap({
         (
             legend: d3.Selection<SVGGElement, unknown, null, undefined>,
             zoomScale: number,
+            radiusScale: d3.ScaleLinear<number, number>,
         ) => {
-            const radiusScale = legendScaleRef.current;
-            if (!radiusScale) return;
-
-            const baseY = 50 + 30 * 2;
-
+            const baseY = 110;
             legend
                 .selectAll<SVGCircleElement, number>(".legend-circle")
                 .attr("r", (d) => radiusScale(d) * zoomScale)
@@ -222,50 +226,53 @@ export function WorldMap({
                 })
                 .selectAll<SVGTextElement, unknown>(".legend-text");
 
+            let rectWidth = config.legendWidth;
+            let rectHeight = config.legendHeight;
             if (isCountryMode) {
-                const rectWidth = Math.max(
-                    Math.min(140 * zoomScale ** 0.75, 300),
-                    140,
+                rectWidth = Math.max(
+                    Math.min(
+                        config.legendWidth * zoomScale ** 0.6,
+                        config.legendMaxWidth,
+                    ),
+                    config.legendWidth,
                 );
-                const rectHeight = Math.max(
-                    Math.min(130 * zoomScale ** 0.75, 250),
-                    130,
+                rectHeight = Math.max(
+                    Math.min(
+                        config.legendHeight * zoomScale ** 0.6,
+                        config.legendMaxHeight,
+                    ),
+                    config.legendHeight,
                 );
-
-                element
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-                clipRect
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-
-                legendText.attr("x", 10).attr("y", -rectHeight + 135);
             } else {
-                const rectWidth = Math.max(
-                    Math.min(140 * zoomScale ** 0.18, 300),
-                    140,
+                rectWidth = Math.max(
+                    Math.min(
+                        config.legendWidth * zoomScale ** 0.18,
+                        config.legendMaxWidth,
+                    ),
+                    config.legendWidth,
                 );
-                const rectHeight = Math.max(
-                    Math.min(130 * zoomScale ** 0.18, 250),
-                    130,
+                rectHeight = Math.max(
+                    Math.min(
+                        config.legendHeight * zoomScale ** 0.18,
+                        config.legendMaxHeight,
+                    ),
+                    config.legendHeight,
                 );
-                element
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-                clipRect
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-
-                legendText.attr("x", 10).attr("y", -rectHeight + 135);
             }
+            element
+                .attr("width", rectWidth)
+                .attr("height", rectHeight)
+                .attr("x", 0)
+                .attr("y", config.legendHeight - rectHeight);
+            clipRect
+                .attr("width", rectWidth)
+                .attr("height", rectHeight)
+                .attr("x", 0)
+                .attr("y", config.legendHeight - rectHeight);
+
+            legendText
+                .attr("x", 10)
+                .attr("y", -rectHeight + config.legendHeight + 25);
         },
         [isCountryMode],
     );
@@ -339,7 +346,6 @@ export function WorldMap({
 
     // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)
     const handleCountryMouseout = useCallback((event: any) => {
-        console.log("Mouse out:", event.target.__data__);
         if (event.target.__data__.continentCode) {
             d3.selectAll(".data-arrow").attr("opacity", 1);
         } else
@@ -375,38 +381,21 @@ export function WorldMap({
                 // Fetch or use cached world topology data
                 let worldData = worldDataCache.current?.map;
                 const cachedSize = worldDataCache.current?.size;
-                console.log(
-                    `Map definition requested: ${mapDefinition}, cached definition: ${cachedSize}`,
-                );
                 if (!worldData || cachedSize !== mapDefinition) {
                     let size = "110m";
                     switch (mapDefinition) {
                         case "low":
-                            console.log(
-                                "Low definition selected, using 110m...",
-                            );
                             size = "110m";
                             break;
                         case "medium":
-                            console.log(
-                                "Medium definition selected, using 50m...",
-                            );
                             size = "50m";
                             break;
                         case "high":
-                            console.log(
-                                "High definition selected, using 10m...",
-                            );
                             size = "10m";
                             break;
                         default:
-                            console.log(
-                                `Unknown map definition "${mapDefinition}", defaulting to low (110m)...`,
-                            );
                             size = "110m";
                     }
-                    console.log(`Fetching map data for definition: ${size}...`);
-                    console.log(mapDefinition);
                     const url = `${basePath}/world/world-${size}.json`;
                     const response = await fetch(url);
                     if (!response.ok)
@@ -416,7 +405,6 @@ export function WorldMap({
                         map: worldData,
                         size: mapDefinition,
                     };
-                    console.log("Map data loaded and cached:", url);
                 }
 
                 // Extract country features (topojson.feature always returns FeatureCollection)
@@ -506,7 +494,11 @@ export function WorldMap({
                     .on("zoom", (event) => {
                         mapLayer.attr("transform", event.transform);
                         currentTransformRef.current = event.transform;
-                        applyLegendZoom(correctLegend, event.transform.k);
+                        applyLegendZoom(
+                            correctLegend,
+                            event.transform.k,
+                            legendScaleRef.current!,
+                        );
                     });
 
                 mapSvg.call(zoom);
@@ -734,7 +726,6 @@ export function WorldMap({
                 maxValue,
                 minValue,
             );
-            console.log("Color scale domain:", colorScale.domain());
             const colorLegend = Legend(colorScale, {
                 width: 50,
                 height: windowSize.height * 0.8,
@@ -888,8 +879,8 @@ function createLegend(
         .append("rect")
         .attr("x", 0)
         .attr("y", 0)
-        .attr("width", 140)
-        .attr("height", 110)
+        .attr("width", config.legendWidth)
+        .attr("height", config.legendHeight)
         .attr("rx", 8)
         .attr("class", "legend-clip-rect");
 
@@ -897,8 +888,8 @@ function createLegend(
         .append("rect")
         .attr("x", 0)
         .attr("y", 0)
-        .attr("width", 140)
-        .attr("height", 130)
+        .attr("width", config.legendWidth)
+        .attr("height", config.legendHeight)
         .attr("rx", 8)
         .attr("fill", "var(--bg-legend)")
         .attr("stroke", "var(--border-color)")
@@ -917,7 +908,7 @@ function createLegend(
         .append("g")
         .attr("class", "inner-legend")
         .attr("clip-path", `url(#${clipId})`)
-        .attr("transform", `translate(0, -10)`);
+        .attr("transform", `translate(0, 10)`);
 
     return innerLegend;
 }
@@ -936,6 +927,7 @@ function makeCircleProjection(
     applyZoom: (
         legend: d3.Selection<SVGGElement, unknown, null, undefined>,
         zoomScale: number,
+        radiusScale: d3.ScaleLinear<number, number, never>,
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
@@ -956,11 +948,24 @@ function makeCircleProjection(
             .append("circle")
             .attr("class", "legend-circle")
             .attr("cx", 100)
-            .attr("cy", (d) => 50 + 30 * 2 - radiusScale(d))
+            .attr("cy", (d) => 110 - radiusScale(d))
             .attr("r", (d) => radiusScale(d))
             .attr("fill", "#ff9800")
             .attr("opacity", 0.7)
             .attr("stroke", "#e65100")
+            .attr("stroke-width", 1);
+
+        legendLayer
+            .selectAll(".legend-tick")
+            .data(legendValues)
+            .enter()
+            .append("line")
+            .attr("class", "legend-tick")
+            .attr("x1", 100)
+            .attr("y1", (d) => 110 - radiusScale(d) * 2)
+            .attr("x2", 60)
+            .attr("y2", (d) => 110 - radiusScale(d) * 2)
+            .attr("stroke", "var(--fg)")
             .attr("stroke-width", 1);
 
         legendLayer
@@ -970,25 +975,12 @@ function makeCircleProjection(
             .append("text")
             .attr("class", "legend-label")
             .attr("x", 10)
-            .attr("y", (d) => 50 + 30 * 2 - radiusScale(d) * 2 + 5)
+            .attr("y", (d) => 115 - radiusScale(d) * 2)
             .attr("fill", "var(--fg)")
             .attr("font-size", 12)
             .text((d) => (d / 1000).toFixed(0) + "000");
 
-        legendLayer
-            .selectAll(".legend-tick")
-            .data(legendValues)
-            .enter()
-            .append("line")
-            .attr("class", "legend-tick")
-            .attr("x1", 100)
-            .attr("y1", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
-            .attr("x2", 60)
-            .attr("y2", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
-            .attr("stroke", "var(--fg)")
-            .attr("stroke-width", 1);
-
-        applyZoom(legendLayer, zoom);
+        applyZoom(legendLayer, zoom, radiusScale);
     }
 
     // Bind data to circles (only countries with data)
@@ -1049,6 +1041,7 @@ function makeArrowProjection(
     applyZoom: (
         legend: d3.Selection<SVGGElement, unknown, null, undefined>,
         zoomScale: number,
+        strokeScale: d3.ScaleLinear<number, number, never>,
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
@@ -1106,7 +1099,6 @@ function makeArrowProjection(
         .transition("exit")
         .duration(animationDuration)
         .attr("stroke-dashoffset", function () {
-            console.log("Exiting arc:", d3.select(this).datum());
             const length = (this as SVGPathElement).getTotalLength();
             return `${length}`;
         })
@@ -1220,7 +1212,7 @@ function makeArrowProjection(
             .attr("font-size", 12)
             .text((d) => (d / 1000).toFixed(0) + "000");
 
-        applyZoom(legendLayer, zoom);
+        applyZoom(legendLayer, zoom, strokeScale);
     }
     return strokeScale;
 }
