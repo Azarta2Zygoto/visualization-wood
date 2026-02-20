@@ -175,6 +175,14 @@ export default function HomePage(): JSX.Element {
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
+            <Graphique
+                allData={allData}
+                type={[typeData]}
+                productsSelected={productsSelected}
+                countriesSelected={countriesSelected}
+                iconSelected={iconSelected}
+                allEvents={allEvents}
+            />
         </Fragment>
     );
 }
