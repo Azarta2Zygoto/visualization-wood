@@ -93,6 +93,11 @@
         "high": "Elevée",
         "close": "Fermer les paramètres",
         "select-language": "Sélectionner la langue :",
-        "select-theme": "Sélectionner le thème :"
+        "select-theme": "Sélectionner le thème :",
+        "map-projection": "Projection cartographique :",
+        "geoEqualEarth": "Equal Earth",
+        "geoNaturalEarth": "Natural Earth",
+        "geoMercator": "Mercator",
+        "geoOrthographic": "Orthographique"
     }
 }

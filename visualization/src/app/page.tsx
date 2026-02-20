@@ -37,6 +37,8 @@ export default function HomePage(): JSX.Element {
     const [isOpenParamBar, setIsOpenParamBar] = useState<boolean>(false);
     const [mapDefinition, setMapDefinition] = useState<string>("low");
     const [isAbsolute, setIsAbsolute] = useState<boolean>(false);
+    const [geoProjection, setGeoProjection] =
+        useState<string>("geoNaturalEarth");
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -133,8 +135,10 @@ export default function HomePage(): JSX.Element {
             <ParamBar
                 open={isOpenParamBar}
                 mapDefinition={mapDefinition}
+                geoProjection={geoProjection}
                 setOpen={setIsOpenParamBar}
                 setMapDefinition={setMapDefinition}
+                setGeoProjection={setGeoProjection}
             />
 
             <WorldMap
@@ -148,6 +152,7 @@ export default function HomePage(): JSX.Element {
                 isCountryMode={isCountryMode}
                 mapDefinition={mapDefinition}
                 isAbsolute={isAbsolute}
+                geoProjection={geoProjection}
                 setCountriesSelected={setCountriesSelected}
             />
 

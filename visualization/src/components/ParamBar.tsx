@@ -3,8 +3,11 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX } from "react";
 
+import { projections } from "@/data/geoprojection";
+
 import { useGlobal } from "./globalProvider";
 import FlagSelectMenu from "./personal/flagSelectMenu";
+import SelectMenu from "./personal/selectMenu";
 import ThemeSwitch from "./personal/themeSwitch";
 
 const definitions = ["low", "medium", "high"] as const;
@@ -12,15 +15,19 @@ const definitions = ["low", "medium", "high"] as const;
 interface ParamBarProps {
     open: boolean;
     mapDefinition: string;
+    geoProjection: string;
     setOpen: (open: boolean) => void;
     setMapDefinition: (definition: string) => void;
+    setGeoProjection: (projection: string) => void;
 }
 
 export default function ParamBar({
     open,
     mapDefinition,
+    geoProjection,
     setOpen,
     setMapDefinition,
+    setGeoProjection,
 }: ParamBarProps): JSX.Element {
     const t = useTranslations("ParamBar");
 
@@ -69,6 +76,16 @@ export default function ParamBar({
                         </button>
                     ))}
                 </div>
+                <p>{t("map-projection")}</p>
+                <SelectMenu
+                    id="projection-select"
+                    options={projections.map((p) => ({
+                        label: t(p.name),
+                        value: p.name,
+                    }))}
+                    selectedOption={t(geoProjection)}
+                    onOptionSelect={setGeoProjection}
+                />
                 <button
                     className="btn"
                     type="button"

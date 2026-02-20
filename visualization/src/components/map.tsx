@@ -17,9 +17,11 @@ import * as topojson from "topojson-client";
 import type_data from "@/data/N027_LIB.json";
 import continent from "@/data/continent.json";
 import pays from "@/data/country_extended.json";
+import { projections } from "@/data/geoprojection";
 import type { CountryData } from "@/data/types";
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
+import { simpleDrag } from "@/utils/drag";
 import { isKnownCountry } from "@/utils/function";
 
 import { useGlobal } from "./globalProvider";
@@ -61,6 +63,7 @@ interface WorldMapProps {
     isCountryMode: boolean;
     mapDefinition: string;
     isAbsolute: boolean;
+    geoProjection: string;
     setCountriesSelected: (countries: number[]) => void;
 }
 
@@ -75,6 +78,7 @@ export function WorldMap({
     isCountryMode = false,
     mapDefinition,
     isAbsolute,
+    geoProjection,
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
     const t = useTranslations("WorldMap");
@@ -107,6 +111,8 @@ export function WorldMap({
             countryName: string;
             x: number;
             y: number;
+            lon: number;
+            lat: number;
         }>
     >([]);
     const [layer, setLayer] = useState<d3.Selection<
@@ -375,8 +381,13 @@ export function WorldMap({
             const savedTransform = currentTransformRef.current;
 
             // Create projection and path
-            const projection = d3
-                .geoNaturalEarth1()
+            const correctProjection = projections.find(
+                (p) => p.name === geoProjection,
+            );
+            if (!correctProjection) return;
+
+            const projection = correctProjection
+                .value()
                 .scale(310)
                 .translate(correctionSize);
             projectionRef.current = projection;
@@ -497,6 +508,7 @@ export function WorldMap({
                     .on("zoom", (event) => {
                         mapLayer.attr("transform", event.transform);
                         currentTransformRef.current = event.transform;
+
                         applyLegendZoom(
                             correctLegend,
                             event.transform.k,
@@ -504,7 +516,15 @@ export function WorldMap({
                         );
                     });
 
-                mapSvg.call(zoom);
+                if (correctProjection.drag) {
+                    mapSvg.call(
+                        simpleDrag({
+                            projection,
+                            pathGenerator,
+                            mapLayer,
+                        }),
+                    );
+                } else mapSvg.call(zoom);
 
                 // Restore previous transform
                 if (
@@ -562,12 +582,16 @@ export function WorldMap({
 
                         return {
                             countryName,
+                            lon: centroid[0],
+                            lat: centroid[1],
                             x: projectedCentroid[0],
                             y: projectedCentroid[1],
                         };
                     })
                     .filter(Boolean) as Array<{
                     countryName: string;
+                    lon: number;
+                    lat: number;
                     x: number;
                     y: number;
                 }>;
@@ -589,6 +613,7 @@ export function WorldMap({
         windowSize.width,
         mapDefinition,
         theme,
+        geoProjection,
     ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
@@ -766,6 +791,8 @@ export function WorldMap({
                     return {
                         countryName,
                         value,
+                        lon: point.lon,
+                        lat: point.lat,
                         x: point.x,
                         y: point.y,
                     };
@@ -775,6 +802,8 @@ export function WorldMap({
                 value: number;
                 x: number;
                 y: number;
+                lon: number;
+                lat: number;
             }>;
 
             // Find max value for scaling
@@ -816,6 +845,8 @@ export function WorldMap({
                             projection(
                                 values.center as [number, number],
                             )?.[1] || 0,
+                        lon: values.center[0],
+                        lat: values.center[1],
                     };
                 },
             );
