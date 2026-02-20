@@ -207,3 +207,4 @@ __marimo__/
 
 # The huge dataset files
 /data/
+/test_result/

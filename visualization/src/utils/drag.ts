@@ -55,7 +55,6 @@ export function simpleDrag({
     let v0: [number, number, number];
     let q0: [number, number, number, number];
     let r0: [number, number, number];
-    let a0: number;
     let tl = 0;
 
     const zoom = d3
@@ -72,7 +71,6 @@ export function simpleDrag({
 
         if (t.length !== tl) {
             tl = t.length;
-            if (tl > 1) a0 = Math.atan2(t[1][1] - t[0][1], t[1][0] - t[0][0]);
             zoomstarted.call(that, event);
         }
 
@@ -89,26 +87,25 @@ export function simpleDrag({
 
     function zoomstarted(this: SVGSVGElement, event: any) {
         projection.scale(event.transform.k);
-        v0 = versor.cartesian(projection.invert(point(event, this)));
+        const pt = point(event, this);
+        const coords: [number, number] = [pt[0], pt[1]];
+        v0 = versor.cartesian(
+            projection.invert ? (projection.invert(coords) ?? [0, 0]) : [0, 0],
+        );
         q0 = versor((r0 = projection.rotate()));
     }
 
     function zoomed(this: SVGSVGElement, event: any) {
         projection.scale(event.transform.k);
-        const pt = point(event, this);
+        const pt = point(event, this) as [number, number];
+        const rotatedProjection = projection.rotate(r0);
         const v1: [number, number, number] = versor.cartesian(
-            projection.rotate(r0).invert(pt),
+            rotatedProjection.invert
+                ? (rotatedProjection.invert(pt) ?? [0, 0])
+                : [0, 0],
         );
         const delta = versor.delta(v0, v1);
-        let q1 = versor.multiply(q0, delta);
-
-        // For multitouch, compose with a rotation around the axis.
-        if (pt[2] !== undefined) {
-            const d = (pt[2] - a0) / 2;
-            const s = -Math.sin(d);
-            const c = Math.sign(Math.cos(d));
-            q1 = versor.multiply([Math.sqrt(1 - s * s), 0, 0, c * s], q1);
-        }
+        const q1 = versor.multiply(q0, delta);
 
         projection.rotate(versor.rotation(q1));
 
