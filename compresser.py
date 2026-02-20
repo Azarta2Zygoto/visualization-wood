@@ -174,7 +174,7 @@ def count_element_in_column(data:list[list[str]], column_index:int, element:str)
             count += 1
     return count
 
-def erased_one_column(data:list[list[str]], header:list[str], column_value:str|list[str])->tuple[list[list[str]], list[str]]:
+def erased_specific_column(data:list[list[str]], header:list[str], column_value:str|list[str])->tuple[list[list[str]], list[str]]:
     """
     Erases a specified column.
 
@@ -373,22 +373,131 @@ def multiple_indexation_columns(
         output_file(output_file_name+"_"+str(first_file_number+index), file_data, header, file_extensions=["npz"])
     return indexed_data
 
+def count_distinct_tuples(data:list[list[str]], header:list[str], column_names:list[str]) -> tuple[set, int]:
+    """
+    Counts distinct tuples of values across specified columns.
+
+    Args:
+        data (list): The data to process.
+        header (list[str]): The header of the data.
+        column_names (list[str]): The list of column names to consider for tuple counting.
+
+    Returns:
+        tuple: A set of distinct tuples and their count.
+    """
+    distinct_tuples = set()
+    column_indexes = [header.index(col_name) for col_name in column_names]
+    for row in data:
+        if all(len(row) > col_index for col_index in column_indexes):
+            tuple_values = tuple(row[col_index] for col_index in column_indexes)
+            distinct_tuples.add(tuple_values)
+    return distinct_tuples, len(distinct_tuples)
+
+def is_similar_columns(data:list[list[str]], header:list[str], column_index1:int, column_index2:int) -> bool:
+    """
+    Determines if two columns are similar based on the proportion of matching values.
+
+    Args:
+        data (list): The data to process.
+        header (list[str]): The header of the data.
+        column_index1 (int): The index of the first column to compare.
+        column_index2 (int): The index of the second column to compare.
+        threshold (float): The similarity threshold (between 0 and 1).
+
+    Returns:
+        bool: True if the columns are similar, False otherwise.
+    """
+    if not data:
+        return False
+
+    matching_dico: dict[str, str] = {}
+    for row in data:
+        if len(row) > max(column_index1, column_index2):
+            value1 = row[column_index1]
+            value2 = row[column_index2]
+            if matching_dico.get(value1) is not None and matching_dico[value1] != value2:
+                print(f"Mismatch found: {value1} maps to both {matching_dico[value1]} and {value2}")
+                return False  # Found a mismatch for the same value in column 1
+            matching_dico[value1] = value2
+
+    return True  # All values in column 1 map to the same value in column 2
+
+def correcter_N890(data:list[list[str]], header:list[str]) -> list[list[str]]:
+    """
+    Corrects values in the N890_MOD column based on a provided dictionary.
+
+    Args:
+        data (list): The data to process.
+        header (list[str]): The header of the data.
+        dico_N890 (dict): A dictionary mapping incorrect values to correct values for the N890_MOD column.
+
+    Returns:
+        list: The modified data with corrected values in the N890_MOD column.
+    """
+    dico_N890 = json.load(open("data/LIB_MOD_convert.json", mode='r', encoding='utf-8'))
+    
+    col_index_source = header.index("N890_MOD")
+    col_index_modify = header.index("N890_LIB")
+    if col_index_source == -1 or col_index_modify == -1:
+        print("Error: N890_MOD or N890_LIB column not found in header.")
+        return data
+    
+    for row in data:
+        if len(row) > max(col_index_modify, col_index_source) and row[col_index_source] in dico_N890:
+            row[col_index_modify] = dico_N890[row[col_index_source]][0]  # Assuming we want the first correct value
+    return data
+
+
 
 if __name__ == "__main__":
     input_path = "data/FDS_COMEXTBOIS"
     output_folder_data = "visualization/public/data/"
-    output_folder_dico = "visualization/src/data/"
+    output_folder_dico = "result/"
     start_year = 2012
     end_year = 2025
 
     data, header = open_files(input_path, start_year, end_year)
     print(data[0], header)
+
+    """
     distinct_elements, distinct_count = count_distinct_elements(data, 2)
     print(f"Distinct elements in column 2: {distinct_elements} in total {distinct_count}")
     specific_count = count_element_in_column(data, 0, "NOM")
     print(f"Occurrences of 'NOM' in column 0: {specific_count}")
 
-    new_data, new_header = erased_one_column(data, header, ["GEOGRAPHIE_LIB", "N027_MOD", "N053_MOD", "N890_MOD"])
+    similar_columns = [["N027_LIB", "N027_MOD"], ["N053_LIB", "N053_MOD"], ["N890_LIB", "N890_MOD"]]
+    for col1, col2 in similar_columns:
+        col_index1 = header.index(col1)
+        col_index2 = header.index(col2)
+        if is_similar_columns(data, header, col_index1, col_index2):
+            print(f"Columns {col1} and {col2} are similar.")
+        else:
+            print(f"Columns {col1} and {col2} are not similar.")
+
+    distinct_tuple = count_distinct_tuples(new_data, header, ["N890_LIB", "N890_MOD"])
+    print(f"Distinct tuples for columns 'N053_N890_LIBLIB' and 'N890_MOD': {distinct_tuple[0]} in total {distinct_tuple[1]}")
+
+    new_data = correcter_N890(data, header)
+    print(f"Data after correction: {new_data[0:500]}, Header: {header}")
+
+    similar_columns = [["N027_LIB", "N027_MOD"], ["N053_LIB", "N053_MOD"], ["N890_LIB", "N890_MOD"]]
+    for col1, col2 in similar_columns:
+        col_index1 = header.index(col1)
+        col_index2 = header.index(col2)
+        if is_similar_columns(new_data, header, col_index1, col_index2):
+            print(f"Columns {col1} and {col2} are similar.")
+        else:
+            print(f"Columns {col1} and {col2} are not similar.")
+
+    
+    distinct_tuple = count_distinct_tuples(new_data, header, ["N890_LIB", "N890_MOD"])
+    print(f"Distinct tuples for columns 'N053_N890_LIBLIB' and 'N890_MOD': {distinct_tuple[0]} in total {distinct_tuple[1]}")
+    """
+
+    new_data = correcter_N890(data, header)
+    print(f"Data after correction: {new_data[0:500]}, Header: {header}")
+
+    new_data, new_header = erased_specific_column(new_data, header, ["GEOGRAPHIE_LIB", "N027_MOD", "N053_MOD", "N890_MOD"])
     print(f"Data after erasing column 3: {new_data[0]}, New Header: {new_header}")
 
     all_count = count_all_columns(new_data)
