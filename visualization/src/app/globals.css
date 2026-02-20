@@ -96,7 +96,8 @@ body {
     background-color: var(--bg);
     color: var(--fg);
     font-family: Helvetica, sans-serif;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     overscroll-behavior: contain;
     position: relative;
     transition:
