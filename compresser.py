@@ -42,6 +42,24 @@ def open_files(input_file_path:str, start:int|None, end:int|None, delimiter:str=
 
     return read_files, headers
 
+def open_json_file(input_file_path:str) -> dict:
+    """
+    Opens a JSON file and returns its content as a dictionary.
+
+    Args:
+        input_file_path (str): Path to the JSON input file (without the file extension).
+    Returns:
+        dict: The content of the JSON file as a dictionary.
+    """
+    try:
+        with open(f"{input_file_path}.json", mode='r', encoding='utf-8') as input_file:
+            data = json.load(input_file)
+        print(f"Successfully opened file {input_file_path}.json.")
+        return data
+    except Exception as e:
+        print(f"Error opening JSON file: {e}")
+        return {}
+
 
 def output_file(
         output_file_path:str,
@@ -452,7 +470,7 @@ def correcter_N890(data:list[list[str]], header:list[str]) -> list[list[str]]:
 if __name__ == "__main__":
     input_path = "data/FDS_COMEXTBOIS"
     output_folder_data = "visualization/public/data/"
-    output_folder_dico = "result/"
+    output_folder_dico = "test_result/"
     start_year = 2012
     end_year = 2025
 

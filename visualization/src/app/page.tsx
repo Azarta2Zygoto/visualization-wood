@@ -175,6 +175,7 @@ export default function HomePage(): JSX.Element {
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
+            {/** 
             <Graphique
                 allData={allData}
                 type={[typeData]}
@@ -183,6 +184,7 @@ export default function HomePage(): JSX.Element {
                 iconSelected={iconSelected}
                 allEvents={allEvents}
             />
+            */}
         </Fragment>
     );
 }

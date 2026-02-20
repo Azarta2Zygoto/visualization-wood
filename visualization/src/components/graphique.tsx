@@ -14,8 +14,8 @@ import * as d3 from "d3";
 import updateMultiLines_with_icons from "@/components/line_chart_with_icons";
 import updateMirrorStackedAreaChart from "@/components/mirror_stacked_area_chart";
 import type_data from "@/data/N027_LIB.json";
-import list_products from "@/data/N890_LIB.json";
 import pays from "@/data/country_extended.json";
+import list_products from "@/data/products.json";
 import all_icons from "@/data/symboles.json";
 
 import { useGlobal } from "./globalProvider";
@@ -266,7 +266,8 @@ function flattenGlobalMap(
 ): DataPoint[] {
     const countryMap = new Map<string, Country>(Object.entries(pays));
     const typeMap: Record<string, string> = type_data;
-    const produitMap: Record<string, string> = list_products;
+    const produitMap: Record<string, { name: string; code: string }> =
+        list_products;
 
     const result: DataPoint[] = [];
     const nestedMap = nestedMapRef.current;
@@ -289,7 +290,7 @@ function flattenGlobalMap(
                     result.push({
                         date: e.date,
                         pays: countryMap.get(String(countryId))?.fr,
-                        produit: produitMap[String(productId)],
+                        produit: produitMap[String(productId)].name,
                         type: typeMap[String(typeId)],
                         value: e.value,
                     });
@@ -335,7 +336,8 @@ function filterData(
 
     const countryMap = new Map<string, Country>(Object.entries(pays));
     const typeMap: Record<string, string> = type_data;
-    const produitMap: Record<string, string> = list_products;
+    const produitMap: Record<string, { name: string; code: string }> =
+        list_products;
     return Object.entries(allData) //il faut ajouter l'attribut year pour chaque année
         .flatMap(([year, yearData]) =>
             yearData.map((d: any) => ({
@@ -383,7 +385,7 @@ function filterData(
             return {
                 date: parsedDate ?? new Date(0), // si parseDateMonth retourne null, on met 1er Jan 1970
                 pays: countryMap.get(String(d[0]))?.fr,
-                produit: produitMap[String(d[3])],
+                produit: produitMap[String(d[3])].name,
                 type: typeMap[String(d[1])],
                 value: +d[4],
             } as DataPoint;

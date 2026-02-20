@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { type JSX, useState } from "react";
 
-import list_products from "@/data/N890_LIB.json";
 import metadata from "@/data/metadata.json";
+import list_products from "@/data/products.json";
 import icon_symbol from "@/data/symboles.json";
 
 import Checkbox from "./personal/checkbox";
@@ -343,7 +343,7 @@ export default function ConfigBar({
             <MultiSelect
                 id="lang"
                 options={Object.entries(list_products).map(([key, value]) => ({
-                    label: value,
+                    label: value.name,
                     value: key,
                 }))}
                 onValueChange={handleNewProductsSelected}

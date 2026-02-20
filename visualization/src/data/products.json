@@ -1,0 +1,814 @@
+{
+    "0": {
+        "name": "Produits",
+        "code": "0"
+    },
+    "1": {
+        "name": "Bruts ou simplement poncés",
+        "code": "0.2.11.3.12.1"
+    },
+    "2": {
+        "name": "Bois de feu n.c.a",
+        "code": "0.1.11.4.13"
+    },
+    "3": {
+        "name": "Feuilles pour placage",
+        "code": "0.2.11.1"
+    },
+    "4": {
+        "name": "Sciages de feuillus tempérés",
+        "code": "0.1.14.2"
+    },
+    "5": {
+        "name": "Bois lamellés (GLULAM, CLT)",
+        "code": "0.2.12.4.16"
+    },
+    "6": {
+        "name": "Sciures brutes",
+        "code": "0.1.12.2"
+    },
+    "7": {
+        "name": "Meubles et sièges en bois",
+        "code": "0.2.13.2"
+    },
+    "8": {
+        "name": "Caisses, cageots, tambours pour câbles",
+        "code": "0.2.12.2.11"
+    },
+    "9": {
+        "name": "Panneaux MDF-HDF",
+        "code": "0.2.11.4.12"
+    },
+    "10": {
+        "name": "Autres papiers et cartons bruts",
+        "code": "0.2.16.9"
+    },
+    "11": {
+        "name": "Autres plateaux",
+        "code": "0.2.12.2.12.9"
+    },
+    "12": {
+        "name": "Bois ronds",
+        "code": "0.1.11"
+    },
+    "13": {
+        "name": "Contreplaqués de feuilles de bois",
+        "code": "0.2.11.2.11"
+    },
+    "14": {
+        "name": "Sciages d'autres feuillus tempérés",
+        "code": "0.1.14.2.13"
+    },
+    "15": {
+        "name": "Pâtes à papier",
+        "code": "0.2.14"
+    },
+    "16": {
+        "name": "Autres pâtes de bois",
+        "code": "0.2.14.9"
+    },
+    "17": {
+        "name": "Fabrications en bois, meubles et sièges",
+        "code": "0.2.13"
+    },
+    "18": {
+        "name": "Sciages de conifères",
+        "code": "0.1.14.1"
+    },
+    "19": {
+        "name": "Bois bruts traités à la créosote ou autres",
+        "code": "0.1.11.5"
+    },
+    "20": {
+        "name": "Autres ouvrages de menuiserie",
+        "code": "0.2.12.4.19"
+    },
+    "21": {
+        "name": "Contreplaqués de feuilles de bois conifères",
+        "code": "0.2.11.2.11.1"
+    },
+    "22": {
+        "name": "Extraits tannants végétaux",
+        "code": "0.3.11"
+    },
+    "23": {
+        "name": "Déchets et débris de bois",
+        "code": "0.1.12.3"
+    },
+    "24": {
+        "name": "Chêne grumes",
+        "code": "0.1.11.2.11.1"
+    },
+    "25": {
+        "name": "Sciages de chêne",
+        "code": "0.1.14.2.11"
+    },
+    "26": {
+        "name": "Autres panneaux de particules",
+        "code": "0.2.11.3.12.9"
+    },
+    "27": {
+        "name": "Bois feuillards, pieux, piquets de feuillus",
+        "code": "0.2.12.9.11.2"
+    },
+    "28": {
+        "name": "Chêne trituration",
+        "code": "0.1.11.2.11.2"
+    },
+    "29": {
+        "name": "Pâtes de fibres autres que le bois",
+        "code": "0.2.14.9.12"
+    },
+    "30": {
+        "name": "Térébenthine, colophane et dérivés",
+        "code": "0.3.12"
+    },
+    "31": {
+        "name": "Sciages d'érable",
+        "code": "0.1.14.2.13.1"
+    },
+    "32": {
+        "name": "Feuilles pour placage de conifères",
+        "code": "0.2.11.1.11"
+    },
+    "33": {
+        "name": "Papiers er cartons transformés",
+        "code": "0.2.17"
+    },
+    "34": {
+        "name": "Laine, paille, farine de bois",
+        "code": "0.2.12.9.12"
+    },
+    "35": {
+        "name": "Bois ronds conifères",
+        "code": "0.1.11.1"
+    },
+    "36": {
+        "name": "Sciages rabotés, aboutés d'érable",
+        "code": "0.1.14.2.13.1.11"
+    },
+    "37": {
+        "name": "Hêtre",
+        "code": "0.1.11.2.12"
+    },
+    "38": {
+        "name": "Charbon de bois",
+        "code": "0.1.11.6"
+    },
+    "39": {
+        "name": "Autres panneaux de fibres",
+        "code": "0.2.11.4.19"
+    },
+    "40": {
+        "name": "Palettes, plateaux",
+        "code": "0.2.12.2.12"
+    },
+    "41": {
+        "name": "Bois profilés de conifères",
+        "code": "0.2.12.1.11"
+    },
+    "42": {
+        "name": "Ouvrages de tonnellerie",
+        "code": "0.2.12.3"
+    },
+    "43": {
+        "name": "Granulés de bois (pellets) et autres bois aggloméré pour énergie",
+        "code": "0.1.13"
+    },
+    "44": {
+        "name": "Ouvrages décoratifs-domestiques",
+        "code": "0.2.12.9.13"
+    },
+    "45": {
+        "name": "Papiers ou cartons à recycler",
+        "code": "0.2.15"
+    },
+    "46": {
+        "name": "Autres sciages d'érable",
+        "code": "0.1.14.2.13.1.19"
+    },
+    "47": {
+        "name": "Contreplaqués de feuilles de bois feuillus tempérés",
+        "code": "0.2.11.2.11.2"
+    },
+    "48": {
+        "name": "Pâtes mécaniques de bois ou mi-chimique",
+        "code": "0.2.14.1"
+    },
+    "49": {
+        "name": "Feuilles pour placage de feuillus",
+        "code": "0.2.11.1.12"
+    },
+    "50": {
+        "name": "Sciages de cerisier",
+        "code": "0.1.14.2.13.2"
+    },
+    "51": {
+        "name": "Hêtre grumes",
+        "code": "0.1.11.2.12.1"
+    },
+    "52": {
+        "name": "Papiers hygiéniques et domestiques",
+        "code": "0.2.16.2"
+    },
+    "53": {
+        "name": "Autres panneaux de bois",
+        "code": "0.2.11.3.19"
+    },
+    "54": {
+        "name": "Sciages rabotés, aboutés de cerisier",
+        "code": "0.1.14.2.13.2.11"
+    },
+    "55": {
+        "name": "Autres sciages de cerisier",
+        "code": "0.1.14.2.13.2.19"
+    },
+    "56": {
+        "name": "Autres produits du travail mécanique du bois",
+        "code": "0.2.12"
+    },
+    "57": {
+        "name": "Sciages poncés, aboutés de chêne",
+        "code": "0.1.14.2.11.1"
+    },
+    "58": {
+        "name": "Sciages de frêne",
+        "code": "0.1.14.2.13.3"
+    },
+    "59": {
+        "name": "Sapin-épicéa",
+        "code": "0.1.11.1.11"
+    },
+    "60": {
+        "name": "Autres ouvrages en bois",
+        "code": "0.2.12.9"
+    },
+    "61": {
+        "name": "Hêtre trituration",
+        "code": "0.1.11.2.12.2"
+    },
+    "62": {
+        "name": "Pâtes mécaniques",
+        "code": "0.2.14.1.11"
+    },
+    "63": {
+        "name": "Bois profilés de feuillus",
+        "code": "0.2.12.1.12"
+    },
+    "64": {
+        "name": "Granulés de bois (pellets)",
+        "code": "0.1.13.1"
+    },
+    "65": {
+        "name": "Contreplaqués de feuilles de bois tropicaux",
+        "code": "0.2.11.2.11.3"
+    },
+    "66": {
+        "name": "Sciages rabotés de chêne",
+        "code": "0.1.14.2.11.2"
+    },
+    "67": {
+        "name": "Sciages rabotés, aboutés de frêne",
+        "code": "0.1.14.2.13.3.11"
+    },
+    "68": {
+        "name": "Bois en plaquettes ou en particules, sciures et déchets",
+        "code": "0.1.12"
+    },
+    "69": {
+        "name": "Pâtes mi-chimiques de bois",
+        "code": "0.2.14.1.12"
+    },
+    "70": {
+        "name": "Sapin-épicéa grumes",
+        "code": "0.1.11.1.11.1"
+    },
+    "71": {
+        "name": "Produits des industries du bois, des pâtes et des papiers",
+        "code": "0.2"
+    },
+    "72": {
+        "name": "Ouvrages de menuiserie",
+        "code": "0.2.12.4"
+    },
+    "73": {
+        "name": "Papiers et cartons bruts",
+        "code": "0.2.16"
+    },
+    "74": {
+        "name": "Sciages autres de sapin-épicéa",
+        "code": "0.1.14.1.11.3"
+    },
+    "75": {
+        "name": "Sciages poncés de frêne",
+        "code": "0.1.14.2.13.3.12"
+    },
+    "76": {
+        "name": "Autres sciages de frêne",
+        "code": "0.1.14.2.13.3.19"
+    },
+    "77": {
+        "name": "Pâtes chimiques de bois",
+        "code": "0.2.14.2"
+    },
+    "78": {
+        "name": "Panneaux de fibres",
+        "code": "0.2.11.4"
+    },
+    "79": {
+        "name": "Sapin-épicéa trituration",
+        "code": "0.1.11.1.11.2"
+    },
+    "80": {
+        "name": "Feuilles pour placage de tropicaux",
+        "code": "0.2.11.1.13"
+    },
+    "81": {
+        "name": "Liège et ouvrages en liège",
+        "code": "0.3.13"
+    },
+    "82": {
+        "name": "Lames et frises pour parquets, non assemblées de chêne",
+        "code": "0.1.14.2.11.2.11"
+    },
+    "83": {
+        "name": "Produits d'exploitation forestière et de scierie",
+        "code": "0.1"
+    },
+    "84": {
+        "name": "Matériaux d'emballage",
+        "code": "0.2.16.3"
+    },
+    "85": {
+        "name": "Sciages",
+        "code": "0.1.14"
+    },
+    "86": {
+        "name": "Contreplaqués",
+        "code": "0.2.11.2"
+    },
+    "87": {
+        "name": "Palettes simples, réhausses de palettes",
+        "code": "0.2.12.2.12.1"
+    },
+    "88": {
+        "name": "Pâtes chimiques au sulfate de conifères",
+        "code": "0.2.14.2.11"
+    },
+    "89": {
+        "name": "Ouvrages pour emballage et transport",
+        "code": "0.2.12.2"
+    },
+    "90": {
+        "name": "Autres contreplaqués",
+        "code": "0.2.11.2.19"
+    },
+    "91": {
+        "name": "Bois en plaquettes ou en particules",
+        "code": "0.1.12.1"
+    },
+    "92": {
+        "name": "Autres conifères",
+        "code": "0.1.11.1.13"
+    },
+    "93": {
+        "name": "Autres sciages rabotés de chêne",
+        "code": "0.1.14.2.11.2.19"
+    },
+    "94": {
+        "name": "Placages, panneaux, contreplaqués",
+        "code": "0.2.11"
+    },
+    "95": {
+        "name": "Autres feuillus tempérés (grumes + trituration)",
+        "code": "0.1.11.2.19"
+    },
+    "96": {
+        "name": "Produits divers d'exploitation forestière",
+        "code": "0.3"
+    },
+    "97": {
+        "name": "Autres",
+        "code": "0.2.12.9.19"
+    },
+    "98": {
+        "name": "Pâtes chimiques au sulfate de feuillus",
+        "code": "0.2.14.2.12"
+    },
+    "99": {
+        "name": "Autres sciages de chêne",
+        "code": "0.1.14.2.11.9"
+    },
+    "100": {
+        "name": "Panneaux de fibres durs",
+        "code": "0.2.11.4.11"
+    },
+    "101": {
+        "name": "Panneaux pour parquets",
+        "code": "0.2.12.4.11"
+    },
+    "102": {
+        "name": "Bois profilés pour parquet, baguettes, moulures",
+        "code": "0.2.12.1"
+    },
+    "103": {
+        "name": "Panneaux OSB",
+        "code": "0.2.11.3.11"
+    },
+    "104": {
+        "name": "Bois ronds feuillus tempérés",
+        "code": "0.1.11.2"
+    },
+    "105": {
+        "name": "Bois feuillards, pieux, piquets",
+        "code": "0.2.12.9.11"
+    },
+    "106": {
+        "name": "Bois de conifères en plaquettes ou en particules",
+        "code": "0.1.12.1.11"
+    },
+    "107": {
+        "name": "Pâtes chimiques au bisulfite de conifères",
+        "code": "0.2.14.2.13"
+    },
+    "108": {
+        "name": "Panneaux de particules autres que OSB",
+        "code": "0.2.11.3.12"
+    },
+    "109": {
+        "name": "Traverses",
+        "code": "0.1.15"
+    },
+    "110": {
+        "name": "Okoumé et sipo",
+        "code": "0.1.11.3.13"
+    },
+    "111": {
+        "name": "Pâtes chimiques au bisulfite de feuillus",
+        "code": "0.2.14.2.14"
+    },
+    "112": {
+        "name": "Contreplaqués à âme panneautée, lattée ou lamellée",
+        "code": "0.2.11.2.19.1"
+    },
+    "113": {
+        "name": "Bois de feuillus en plaquettes ou en particules",
+        "code": "0.1.12.1.12"
+    },
+    "114": {
+        "name": "Papiers graphiques",
+        "code": "0.2.16.1"
+    },
+    "115": {
+        "name": "Autres tropicaux",
+        "code": "0.1.11.3.19"
+    },
+    "116": {
+        "name": "Sciages de hêtre",
+        "code": "0.1.14.2.12"
+    },
+    "117": {
+        "name": "Traverses non imprégnées",
+        "code": "0.1.15.1"
+    },
+    "118": {
+        "name": "Pâtes chimiques de bois à dissoudre",
+        "code": "0.2.14.3"
+    },
+    "119": {
+        "name": "Autres contreplaqués (LVL)",
+        "code": "0.2.11.2.19.9"
+    },
+    "120": {
+        "name": "Bois feuillards, pieux, piquets de conifères",
+        "code": "0.2.12.9.11.1"
+    },
+    "121": {
+        "name": "Chêne",
+        "code": "0.1.11.2.11"
+    },
+    "122": {
+        "name": "Bois de feu en rondins, bûches",
+        "code": "0.1.11.4"
+    },
+    "123": {
+        "name": "Fenêtres, portes, leurs cadres et chambranles",
+        "code": "0.2.12.4.12"
+    },
+    "124": {
+        "name": "Traverses imprégnées",
+        "code": "0.1.15.2"
+    },
+    "125": {
+        "name": "Autres contreplaqués avec au moins un pli extérieur en bois tropicaux",
+        "code": "0.2.11.2.19.9.11"
+    },
+    "126": {
+        "name": "Pâtes de fibres obtenues à partir de papiers ou cartons recyclés",
+        "code": "0.2.14.9.11"
+    },
+    "127": {
+        "name": "Sciages de sapin-épicéa",
+        "code": "0.1.14.1.11"
+    },
+    "128": {
+        "name": "Autres contreplaqués avec au moins un pli extérieur en feuillus",
+        "code": "0.2.11.2.19.9.12"
+    },
+    "129": {
+        "name": "Contreplaqués de tropicaux ne contenant pas un panneau de particules",
+        "code": "0.2.11.2.19.9.13"
+    },
+    "130": {
+        "name": "Sciages rabotés de sapin-épicéa",
+        "code": "0.1.14.1.11.1"
+    },
+    "131": {
+        "name": "Sciages poncés d'érable",
+        "code": "0.1.14.2.13.1.12"
+    },
+    "132": {
+        "name": "Contreplaqués de conifères ne contenant pas un panneau de particules",
+        "code": "0.2.11.2.19.9.14"
+    },
+    "133": {
+        "name": "Fenêtres, portes, leurs cadres et chambranles en conifères",
+        "code": "0.2.12.4.12.1"
+    },
+    "134": {
+        "name": "Fenêtres, portes, leurs cadres et chambranles en feuillus",
+        "code": "0.2.12.4.12.2"
+    },
+    "135": {
+        "name": "Bouleau",
+        "code": "0.1.11.2.13"
+    },
+    "136": {
+        "name": "Bouleau grumes",
+        "code": "0.1.11.2.13.1"
+    },
+    "137": {
+        "name": "Panneaux de particules",
+        "code": "0.2.11.3"
+    },
+    "138": {
+        "name": "Bouleau trituration",
+        "code": "0.1.11.2.13.2"
+    },
+    "139": {
+        "name": "Peuplier (grumes + trituration)",
+        "code": "0.1.11.2.14"
+    },
+    "140": {
+        "name": "Construction préfabriquées en bois",
+        "code": "0.2.13.1"
+    },
+    "141": {
+        "name": "Eucalyptus (grumes + trituration)",
+        "code": "0.1.11.2.15"
+    },
+    "142": {
+        "name": "Fenêtres, portes, leurs cadres et chambranles en bois tropicaux",
+        "code": "0.2.12.4.12.3"
+    },
+    "143": {
+        "name": "Coffrage pour bétonnage",
+        "code": "0.2.12.4.13"
+    },
+    "144": {
+        "name": "Bois ronds tropicaux",
+        "code": "0.1.11.3"
+    },
+    "145": {
+        "name": "Dark red meranti, light red meranti, meranti bakau",
+        "code": "0.1.11.3.11"
+    },
+    "146": {
+        "name": "Sapelli, acajou d'Afrique, iroko",
+        "code": "0.1.11.3.12"
+    },
+    "147": {
+        "name": "Bardeaux",
+        "code": "0.2.12.4.14"
+    },
+    "148": {
+        "name": "Poutres et poteaux",
+        "code": "0.2.12.4.15"
+    },
+    "149": {
+        "name": "Briquette de bois",
+        "code": "0.1.13.2"
+    },
+    "150": {
+        "name": "Sciages poncés de cerisier",
+        "code": "0.1.14.2.13.2.12"
+    },
+    "151": {
+        "name": "Sciages autres de pins",
+        "code": "0.1.14.1.12.3"
+    },
+    "152": {
+        "name": "Sciages autres conifères",
+        "code": "0.1.14.1.13"
+    },
+    "153": {
+        "name": "Chêne n.c.a",
+        "code": "0.1.11.2.11.9"
+    },
+    "154": {
+        "name": "Sciages de peuplier",
+        "code": "0.1.14.2.13.4"
+    },
+    "155": {
+        "name": "Sciages rabotés, aboutés de peuplier",
+        "code": "0.1.14.2.13.4.11"
+    },
+    "156": {
+        "name": "Autres sciages de peuplier",
+        "code": "0.1.14.2.13.4.19"
+    },
+    "157": {
+        "name": "Sciages rabotés d'autres conifères",
+        "code": "0.1.14.1.13.1"
+    },
+    "158": {
+        "name": "Sciages de bouleau",
+        "code": "0.1.14.2.13.5"
+    },
+    "159": {
+        "name": "Sciages rabotés, aboutés de bouleau",
+        "code": "0.1.14.2.13.5.11"
+    },
+    "160": {
+        "name": "Hêtre n.c.a",
+        "code": "0.1.11.2.12.9"
+    },
+    "161": {
+        "name": "Autres sciages de bouleau",
+        "code": "0.1.14.2.13.5.19"
+    },
+    "162": {
+        "name": "Sciages collés, aboutés d'autres conifères",
+        "code": "0.1.14.1.13.2"
+    },
+    "163": {
+        "name": "Sciages autres feuillus",
+        "code": "0.1.14.2.13.6"
+    },
+    "164": {
+        "name": "Sciages autres d'autres conifères",
+        "code": "0.1.14.1.13.3"
+    },
+    "165": {
+        "name": "Sciages rabotés, aboutés d'autres feuillus",
+        "code": "0.1.14.2.13.6.11"
+    },
+    "166": {
+        "name": "Sciages poncés d'autres feuillus",
+        "code": "0.1.14.2.13.6.12"
+    },
+    "167": {
+        "name": "Autres sciages d'autres feuillus",
+        "code": "0.1.14.2.13.6.19"
+    },
+    "168": {
+        "name": "Sciages de tropicaux",
+        "code": "0.1.14.3"
+    },
+    "169": {
+        "name": "Pins",
+        "code": "0.1.11.1.12"
+    },
+    "170": {
+        "name": "Pins grumes",
+        "code": "0.1.11.1.12.1"
+    },
+    "171": {
+        "name": "Bois de feu conifères",
+        "code": "0.1.11.4.11"
+    },
+    "172": {
+        "name": "Pins trituration",
+        "code": "0.1.11.1.12.2"
+    },
+    "173": {
+        "name": "Traverses non imprégnées de conifères",
+        "code": "0.1.15.1.11"
+    },
+    "174": {
+        "name": "Bois de feu feuillus",
+        "code": "0.1.11.4.12"
+    },
+    "175": {
+        "name": "Traverses non imprégnées de feuillus",
+        "code": "0.1.15.1.12"
+    },
+    "176": {
+        "name": "Autres conifères grumes",
+        "code": "0.1.11.1.13.1"
+    },
+    "177": {
+        "name": "Traverses imprégnées de conifères",
+        "code": "0.1.15.2.11"
+    },
+    "178": {
+        "name": "Bois bruts conifère traités à la créosote ou autres",
+        "code": "0.1.11.5.11"
+    },
+    "179": {
+        "name": "Traverses imprégnées de feuillus",
+        "code": "0.1.15.2.12"
+    },
+    "180": {
+        "name": "Autres conifères trituration",
+        "code": "0.1.11.1.13.2"
+    },
+    "181": {
+        "name": "Bois bruts feuillus traités à la créosote ou autres",
+        "code": "0.1.11.5.12"
+    },
+    "182": {
+        "name": "Bois profilés de tropicaux",
+        "code": "0.2.12.1.13"
+    },
+    "183": {
+        "name": "Sciages collés, aboutés de sapin-épicéa",
+        "code": "0.1.14.1.11.2"
+    },
+    "184": {
+        "name": "Sciages de pins",
+        "code": "0.1.14.1.12"
+    },
+    "185": {
+        "name": "Sciages rabotés de pins",
+        "code": "0.1.14.1.12.1"
+    },
+    "186": {
+        "name": "Sciages collés, aboutés de pins",
+        "code": "0.1.14.1.12.2"
+    },
+    "187": {
+        "name": "Sciages poncés de bouleau",
+        "code": "0.1.14.2.13.5.12"
+    },
+    "188": {
+        "name": "Sciages poncés de peuplier",
+        "code": "0.1.14.2.13.4.12"
+    },
+    "189": {
+        "name": "Autres bois aggloméré pour énergie",
+        "code": "0.1.13.9"
+    },
+    "190": {
+        "name": "LVL avec au moins un pli extérieur en feuillus",
+        "code": "0.2.11.2.19.2.12"
+    },
+    "191": {
+        "name": "LVL avec les 2 plis extérieurs en conifères",
+        "code": "0.2.11.2.19.2.13"
+    },
+    "192": {
+        "name": "Sciages d'épicéa, pin et sapin (proportions indéterminées)",
+        "code": "0.1.14.1.14"
+    },
+    "193": {
+        "name": "Poutres en I (I Beans)",
+        "code": "0.2.12.4.15.1"
+    },
+    "194": {
+        "name": "Autres poutres et poteaux",
+        "code": "0.2.12.4.15.2"
+    },
+    "195": {
+        "name": "Bois lamelés collés (Glulam)",
+        "code": "0.2.12.4.16.1"
+    },
+    "196": {
+        "name": "Bois lamelés croisés (CLT, Xlam)",
+        "code": "0.2.12.4.16.2"
+    },
+    "197": {
+        "name": "avec au moins un pli extérieur en bois tropicaux",
+        "code": "0.2.11.2.19.1.11"
+    },
+    "198": {
+        "name": "avec au moins un pli extérieur en feuillus",
+        "code": "0.2.11.2.19.1.12"
+    },
+    "199": {
+        "name": "avec les 2 plis extérieurs en conifères",
+        "code": "0.2.11.2.19.1.13"
+    },
+    "200": {
+        "name": "Bois de placage stratifié (LVL)",
+        "code": "0.2.11.2.19.2"
+    },
+    "201": {
+        "name": "LVL avec au moins un pli extérieur en bois tropicaux",
+        "code": "0.2.11.2.19.2.11"
+    },
+    "202": {
+        "name": "Sciages d'Hem-fir et sapin (proportions indéterminées)",
+        "code": "0.1.14.1.15"
+    }
+}
