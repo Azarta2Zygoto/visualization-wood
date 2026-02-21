@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Fragment, type JSX } from "react";
+import { Fragment, type JSX, useState } from "react";
 
 import products from "@/data/products.json";
 import { processMODData } from "@/utils/MODLecture";
 
+import AttentionInner from "./attentionInner";
 import Accordeon from "./personal/accordeon";
 import Checkbox from "./personal/checkbox";
 
@@ -26,13 +27,8 @@ export default function MODOpener({
 }: MODOpenerProps): JSX.Element {
     const t = useTranslations("MODOpener");
 
-    function handleSelectAllChange(change: boolean) {
-        if (change) {
-            setProductsSelected([0]);
-        } else {
-            setProductsSelected([]);
-        }
-    }
+    const [firstAttentionShown, setFirstAttentionShown] =
+        useState<boolean>(false);
 
     return (
         <Fragment>
@@ -50,12 +46,24 @@ export default function MODOpener({
                 }}
             >
                 <h2 className="h2-primary">{t("title")}</h2>
-                <Checkbox
-                    id="checkbox-all"
-                    label={t("select-all")}
-                    checked={productsSelected.includes(0)}
-                    onChange={(e) => handleSelectAllChange(e.target.checked)}
-                />
+                <div className="rows">
+                    <button
+                        className={`btn ${productsSelected.includes(0) ? "active" : ""}`}
+                        onClick={() => setProductsSelected([0])}
+                        type="button"
+                        style={{ marginBottom: "20px" }}
+                    >
+                        {t("select-all")}
+                    </button>
+                    <button
+                        className={`btn ${productsSelected.length === 0 ? "active" : ""}`}
+                        onClick={() => setProductsSelected([])}
+                        type="button"
+                        style={{ marginBottom: "20px" }}
+                    >
+                        {t("deselect-all")}
+                    </button>
+                </div>
                 <div className="inner-mod">
                     <MODRecursif
                         data={MOD[0] as typeof MOD}
@@ -64,6 +72,13 @@ export default function MODOpener({
                         isChecked={productsSelected.includes(0)}
                     />
                 </div>
+                {productsSelected.length === 0 && !firstAttentionShown && (
+                    <AttentionInner
+                        text={t("attention-text")}
+                        isOpen={productsSelected.length === 0}
+                        hasBeenClosed={() => setFirstAttentionShown(true)}
+                    />
+                )}
                 <button
                     className="btn"
                     onClick={() => onOpen(false)}
@@ -97,9 +112,7 @@ function MODRecursif({
         (key) => key !== "name" && key !== "code",
     );
 
-    function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
-        isChecked = e.target.checked;
-
+    function handleCheckboxChange() {
         const numberCode = Object.keys(products).find(
             (key) => products[key as keyof typeof products].code === code,
         );
@@ -133,11 +146,13 @@ function MODRecursif({
         let isRelated = false;
         productsCode.forEach((c) => {
             if (code.startsWith(c)) {
-                const childrenCodes = getAllDirectChildren(c).filter(
-                    (childCode) => childCode !== correctNumberCode,
+                //c est le code d'un parent de code, il faut ajouter tous les enfants de c récursivement
+                const expandedCodes = expandChildrenUntilTarget(
+                    c,
+                    code,
+                    correctNumberCode,
                 );
-
-                childrenCodes.forEach((childCode) => {
+                expandedCodes.forEach((childCode) => {
                     if (!newProductsSelected.includes(childCode)) {
                         newProductsSelected.push(childCode);
                     }
@@ -145,6 +160,7 @@ function MODRecursif({
                 isRelated = true;
                 return;
             } else if (c.startsWith(code)) {
+                // c est le code d'un enfant de code, il faut ajouter tous les parents de c
                 if (!newProductsSelected.includes(correctNumberCode)) {
                     newProductsSelected.push(correctNumberCode);
                 }
@@ -163,7 +179,37 @@ function MODRecursif({
             }
         });
         if (!isRelated) {
-            newProductsSelected.push(correctNumberCode);
+            if (!newProductsSelected.includes(correctNumberCode)) {
+                newProductsSelected.push(correctNumberCode);
+            }
+        }
+        let parentSiblings = parentsIfAllChildrenSelected([
+            ...newProductsSelected,
+        ]);
+        Object.keys(parentSiblings).forEach((parent) => {
+            const p = Number(parent);
+            if (!newProductsSelected.includes(p)) {
+                newProductsSelected.push(p);
+            }
+            parentSiblings[p].forEach((sibling) => {
+                const idx = newProductsSelected.indexOf(sibling);
+                if (idx !== -1) newProductsSelected.splice(idx, 1);
+            });
+        });
+        while (Object.keys(parentSiblings).length > 0) {
+            parentSiblings = parentsIfAllChildrenSelected([
+                ...newProductsSelected,
+            ]);
+            Object.keys(parentSiblings).forEach((newParent) => {
+                const p = Number(newParent);
+                if (!newProductsSelected.includes(p)) {
+                    newProductsSelected.push(p);
+                }
+                parentSiblings[p].forEach((sibling) => {
+                    const idx = newProductsSelected.indexOf(sibling);
+                    if (idx !== -1) newProductsSelected.splice(idx, 1);
+                });
+            });
         }
         setProductsSelected(newProductsSelected);
     }
@@ -195,19 +241,30 @@ function MODRecursif({
                     ),
                     content: (
                         <div className="ml-4">
-                            {children.map((childKey) => (
-                                <MODRecursif
-                                    key={childKey}
-                                    data={data[childKey] as typeof MOD}
-                                    setProductsSelected={setProductsSelected}
-                                    selectedProducts={selectedProducts}
-                                    isChecked={
-                                        isChecked ||
-                                        IsParentSelected(code, selectedProducts)
-                                    }
-                                    depth={depth + 1}
-                                />
-                            ))}
+                            {children
+                                .sort(
+                                    (a, b) =>
+                                        Object.keys(data[b]).length -
+                                        Object.keys(data[a]).length,
+                                )
+                                .map((childKey) => (
+                                    <MODRecursif
+                                        key={childKey}
+                                        data={data[childKey] as typeof MOD}
+                                        setProductsSelected={
+                                            setProductsSelected
+                                        }
+                                        selectedProducts={selectedProducts}
+                                        isChecked={
+                                            isChecked ||
+                                            IsParentSelected(
+                                                code,
+                                                selectedProducts,
+                                            )
+                                        }
+                                        depth={depth + 1}
+                                    />
+                                ))}
                         </div>
                     ),
                 }}
@@ -244,4 +301,82 @@ function getAllDirectChildren(code: string): number[] {
         }
     });
     return children;
+}
+
+/**
+ * Recursively expand children from parentCode until the targetCode is found.
+ * At each level, add siblings of the branch leading to targetCode.
+ * @param parentCode - The parent code to start expanding from
+ * @param targetCode - The code we're looking for (to exclude)
+ * @param targetNumberCode - The number key of the target (to exclude)
+ * @returns Array of number codes to add to selection
+ */
+function expandChildrenUntilTarget(
+    parentCode: string,
+    targetCode: string,
+    targetNumberCode: number,
+): number[] {
+    const result: number[] = [];
+    const directChildren = getAllDirectChildren(parentCode);
+
+    for (const childNumberCode of directChildren) {
+        const childCode =
+            products[String(childNumberCode) as keyof typeof products].code;
+
+        if (childNumberCode === targetNumberCode) {
+            // This is the target - skip it
+            continue;
+        }
+
+        if (targetCode.startsWith(childCode)) {
+            // This child is an ancestor of the target - recurse into it
+            const nestedResults = expandChildrenUntilTarget(
+                childCode,
+                targetCode,
+                targetNumberCode,
+            );
+            result.push(...nestedResults);
+        } else {
+            // This child is a sibling of the branch - add it
+            result.push(childNumberCode);
+        }
+    }
+
+    return result;
+}
+
+function parentsIfAllChildrenSelected(selectedProducts: number[]): {
+    [key: number]: number[];
+} {
+    const newSelectedProducts: { [key: number]: number[] } = {};
+
+    selectedProducts.forEach((product) => {
+        const productCode =
+            products[String(product) as keyof typeof products].code;
+
+        const parentCode = productCode.split(".").slice(0, -1).join(".");
+
+        if (parentCode === "0" || parentCode) {
+            const siblings = getAllDirectChildren(parentCode);
+
+            if (
+                siblings.every((sibling) => selectedProducts.includes(sibling))
+            ) {
+                const parentNumberCode = Object.keys(products).find(
+                    (key) =>
+                        products[key as keyof typeof products].code ===
+                        parentCode,
+                );
+                if (
+                    parentNumberCode &&
+                    !Object.keys(newSelectedProducts).includes(
+                        String(parentNumberCode),
+                    )
+                ) {
+                    newSelectedProducts[Number(parentNumberCode)] = siblings;
+                }
+            }
+        }
+    });
+    return newSelectedProducts;
 }

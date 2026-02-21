@@ -31,7 +31,9 @@
         "dropdown-explain": "Multi-select dropdown. Use the up and down arrows to navigate, spacebar to select or deselect an option, and escape to close the dropdown.",
         "filter-explain": "Type to filter available options. Use the up and down arrows to navigate through the filtered options.",
         "fr": "French",
-        "en": "English"
+        "en": "English",
+        "attention": "Attention:",
+        "close-desc": "Close the alert message"
     },
     "Loading": {
         "loading": "Load data for {year}...",

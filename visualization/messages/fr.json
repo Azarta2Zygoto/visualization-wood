@@ -31,7 +31,9 @@
         "dropdown-explain": "Sélecteur déroulant à plusieurs choix. Utilisez les flèches haut et bas pour naviguer, la barre d'espace pour sélectionner ou désélectionner une option, et la touche Échap pour fermer le sélecteur.",
         "filter-explain": "Ecrivez pour filtrer les options disponibles. Utilisez les flèches haut et bas pour naviguer dans les options filtrées.",
         "fr": "Français",
-        "en": "Anglais"
+        "en": "Anglais",
+        "attention": "Attention :",
+        "close-desc": "Fermer le message d'alerte"
     },
     "Loading": {
         "loading": "Chargement des données de {year}...",
@@ -105,6 +107,7 @@
         "title": "Sélection des produits",
         "select-all": "Tout sélectionner",
         "deselect-all": "Tout désélectionner",
-        "close": "Fermer la sélection de produits"
+        "close": "Fermer la sélection de produits",
+        "attention-text": "Par défaut, si aucun produit n'est sélectionné, tous les produits sont affichés. Sélectionnez au moins un produit pour voir les données correspondantes."
     }
 }
