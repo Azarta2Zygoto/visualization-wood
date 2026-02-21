@@ -11,7 +11,8 @@ export interface MirrorDataPoint {
 }
 export default function updateMirrorStackedAreaChart(
     data: MirrorDataPoint[],
-    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+    globalAllDates: Date[]
 ) {
     if (!data || data.length === 0) return;
 
@@ -32,20 +33,16 @@ export default function updateMirrorStackedAreaChart(
         root = svg.append("g").attr("class", "mirror-root");
     }
 
-    /* =========================
-       DATA PREP
-    ========================= */
-
-    const allDates = Array.from(d3.union(data.map(d => +d.date)))
-        .map(d => new Date(d))
-        .sort(d3.ascending);
-
-    const products = Array.from(d3.union(data.map(d => d.product)));
-
+    const allDates = globalAllDates;
+    //on trie les produits pour avoir toujours le même ordre 
+    const products = Array.from(
+        d3.union(data.map(d => d.product))
+    ).sort(d3.ascending);
     const completeIndex = (type: string) => {
         const filtered = data.filter(d => d.type === type);
+        console.log(new Set(filtered.map(d => d.product)))
         const index = d3.index(filtered, d => +d.date, d => d.product);
-
+        console.log(allDates)
         const complete = new Map<number, Map<string, { value: number }>>();
 
         allDates.forEach(date => {
@@ -123,7 +120,27 @@ export default function updateMirrorStackedAreaChart(
         if (!colorRegistry.has(product)) {
             const usedColors = new Set(colorRegistry.values());
             const available = palette.find(c => !usedColors.has(c));
-            colorRegistry.set(product, available ?? palette[0]);
+            if (available) {//si on trouve une couleur disponible on l'affecte 
+                colorRegistry.set(product, available);
+            } else {
+                // Compter les occurrences
+                const counts = new Map<string, number>();
+
+                palette.forEach(color => counts.set(color, 0));
+
+                for (const color of colorRegistry.values()) {
+                    counts.set(color, (counts.get(color) ?? 0) + 1);
+                }
+
+                // Trouver la couleur la moins utilisée
+                const leastUsed = palette.reduce((minColor, color) => {
+                    return (counts.get(color)! < counts.get(minColor)!)
+                        ? color
+                        : minColor;
+                });
+                //on attribue la couleur la moins utilisé 
+                colorRegistry.set(product, leastUsed);
+            }
         }
     });
 
@@ -246,22 +263,39 @@ export default function updateMirrorStackedAreaChart(
         group.selectAll("path.myArea")
             .data(series, (d: any) => d.key)
             .join(
-                (enter: any) =>
-                    enter.append("path")
+                (enter: any) => {
+                    console.log("ENTER:", enter.data());
+
+                    return enter.append("path")
                         .attr("class", "myArea")
-                        .attr("fill", (d: any) => color(d.key))
+                        .attr("fill", (d: any) => {
+                            console.log("Fill ENTER:", d.key);
+                            return color(d.key);
+                        })
                         .style("opacity", 0)
                         .attr("d", area)
-                        .call((e: any) => e.transition().duration(800).style("opacity", 1)),
-                (update: any) =>
-                    update.call((u: any) =>
+                        .call((e: any) =>
+                            e.transition().duration(800).style("opacity", 1)
+                        );
+                },
+
+                (update: any) => {
+                    console.log("UPDATE:", update.data());
+
+                    return update.call((u: any) =>
                         u.transition().duration(800).attr("d", area)
-                    ),
-                (exit: any) =>
-                    exit.call((x: any) =>
+                    );
+                },
+
+                (exit: any) => {
+                    console.log("EXIT:", exit.data());
+
+                    return exit.call((x: any) =>
                         x.transition().duration(400).style("opacity", 0).remove()
-                    )
-            ).on("mouseover", function (this: any) {
+                    );
+                }
+            )
+            .on("mouseover", function (this: any) {
                 Tooltip.style("opacity", 1);
                 d3.selectAll(".myArea").style("opacity", 0.2);
                 d3.select(this).style("stroke", "black").style("opacity", 1);
