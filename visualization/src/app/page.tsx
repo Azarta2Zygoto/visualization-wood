@@ -116,10 +116,6 @@ export default function HomePage(): JSX.Element {
         fetchData(currentYear);
     }, [currentYear]);
 
-    useEffect(() => {
-        console.log(countriesSelected);
-    }, [countriesSelected]);
-
     return (
         <Fragment>
             <h1 className="title">{t("title")}</h1>
@@ -177,7 +173,7 @@ export default function HomePage(): JSX.Element {
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
-            {/**<Graphique
+            <Graphique
                 allData={allData}
                 type={[typeData]}
                 productsSelected={productsSelected}
@@ -185,7 +181,6 @@ export default function HomePage(): JSX.Element {
                 iconSelected={iconSelected}
                 allEvents={allEvents}
             />
-                */}
         </Fragment>
     );
 }

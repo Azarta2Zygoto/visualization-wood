@@ -86,7 +86,9 @@ export function WorldMap({
     ] as const;
 
     const svgRef = useRef<SVGSVGElement>(null);
-    const worldDataCache = useRef<{ map: any; size: definitions }>(null);
+    const worldDataCache = useRef<{ map: any; size: definitions }[]>([]);
+    // Token to cancel stale async initializations (prevents double append)
+    const loadTokenRef = useRef(0);
     const projectionRef = useRef<d3.GeoProjection | null>(null);
     const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
     const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
@@ -370,6 +372,10 @@ export function WorldMap({
     // Effect 5: Load map and draw countries (runs once on mount, then only if mode or window size changes)
     useEffect(() => {
         const loadMap = async () => {
+            console.log("Initializing map...");
+            // Mark this async init with a token
+            const token = ++loadTokenRef.current;
+            console.log("map init token", token);
             const svg = svgRef.current;
             if (!svg) return;
 
@@ -390,17 +396,21 @@ export function WorldMap({
 
             const pathGenerator = d3.geoPath().projection(projection);
 
-            // Clear any existing content
-            d3.select(svg).selectAll("*").remove();
+            // Clear any previous map root to avoid duplicate renderings
+            // (use a single root group so repeated inits remove prior map)
+            const svgSel = d3.select(svg);
+            console.log("Clearing previous map...");
+            svgSel.selectAll(".map-root").remove();
 
             try {
                 console.log("Loading map data...");
                 // Fetch or use cached world topology data
-                let worldData = worldDataCache.current?.map;
-                if (
-                    !worldData ||
-                    worldDataCache.current?.size !== mapDefinition
-                ) {
+                const worldDataCached = worldDataCache.current;
+                const cachedEntry = worldDataCached.find(
+                    (entry) => entry.size === mapDefinition,
+                );
+                let worldData = cachedEntry?.map;
+                if (!worldData) {
                     const size = MAP_DEFINITIONS[mapDefinition];
                     const url = `${basePath}/world/world-${size}.json`;
                     const response = await fetch(url);
@@ -408,10 +418,16 @@ export function WorldMap({
                         throw new Error("Failed to load world data");
                     worldData = await response.json();
 
-                    worldDataCache.current = {
+                    worldDataCache.current.push({
                         map: worldData,
                         size: mapDefinition,
-                    };
+                    });
+                }
+
+                // If another load started after this one, abort this init
+                if (token !== loadTokenRef.current) {
+                    console.log("Aborting stale map init", token);
+                    return;
                 }
 
                 // Extract country features (topojson.feature always returns FeatureCollection)
@@ -469,9 +485,8 @@ export function WorldMap({
                     });
                 }
 
-                // Create SVG
-                const mapSvg = d3
-                    .select(svg)
+                // Create SVG (attach a single root group to make init idempotent)
+                const mapSvg = svgSel
                     .attr("width", windowSize.width - 10)
                     .attr("height", windowSize.height)
                     .attr(
@@ -479,9 +494,11 @@ export function WorldMap({
                         `0 0 ${windowSize.width - 10} ${windowSize.height}`,
                     );
 
-                const mapLayer = mapSvg.append("g").attr("class", "map-layer");
+                const root = mapSvg.append("g").attr("class", "map-root");
 
-                const legendLayer = mapSvg
+                const mapLayer = root.append("g").attr("class", "map-layer");
+
+                const legendLayer = root
                     .append("g")
                     .attr("class", "legend-layer")
                     .attr(
