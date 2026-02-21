@@ -96,3 +96,4 @@ export const THEME_STORAGE_KEY = "theme";
 export const LOCALE_STORAGE_KEY = "locale";
 export const MAP_DEFINITION_STORAGE_KEY = "mapDefinition";
 export const GEO_PROJECTION_STORAGE_KEY = "geoProjection";
+export const IS_STATIC_STORAGE_KEY = "isStatic";

@@ -69,6 +69,7 @@ export default function Checkbox({
             id={id + "-label"}
             style={boxStyle}
             htmlFor={id}
+            title={title}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
         >
@@ -88,7 +89,6 @@ export default function Checkbox({
                 disabled={disabled}
                 name={name ?? id}
                 required={required}
-                title={title}
                 aria-checked={checked}
                 aria-required={required}
                 aria-disabled={disabled}

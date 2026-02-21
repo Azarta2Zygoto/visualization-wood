@@ -60,6 +60,7 @@ interface WorldMapProps {
     mapDefinition: definitions;
     isAbsolute: boolean;
     geoProjection: string;
+    isStatic: boolean;
     setCountriesSelected: (countries: number[]) => void;
 }
 
@@ -75,6 +76,7 @@ export function WorldMap({
     mapDefinition,
     isAbsolute,
     geoProjection,
+    isStatic,
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
     const t = useTranslations("WorldMap");
@@ -181,6 +183,8 @@ export function WorldMap({
             zoomScale: number,
             radiusScale: d3.ScaleLinear<number, number>,
         ) => {
+            if (!legend) return;
+            if (isStatic) zoomScale = 1;
             const baseY = 110;
             legend
                 .selectAll<SVGCircleElement, number>(".legend-circle")
@@ -294,7 +298,7 @@ export function WorldMap({
                 .attr("x", 10)
                 .attr("y", -rectHeight + config.legendHeight + 25);
         },
-        [isCountryMode],
+        [isCountryMode, isStatic],
     );
 
     // Effect 3: Memoized event handlers (stable references to prevent re-attaching)
@@ -524,6 +528,45 @@ export function WorldMap({
                             event.transform.k,
                             legendScaleRef.current!,
                         );
+
+                        // Keep data points at constant visual size when isStatic
+                        if (isStatic && legendScaleRef.current) {
+                            mapLayer
+                                .selectAll<SVGCircleElement, any>(".data-point")
+                                .attr(
+                                    "r",
+                                    (d) =>
+                                        legendScaleRef.current!(d.value) /
+                                        event.transform.k,
+                                );
+                            mapLayer
+                                .selectAll<SVGLineElement, any>(".data-arrow")
+                                .attr(
+                                    "stroke-width",
+                                    (d) =>
+                                        legendScaleRef.current!(d.value) /
+                                        event.transform.k,
+                                );
+
+                            const arrowHeadSelection = mapLayer.selectAll<
+                                SVGPathElement,
+                                any
+                            >(".arrow-head");
+
+                            const max =
+                                d3.max(
+                                    arrowHeadSelection.data(),
+                                    (d) => d.value,
+                                ) || 1;
+
+                            arrowHeadSelection.attr("d", (d) =>
+                                calculateArrowHead(
+                                    d,
+                                    17 / event.transform.k,
+                                    max,
+                                ),
+                            );
+                        }
                     });
 
                 if (correctProjection.drag) {
@@ -624,6 +667,7 @@ export function WorldMap({
         mapDefinition,
         theme,
         geoProjection,
+        isStatic,
     ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
@@ -828,6 +872,7 @@ export function WorldMap({
                 applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
+                isStatic,
             );
         } else {
             const projection = projectionRef.current;
@@ -872,6 +917,7 @@ export function WorldMap({
                 applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
+                isStatic,
             );
         }
     }, [
@@ -886,6 +932,7 @@ export function WorldMap({
         handleCountryMouseout,
         theme,
         isAbsolute,
+        isStatic,
     ]);
 
     return (
@@ -967,8 +1014,12 @@ function makeCircleProjection(
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
+    isStatic: boolean = false,
 ): d3.ScaleLinear<number, number, never> {
     const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, 30]);
+    // When isStatic, divide radius by zoom to keep constant visual size
+    const effectiveRadius = (d: { value: number }) =>
+        isStatic ? radiusScale(d.value) / zoom : radiusScale(d.value);
 
     if (legendLayer) {
         legendLayer
@@ -1046,12 +1097,9 @@ function makeCircleProjection(
         .style("cursor", "pointer")
         .transition()
         .duration(animationDuration)
-        .attr("r", (d) => radiusScale(d.value));
+        .attr("r", effectiveRadius);
 
-    circles
-        .transition()
-        .duration(animationDuration)
-        .attr("r", (d) => radiusScale(d.value));
+    circles.transition().duration(animationDuration).attr("r", effectiveRadius);
 
     // Attach hover handlers to circles
     mapLayer
@@ -1081,8 +1129,12 @@ function makeArrowProjection(
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
+    isStatic: boolean = false,
 ): d3.ScaleLinear<number, number, never> {
     const continents = Object.keys(continent);
+
+    const effectiveRadius = (d: number) =>
+        isStatic ? strokeScale(d) / zoom : strokeScale(d);
 
     // Build arcs and associated data for each continent
     const arcsData = continents
@@ -1158,7 +1210,7 @@ function makeArrowProjection(
 
     arrowEnter
         .merge(arrowPath)
-        .attr("stroke-width", (d) => strokeScale(d.value))
+        .attr("stroke-width", (d) => effectiveRadius(d.value))
         .transition("update")
         .duration(animationDuration)
         .attr("stroke-dashoffset", "0");
@@ -1182,8 +1234,7 @@ function makeArrowProjection(
         })
         .remove();
 
-    const arrowheadSize = 17;
-
+    const arrowheadSize = isStatic ? 17 / zoom : 17; // Base size of arrowhead, scaled down when static
     const arrowheadEnter = arrowheads
         .enter()
         .append("path")
@@ -1229,12 +1280,18 @@ function makeArrowProjection(
             .enter()
             .append("line")
             .attr("class", "legend-line")
-            .attr("x1", 100)
-            .attr("y1", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
-            .attr("x2", 120)
-            .attr("y2", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
+            .attr("x1", 80)
+            .attr(
+                "y1",
+                (d, i) => 45 + 25 * i + (effectiveRadius(d) * (i - 2)) / 2,
+            )
+            .attr("x2", 125)
+            .attr(
+                "y2",
+                (d, i) => 45 + 25 * i + (effectiveRadius(d) * (i - 2)) / 2,
+            )
             .attr("stroke", "#ff9800")
-            .attr("stroke-width", (d) => strokeScale(d));
+            .attr("stroke-width", (d) => effectiveRadius(d));
 
         legendLayer
             .selectAll(".legend-label")
@@ -1243,7 +1300,10 @@ function makeArrowProjection(
             .append("text")
             .attr("class", "legend-label")
             .attr("x", 10)
-            .attr("y", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
+            .attr(
+                "y",
+                (d, i) => 45 + 25 * i + (effectiveRadius(d) * (i - 2)) / 2,
+            )
             .attr("fill", "var(--fg)")
             .attr("font-size", 12)
             .text((d) => (d / 1000).toFixed(0) + "000");

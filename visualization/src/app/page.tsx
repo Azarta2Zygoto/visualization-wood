@@ -40,6 +40,7 @@ export default function HomePage(): JSX.Element {
     const [isAbsolute, setIsAbsolute] = useState<boolean>(false);
     const [geoProjection, setGeoProjection] =
         useState<string>("geoNaturalEarth");
+    const [IsStatic, setIsStatic] = useState<boolean>(false);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -133,9 +134,11 @@ export default function HomePage(): JSX.Element {
                 open={isOpenParamBar}
                 mapDefinition={mapDefinition}
                 geoProjection={geoProjection}
+                isStatic={IsStatic}
                 setOpen={setIsOpenParamBar}
                 setMapDefinition={setMapDefinition}
                 setGeoProjection={setGeoProjection}
+                setIsStatic={setIsStatic}
             />
 
             <WorldMap
@@ -150,6 +153,7 @@ export default function HomePage(): JSX.Element {
                 mapDefinition={mapDefinition}
                 isAbsolute={isAbsolute}
                 geoProjection={geoProjection}
+                isStatic={IsStatic}
                 setCountriesSelected={setCountriesSelected}
             />
 

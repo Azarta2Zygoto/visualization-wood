@@ -101,7 +101,9 @@
         "geoEqualEarth": "Equal Earth",
         "geoNaturalEarth": "Natural Earth",
         "geoMercator": "Mercator",
-        "geoOrthographic": "Orthographique"
+        "geoOrthographic": "Orthographique",
+        "static-map": "Légende statique au zoom",
+        "static-map-desc": "Rendre la taille des points et la légende insensible au zoom pour une carte plus lisible à différentes échelles."
     },
     "MODOpener": {
         "title": "Sélection des produits",

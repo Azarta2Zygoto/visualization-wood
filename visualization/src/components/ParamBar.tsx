@@ -5,6 +5,7 @@ import { Fragment, type JSX, useEffect } from "react";
 
 import {
     GEO_PROJECTION_STORAGE_KEY,
+    IS_STATIC_STORAGE_KEY,
     MAP_DEFINITIONS,
     MAP_DEFINITION_STORAGE_KEY,
     definitions,
@@ -12,6 +13,7 @@ import {
 import { type ProjectionName, projections } from "@/data/geoprojection";
 
 import { useGlobal } from "./globalProvider";
+import Checkbox from "./personal/checkbox";
 import FlagSelectMenu from "./personal/flagSelectMenu";
 import SelectMenu from "./personal/selectMenu";
 import ThemeSwitch from "./personal/themeSwitch";
@@ -20,18 +22,22 @@ interface ParamBarProps {
     open: boolean;
     mapDefinition: definitions;
     geoProjection: string;
+    isStatic: boolean;
     setOpen: (open: boolean) => void;
     setMapDefinition: (definition: definitions) => void;
     setGeoProjection: (projection: string) => void;
+    setIsStatic: (isStatic: boolean) => void;
 }
 
 export default function ParamBar({
     open,
     mapDefinition,
     geoProjection,
+    isStatic,
     setOpen,
     setMapDefinition,
     setGeoProjection,
+    setIsStatic,
 }: ParamBarProps): JSX.Element {
     const t = useTranslations("ParamBar");
 
@@ -45,6 +51,11 @@ export default function ParamBar({
     function handleProjectionChange(projection: string) {
         setGeoProjection(projection);
         localStorage.setItem(GEO_PROJECTION_STORAGE_KEY, projection);
+    }
+
+    function handleIsStaticChange(isStatic: boolean) {
+        setIsStatic(isStatic);
+        localStorage.setItem(IS_STATIC_STORAGE_KEY, isStatic.toString());
     }
 
     useEffect(() => {
@@ -69,6 +80,15 @@ export default function ParamBar({
             setGeoProjection(storedProjection);
         }
     }, [setGeoProjection]);
+
+    useEffect(() => {
+        const storedIsStatic = localStorage.getItem(IS_STATIC_STORAGE_KEY) as
+            | string
+            | null;
+        if (storedIsStatic !== null) {
+            setIsStatic(storedIsStatic === "true");
+        }
+    }, [setIsStatic]);
 
     return (
         <Fragment>
@@ -118,6 +138,13 @@ export default function ParamBar({
                     }))}
                     selectedOption={t(geoProjection)}
                     onOptionSelect={handleProjectionChange}
+                />
+                <Checkbox
+                    id="static-map-checkbox"
+                    label={t("static-map")}
+                    title={t("static-map-desc")}
+                    checked={isStatic}
+                    onChange={(e) => handleIsStaticChange(e.target.checked)}
                 />
                 <button
                     className="btn"
