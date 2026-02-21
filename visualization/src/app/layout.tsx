@@ -12,9 +12,9 @@ export const metadata: Metadata = {
     title: "Visualization",
     description: "Visualization of export data between France and the world",
     icons: {
-        icon: "/visualization/logo.png",
-        shortcut: "/visualization/logo.png",
-        apple: "/visualization/logo.png",
+        icon: "/visualization-wood/logo.png",
+        shortcut: "/visualization-wood/logo.png",
+        apple: "/visualization-wood/logo.png",
     },
     openGraph: {
         title: "Visualization",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
         },
         {
             name: "Quentin Potiron",
-            url: "visualization/.well-known/humans.txt",
+            url: "visualization-wood/.well-known/humans.txt",
         },
     ],
     keywords: [

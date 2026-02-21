@@ -6,3 +6,5 @@ export const projections = [
     { name: "geoMercator", value: d3.geoMercator, drag: false },
     { name: "geoOrthographic", value: d3.geoOrthographic, drag: true },
 ] as const;
+
+export type ProjectionName = (typeof projections)[number]["name"];

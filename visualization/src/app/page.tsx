@@ -11,6 +11,7 @@ import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/graphique";
 import Loading from "@/components/loading";
 import { WorldMap } from "@/components/map";
+import { type definitions } from "@/data/constants";
 import metadata_app from "@/data/metadata.json";
 import { readNpz } from "@/utils/read";
 
@@ -35,7 +36,7 @@ export default function HomePage(): JSX.Element {
     const [loadingYears, setLoadingYears] = useState<Set<number>>(new Set());
     const [iconSelected, setIconSelected] = useState<string[]>([]);
     const [isOpenParamBar, setIsOpenParamBar] = useState<boolean>(false);
-    const [mapDefinition, setMapDefinition] = useState<string>("low");
+    const [mapDefinition, setMapDefinition] = useState<definitions>("low");
     const [isAbsolute, setIsAbsolute] = useState<boolean>(false);
     const [geoProjection, setGeoProjection] =
         useState<string>("geoNaturalEarth");

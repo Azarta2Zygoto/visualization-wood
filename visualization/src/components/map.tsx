@@ -15,6 +15,7 @@ import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
 import type_data from "@/data/N027_LIB.json";
+import { MAP_DEFINITIONS, type definitions } from "@/data/constants";
 import continent from "@/data/continent.json";
 import pays from "@/data/country_extended.json";
 import { projections } from "@/data/geoprojection";
@@ -45,11 +46,6 @@ const config = {
         validCountry: "#116383",
         invalidCountry: "#666",
     },
-    mapDefinitions: {
-        low: "110m",
-        medium: "50m",
-        high: "10m",
-    },
 };
 
 interface WorldMapProps {
@@ -61,7 +57,7 @@ interface WorldMapProps {
     countriesSelected: number[];
     isMultipleMode: boolean;
     isCountryMode: boolean;
-    mapDefinition: string;
+    mapDefinition: definitions;
     isAbsolute: boolean;
     geoProjection: string;
     setCountriesSelected: (countries: number[]) => void;
@@ -90,7 +86,7 @@ export function WorldMap({
     ] as const;
 
     const svgRef = useRef<SVGSVGElement>(null);
-    const worldDataCache = useRef<{ map: any; size: string }>(null);
+    const worldDataCache = useRef<{ map: any; size: definitions }>(null);
     const projectionRef = useRef<d3.GeoProjection | null>(null);
     const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
     const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
@@ -405,10 +401,7 @@ export function WorldMap({
                     !worldData ||
                     worldDataCache.current?.size !== mapDefinition
                 ) {
-                    const size =
-                        config.mapDefinitions[
-                            mapDefinition as keyof typeof config.mapDefinitions
-                        ];
+                    const size = MAP_DEFINITIONS[mapDefinition];
                     const url = `${basePath}/world/world-${size}.json`;
                     const response = await fetch(url);
                     if (!response.ok)

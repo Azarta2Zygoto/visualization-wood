@@ -3,10 +3,16 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import {
+    DEFAULT_LOCALE,
+    DEFAULT_THEME,
+    LOCALES,
+    LOCALE_STORAGE_KEY,
+    THEME_ATTRIBUTE,
+    THEME_STORAGE_KEY,
+    THEME_VALUES,
+} from "@/data/constants";
 import type { Themes } from "@/data/types";
-
-const defaultLocale = "fr";
-const locales = ["fr", "en"] as const;
 
 const GlobalContext = createContext<{
     locale: string;
@@ -18,13 +24,13 @@ const GlobalContext = createContext<{
     theme: Themes;
     setTheme: (v: Themes) => void;
 }>({
-    locale: defaultLocale,
+    locale: DEFAULT_LOCALE,
     setLocale: () => {},
     windowSize: { width: 0, height: 0 },
     setWindowSize: () => {},
     allowArrowScroll: true,
     setAllowArrowScroll: () => {},
-    theme: "light",
+    theme: DEFAULT_THEME,
     setTheme: () => {},
 });
 
@@ -32,9 +38,10 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
     const [locale, setLocale] = useState(() => {
-        if (typeof window === "undefined") return defaultLocale;
+        if (typeof window === "undefined") return DEFAULT_LOCALE;
 
-        const localeFromStorage = localStorage.getItem("locale");
+        const localeFromStorage = localStorage.getItem(LOCALE_STORAGE_KEY);
+        const locales = Object.values(LOCALES);
         const isStorageSupported =
             localeFromStorage &&
             Object.keys(locales).some((lang) => lang === localeFromStorage);
@@ -44,9 +51,10 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
         const isSupported = Object.keys(locales).some(
             (lang) => lang === navigatorLang,
         );
-        const lang = isSupported ? navigatorLang : defaultLocale;
+        const lang = isSupported ? navigatorLang : DEFAULT_LOCALE;
         return lang;
     });
+
     const [windowSize, setWindowSize] = useState<{
         width: number;
         height: number;
@@ -57,29 +65,34 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
         return { width: window.innerWidth, height: window.innerHeight };
     });
 
-    const [theme, setTheme] = useState<Themes>("light");
+    const [theme, setTheme] = useState<Themes>(DEFAULT_THEME);
     const [allowArrowScroll, setAllowArrowScroll] = useState(true);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
 
-        const storedTheme = localStorage.getItem("theme") as Themes | null;
-        if (
-            storedTheme &&
-            (storedTheme === "light" || storedTheme === "dark")
-        ) {
+        const storedTheme = localStorage.getItem(
+            LOCALE_STORAGE_KEY,
+        ) as Themes | null;
+        const themes = Object.values(THEME_VALUES);
+        if (storedTheme && themes.includes(storedTheme)) {
             setTheme(storedTheme);
             return;
         }
         const prefersDark = window.matchMedia(
             "(prefers-color-scheme: dark)",
         ).matches;
-        setTheme(prefersDark ? "dark" : "light");
+        setTheme(prefersDark ? THEME_VALUES.DARK : THEME_VALUES.LIGHT);
     }, []);
 
     useEffect(() => {
-        localStorage.setItem("locale", locale);
+        localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     }, [locale]);
+
+    useEffect(() => {
+        document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }, [theme]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -93,11 +106,6 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
             window.removeEventListener("resize", handleResize);
         };
     }, []);
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("theme", theme);
-    }, [theme]);
 
     return (
         <GlobalContext.Provider
