@@ -1,14 +1,15 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { type JSX, useState } from "react";
 
-import list_products from "@/data/N890_LIB.json";
 import metadata from "@/data/metadata.json";
+import list_products from "@/data/products.json";
 import icon_symbol from "@/data/symboles.json";
 
-import Checkbox from "./personal.tsx/checkbox";
-import MonthSelector from "./personal.tsx/monthSelector";
-import SelectMenu from "./personal.tsx/selectMenu";
+import Checkbox from "./personal/checkbox";
+import MonthSelector from "./personal/monthSelector";
+import SelectMenu from "./personal/selectMenu";
 import { MultiSelect } from "./ui/multi-select";
 
 interface ConfigBarProps {
@@ -17,6 +18,7 @@ interface ConfigBarProps {
     currentMonth: number;
     isMultipleMode: boolean;
     isCountryMode: boolean;
+    isAbsolute: boolean;
     setTypeData: (type: number) => void;
     setCurrentYear: (year: number) => void;
     setCurrentMonth: (month: number) => void;
@@ -25,6 +27,7 @@ interface ConfigBarProps {
     setIsMultipleMode: (isMultiple: boolean) => void;
     setIsCountryMode: (isCountryMode: boolean) => void;
     setIconSelected: (icons: string[]) => void;
+    setIsAbsolute: (isAbsolute: boolean) => void;
 }
 
 export default function ConfigBar({
@@ -33,6 +36,7 @@ export default function ConfigBar({
     currentMonth,
     isMultipleMode,
     isCountryMode,
+    isAbsolute,
     setTypeData,
     setCurrentYear,
     setCurrentMonth,
@@ -41,7 +45,10 @@ export default function ConfigBar({
     setIsMultipleMode,
     setIsCountryMode,
     setIconSelected,
+    setIsAbsolute,
 }: ConfigBarProps): JSX.Element {
+    const t = useTranslations("ConfigBar");
+
     const [isVolume, setIsVolume] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(true);
 
@@ -90,15 +97,15 @@ export default function ConfigBar({
             <button
                 className="btn btn-close-config"
                 type="button"
-                aria-label="Close configuration bar"
-                title="Close configuration bar"
+                aria-label={isOpen ? t("close-config") : t("open-config")}
+                title={isOpen ? t("close-config") : t("open-config")}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {isOpen ? "×" : "⚙️"}
             </button>
 
-            <h2 className="h2-primary">Configuration</h2>
-            <p>Echelle d&apos;étude :</p>
+            <h2 className="h2-primary">{t("config")}</h2>
+            <p>{t("study-scale")}</p>
             <div
                 className="rows"
                 style={{ gap: 0 }}
@@ -113,7 +120,7 @@ export default function ConfigBar({
                         borderBottomRightRadius: 0,
                     }}
                 >
-                    Pays
+                    {t("country")}
                 </button>
                 <button
                     className={`btn ${!isCountryMode ? "active" : ""}`}
@@ -121,15 +128,15 @@ export default function ConfigBar({
                     onClick={() => handleCountryModeChange(false)}
                     style={{
                         width: "clamp(90px, 15vw, 180px)",
-                        borderLeft: "none",
+                        borderLeftColor: "transparent",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
                     }}
                 >
-                    Continent
+                    {t("continent")}
                 </button>
             </div>
-            <p>Type de données :</p>
+            <p>{t("data-type")}</p>
             <div
                 className="rows"
                 style={{ gap: 0 }}
@@ -138,6 +145,8 @@ export default function ConfigBar({
                     className={`btn ${typeData === 0 || typeData === 2 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(0, isVolume)}
+                    aria-label={t("export-desc")}
+                    title={t("export-desc")}
                     style={{
                         width: "clamp(60px, 10vw, 120px)",
                         borderTopRightRadius: 0,
@@ -145,72 +154,121 @@ export default function ConfigBar({
                         borderBottomRightRadius: 0,
                     }}
                 >
-                    Exportation
+                    {t("export")}
                 </button>
                 <button
                     className={`btn ${typeData === 1 || typeData === 3 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(1, isVolume)}
+                    aria-label={t("import-desc")}
+                    title={t("import-desc")}
                     style={{
                         borderRadius: 0,
                         width: "clamp(60px, 10vw, 120px)",
-                        borderLeft: "none",
+                        borderLeft: "transparent",
                     }}
                 >
-                    Importation
+                    {t("import")}
                 </button>
                 <button
                     className={`btn ${typeData === 4 ? "active" : ""}`}
                     type="button"
                     onClick={() => handleTypeDataChange(4, isVolume)}
+                    aria-label={t("balance-desc")}
+                    title={t("balance-desc")}
                     style={{
                         width: "clamp(60px, 10vw, 120px)",
-                        borderLeft: "none",
+                        borderLeftColor: "transparent",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
                         borderBottomRightRadius: 0,
                     }}
                 >
-                    Balance
+                    {t("balance")}
                 </button>
             </div>
-            <div
-                className="rows"
-                style={{ gap: 0 }}
-            >
-                <button
-                    className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
-                    type="button"
-                    disabled={typeData === 4}
-                    onClick={() => handleTypeDataChange(typeData, true)}
-                    style={{
-                        width: "clamp(90px, 15vw, 180px)",
-                        borderTop: "none",
-                        borderTopRightRadius: 0,
-                        borderTopLeftRadius: 0,
-                        borderBottomRightRadius: 0,
-                    }}
+            {typeData !== 4 ? (
+                <div
+                    className="rows"
+                    style={{ gap: 0 }}
                 >
-                    Volume (tonnes)
-                </button>
-                <button
-                    className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
-                    type="button"
-                    onClick={() => handleTypeDataChange(typeData, false)}
-                    style={{
-                        width: "clamp(90px, 15vw, 180px)",
-                        borderLeft: "none",
-                        borderTop: "none",
-                        borderTopLeftRadius: 0,
-                        borderTopRightRadius: 0,
-                        borderBottomLeftRadius: 0,
-                    }}
+                    <button
+                        className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
+                        type="button"
+                        disabled={typeData === 4}
+                        onClick={() => handleTypeDataChange(typeData, true)}
+                        aria-label={t("volume-desc")}
+                        title={t("volume-desc")}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderTopColor: "transparent",
+                            borderTopRightRadius: 0,
+                            borderTopLeftRadius: 0,
+                            borderBottomRightRadius: 0,
+                        }}
+                    >
+                        {t("volume")}
+                    </button>
+                    <button
+                        className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
+                        type="button"
+                        onClick={() => handleTypeDataChange(typeData, false)}
+                        aria-label={t("value-desc")}
+                        title={t("value-desc")}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderLeftColor: "transparent",
+                            borderTopColor: "transparent",
+                            borderTopLeftRadius: 0,
+                            borderTopRightRadius: 0,
+                            borderBottomLeftRadius: 0,
+                        }}
+                    >
+                        {t("value")}
+                    </button>
+                </div>
+            ) : (
+                <div
+                    className="rows"
+                    style={{ gap: 0 }}
                 >
-                    Valeur k€
-                </button>
-            </div>
+                    <button
+                        className={`btn ${isAbsolute ? "active" : ""}`}
+                        type="button"
+                        onClick={() => setIsAbsolute(true)}
+                        aria-label={t("value-absolute-desc")}
+                        title={t("value-absolute-desc")}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderTopColor: "transparent",
+                            borderTopRightRadius: 0,
+                            borderTopLeftRadius: 0,
+                            borderBottomRightRadius: 0,
+                        }}
+                    >
+                        {t("value-absolute")}
+                    </button>
+                    <button
+                        className={`btn ${!isAbsolute ? "active" : ""}`}
+                        type="button"
+                        onClick={() => setIsAbsolute(false)}
+                        aria-label={t("value-relative-desc")}
+                        title={t("value-relative-desc")}
+                        style={{
+                            width: "clamp(90px, 15vw, 180px)",
+                            borderLeftColor: "transparent",
+                            borderTopColor: "transparent",
+                            borderTopLeftRadius: 0,
+                            borderTopRightRadius: 0,
+                            borderBottomLeftRadius: 0,
+                        }}
+                    >
+                        {t("value-relative")}
+                    </button>
+                </div>
+            )}
 
-            <p>Choix de la date :</p>
+            <p>{t("date-choose")}</p>
             <div
                 className="rows"
                 style={{ gap: 0 }}
@@ -218,13 +276,13 @@ export default function ConfigBar({
                 <button
                     className="btn"
                     type="button"
-                    aria-label="Decrease year"
-                    title="Decrease year"
+                    aria-label={t("decrease-year")}
+                    title={t("decrease-year")}
                     style={{
                         height: "40px",
                         width: "40px",
-                        borderRight: "none",
-                        borderBottom: "none",
+                        borderRightColor: "transparent",
+                        borderBottomColor: "transparent",
                         borderTopRightRadius: 0,
                         borderBottomRightRadius: 0,
                         borderBottomLeftRadius: 0,
@@ -240,7 +298,7 @@ export default function ConfigBar({
                     style={{
                         borderRadius: 0,
                         width: "100px",
-                        borderBottom: "none",
+                        borderBottomColor: "transparent",
                     }}
                     options={Array.from(
                         {
@@ -259,15 +317,15 @@ export default function ConfigBar({
                 <button
                     className="btn"
                     type="button"
-                    aria-label="Increase year"
-                    title="Increase year"
+                    aria-label={t("increase-year")}
+                    title={t("increase-year")}
                     onClick={() => handleYearChange(currentYear + 1)}
                     disabled={currentYear >= metadata.bois.end_year}
                     style={{
                         height: "40px",
                         width: "40px",
-                        borderLeft: "none",
-                        borderBottom: "none",
+                        borderLeftColor: "transparent",
+                        borderBottomColor: "transparent",
                         borderTopLeftRadius: 0,
                         borderBottomLeftRadius: 0,
                         borderBottomRightRadius: 0,
@@ -281,25 +339,25 @@ export default function ConfigBar({
                 setCurrentMonth={setCurrentMonth}
             />
 
-            <p>Choix du produit :</p>
+            <p>{t("product-choose")}</p>
             <MultiSelect
                 id="lang"
                 options={Object.entries(list_products).map(([key, value]) => ({
-                    label: value,
+                    label: value.name,
                     value: key,
                 }))}
                 onValueChange={handleNewProductsSelected}
                 style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
             />
-            <p>Pays sélectionnés :</p>
+            <p>{isCountryMode ? t("country-choose") : t("continent-choose")}</p>
             <Checkbox
                 id="multiple-mode-checkbox"
-                label="Mode de sélection multiple"
+                label={t("multiple-selection")}
                 checked={isMultipleMode}
                 onChange={(e) => setIsMultipleMode(e.target.checked)}
             />
 
-            <p>Evènements historiques :</p>
+            <p>{t("historic")}</p>
             <MultiSelect
                 id="icon"
                 options={Object.keys(icon_symbol).map((key) => ({

@@ -1,10 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect, useState } from "react";
 
 import Papa from "papaparse";
 
 import ArrowUpDown from "@/components/ArrowUpDown";
+import ParamBar from "@/components/ParamBar";
 import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/graphique";
 import Loading from "@/components/loading";
@@ -15,6 +17,8 @@ import { readNpz } from "@/utils/read";
 const adding_automatic_all_years = false; // Permet de charger les années les unes après les autres ou à chaque demande
 
 export default function HomePage(): JSX.Element {
+    const t = useTranslations("HomePage");
+
     const [allData, setAllData] = useState<{ [key: string]: number[][] }>({});
     const [allEvents, setAllEvents] = useState<any[]>([]);
     const [typeData, setTypeData] = useState<number>(0);
@@ -30,6 +34,11 @@ export default function HomePage(): JSX.Element {
     const [isCountryMode, setIsCountryMode] = useState<boolean>(true);
     const [loadingYears, setLoadingYears] = useState<Set<number>>(new Set());
     const [iconSelected, setIconSelected] = useState<string[]>([]);
+    const [isOpenParamBar, setIsOpenParamBar] = useState<boolean>(false);
+    const [mapDefinition, setMapDefinition] = useState<string>("low");
+    const [isAbsolute, setIsAbsolute] = useState<boolean>(false);
+    const [geoProjection, setGeoProjection] =
+        useState<string>("geoNaturalEarth");
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -112,7 +121,26 @@ export default function HomePage(): JSX.Element {
 
     return (
         <Fragment>
-            <h1 className="title">Echanges internationaux de bois</h1>
+            <h1 className="title">{t("title")}</h1>
+            <button
+                className="btn btn-param"
+                type="button"
+                aria-label={t("parameters")}
+                title={t("parameters")}
+                onClick={() => setIsOpenParamBar((prev) => !prev)}
+            >
+                {isOpenParamBar ? "×" : "⚙️"}
+            </button>
+
+            <ParamBar
+                open={isOpenParamBar}
+                mapDefinition={mapDefinition}
+                geoProjection={geoProjection}
+                setOpen={setIsOpenParamBar}
+                setMapDefinition={setMapDefinition}
+                setGeoProjection={setGeoProjection}
+            />
+
             <WorldMap
                 allData={allData}
                 type={typeData}
@@ -122,6 +150,9 @@ export default function HomePage(): JSX.Element {
                 countriesSelected={countriesSelected}
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
+                mapDefinition={mapDefinition}
+                isAbsolute={isAbsolute}
+                geoProjection={geoProjection}
                 setCountriesSelected={setCountriesSelected}
             />
 
@@ -131,6 +162,7 @@ export default function HomePage(): JSX.Element {
                 currentMonth={currentMonth}
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
+                isAbsolute={isAbsolute}
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
                 setCurrentMonth={setCurrentMonth}
@@ -139,9 +171,18 @@ export default function HomePage(): JSX.Element {
                 setIsMultipleMode={setIsMultipleMode}
                 setIsCountryMode={setIsCountryMode}
                 setIconSelected={setIconSelected}
+                setIsAbsolute={setIsAbsolute}
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
+            <Graphique
+                allData={allData}
+                type={[typeData]}
+                productsSelected={productsSelected}
+                countriesSelected={countriesSelected}
+                iconSelected={iconSelected}
+                allEvents={allEvents}
+            />
         </Fragment>
     );
 }

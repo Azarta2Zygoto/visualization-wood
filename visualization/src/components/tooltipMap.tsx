@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -8,6 +9,8 @@ import { hasFlag } from "country-flag-icons";
 import type_data from "@/data/N027_LIB.json";
 import month_names from "@/data/N053_LIB.json";
 import countryConversion from "@/data/country_extended.json";
+
+import { useGlobal } from "./globalProvider";
 
 interface TooltipMapProps {
     appear: boolean;
@@ -28,16 +31,18 @@ export default function TooltipMap({
     country,
     position: { x, y } = { x: 0, y: 0 },
 }: TooltipMapProps): JSX.Element {
-    // Smart positioning to prevent tooltip from going off-screen
+    const t = useTranslations("Tooltip");
+    const { windowSize, locale } = useGlobal();
+
     const tooltipRef = useRef<HTMLDivElement>(null);
     const [currentPosition, setCurrentPosition] = useState<{
         x: number;
         y: number;
     }>({ x, y });
 
-    const countryCode = Object.values(countryConversion).find(
+    const countryValue = Object.values(countryConversion).find(
         (c) => c.en === country || c.fr === country,
-    )?.code;
+    );
 
     const values = useMemo(
         () => calculateData(usefullData, country),
@@ -53,13 +58,21 @@ export default function TooltipMap({
             const { width, height } =
                 tooltipRef.current.getBoundingClientRect();
             const left =
-                x + width > window.innerWidth ? x - width / 2 - 10 : x + 10;
+                x + width > windowSize.width
+                    ? windowSize.width - width / 2 - 10
+                    : x < width / 2
+                      ? width / 2 + 10
+                      : x;
+
             const top =
-                y + height > window.innerHeight ? y - height - 10 : y + 20;
+                y + height > windowSize.height
+                    ? Math.min(y, windowSize.height) - height - 10
+                    : y + 20;
             setCurrentPosition({ x: left, y: top });
         };
+
         replaceDots();
-    }, [x, y]);
+    }, [windowSize.height, windowSize.width, x, y]);
 
     return (
         <div
@@ -72,18 +85,30 @@ export default function TooltipMap({
             }}
         >
             <div className="rows">
-                {hasFlag(countryCode || "") && countryCode ? (
+                {hasFlag(countryValue?.code || "") && countryValue?.code ? (
                     <Image
                         className="tooltip-country"
-                        alt={country || ""}
-                        aria-label={country}
+                        alt={t("flag", {
+                            country:
+                                locale === "en"
+                                    ? countryValue?.en
+                                    : countryValue?.fr || "unknown",
+                        })}
+                        aria-label={t("flag", {
+                            country:
+                                locale === "en"
+                                    ? countryValue?.en
+                                    : countryValue?.fr || "unknown",
+                        })}
                         width={32}
                         height={24}
-                        src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`}
+                        src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryValue?.code}.svg`}
                     />
                 ) : null}
                 <h3>
-                    {country + " - "}
+                    {locale === "en"
+                        ? countryValue?.en + " - "
+                        : countryValue?.fr + " - "}
                     {month !== 0 &&
                         month_names[
                             month?.toString() as keyof typeof month_names
@@ -93,50 +118,36 @@ export default function TooltipMap({
             </div>
             <ul>
                 <li>
-                    <strong>Export (euros): </strong>
-                    {typeof values.export_euro === "number"
-                        ? values.export_euro.toLocaleString("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                          })
-                        : values.export_euro}
+                    <strong>
+                        {t("export-euro", { value: values.export_euro })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>Import (euros): </strong>
-                    {typeof values.import_euro === "number"
-                        ? values.import_euro.toLocaleString("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                          })
-                        : values.import_euro}
+                    <strong>
+                        {t("import-euro", { value: values.import_euro })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>Trade balance (euros): </strong>
-                    {typeof values.balance_euro === "number"
-                        ? values.balance_euro.toLocaleString("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                          })
-                        : values.balance_euro}
+                    <strong>
+                        {t("balance-euro", { value: values.balance_euro })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>Export (tonnes): </strong>
-                    {typeof values.export_tonnes === "number"
-                        ? values.export_tonnes.toLocaleString("fr-FR")
-                        : values.export_tonnes}
+                    <strong>
+                        {t("export-ton", { value: values.export_tonnes })}
+                    </strong>
                 </li>
                 <li>
-                    <strong>Import (tonnes): </strong>
-                    {typeof values.import_tonnes === "number"
-                        ? values.import_tonnes.toLocaleString("fr-FR")
-                        : values.import_tonnes}
+                    <strong>
+                        {t("import-ton", { value: values.import_tonnes })}
+                    </strong>
                 </li>
             </ul>
         </div>
     );
 }
 
-const defaultNoData = "No data";
+const defaultNoData = -1;
 const AllNoData = {
     export_euro: defaultNoData,
     import_euro: defaultNoData,

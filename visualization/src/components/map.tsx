@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
     type JSX,
     useCallback,
@@ -16,9 +17,12 @@ import * as topojson from "topojson-client";
 import type_data from "@/data/N027_LIB.json";
 import continent from "@/data/continent.json";
 import pays from "@/data/country_extended.json";
+import { projections } from "@/data/geoprojection";
 import type { CountryData } from "@/data/types";
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
+import { simpleDrag } from "@/utils/drag";
+import { isKnownCountry } from "@/utils/function";
 
 import { useGlobal } from "./globalProvider";
 import TooltipMap from "./tooltipMap";
@@ -27,6 +31,26 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const pays_english = new Set(Object.values(pays).map((country) => country.en));
 const animationDuration = 800;
 const ParisCoord: [number, number] = [2.3522, 48.8566];
+
+const config = {
+    legendHeight: 130,
+    legendWidth: 140,
+    legendMaxHeight: 250,
+    legendMaxWidth: 300,
+    light: {
+        validCountry: "#87ceeb",
+        invalidCountry: "#d3d3d3",
+    },
+    dark: {
+        validCountry: "#116383",
+        invalidCountry: "#666",
+    },
+    mapDefinitions: {
+        low: "110m",
+        medium: "50m",
+        high: "10m",
+    },
+};
 
 interface WorldMapProps {
     allData: { [key: string]: number[][] };
@@ -37,6 +61,9 @@ interface WorldMapProps {
     countriesSelected: number[];
     isMultipleMode: boolean;
     isCountryMode: boolean;
+    mapDefinition: string;
+    isAbsolute: boolean;
+    geoProjection: string;
     setCountriesSelected: (countries: number[]) => void;
 }
 
@@ -49,17 +76,21 @@ export function WorldMap({
     countriesSelected,
     isMultipleMode,
     isCountryMode = false,
+    mapDefinition,
+    isAbsolute,
+    geoProjection,
     setCountriesSelected,
 }: WorldMapProps): JSX.Element {
-    const { windowSize } = useGlobal();
+    const t = useTranslations("WorldMap");
+    const { windowSize, theme } = useGlobal();
 
     const correctionSize: [number, number] = [
-        windowSize.width / 2 - 1,
+        windowSize.width / 2 - 5,
         windowSize.height / 2,
     ] as const;
 
     const svgRef = useRef<SVGSVGElement>(null);
-    const worldDataCache = useRef<any>(null);
+    const worldDataCache = useRef<{ map: any; size: string }>(null);
     const projectionRef = useRef<d3.GeoProjection | null>(null);
     const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
     const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
@@ -80,6 +111,8 @@ export function WorldMap({
             countryName: string;
             x: number;
             y: number;
+            lon: number;
+            lat: number;
         }>
     >([]);
     const [layer, setLayer] = useState<d3.Selection<
@@ -148,12 +181,9 @@ export function WorldMap({
         (
             legend: d3.Selection<SVGGElement, unknown, null, undefined>,
             zoomScale: number,
+            radiusScale: d3.ScaleLinear<number, number>,
         ) => {
-            const radiusScale = legendScaleRef.current;
-            if (!radiusScale) return;
-
-            const baseY = 50 + 30 * 2;
-
+            const baseY = 110;
             legend
                 .selectAll<SVGCircleElement, number>(".legend-circle")
                 .attr("r", (d) => radiusScale(d) * zoomScale)
@@ -218,50 +248,53 @@ export function WorldMap({
                 })
                 .selectAll<SVGTextElement, unknown>(".legend-text");
 
+            let rectWidth = config.legendWidth;
+            let rectHeight = config.legendHeight;
             if (isCountryMode) {
-                const rectWidth = Math.max(
-                    Math.min(140 * zoomScale ** 0.75, 300),
-                    140,
+                rectWidth = Math.max(
+                    Math.min(
+                        config.legendWidth * zoomScale ** 0.6,
+                        config.legendMaxWidth,
+                    ),
+                    config.legendWidth,
                 );
-                const rectHeight = Math.max(
-                    Math.min(130 * zoomScale ** 0.75, 250),
-                    130,
+                rectHeight = Math.max(
+                    Math.min(
+                        config.legendHeight * zoomScale ** 0.6,
+                        config.legendMaxHeight,
+                    ),
+                    config.legendHeight,
                 );
-
-                element
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-                clipRect
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-
-                legendText.attr("x", 10).attr("y", -rectHeight + 135);
             } else {
-                const rectWidth = Math.max(
-                    Math.min(140 * zoomScale ** 0.18, 300),
-                    140,
+                rectWidth = Math.max(
+                    Math.min(
+                        config.legendWidth * zoomScale ** 0.18,
+                        config.legendMaxWidth,
+                    ),
+                    config.legendWidth,
                 );
-                const rectHeight = Math.max(
-                    Math.min(130 * zoomScale ** 0.18, 250),
-                    130,
+                rectHeight = Math.max(
+                    Math.min(
+                        config.legendHeight * zoomScale ** 0.18,
+                        config.legendMaxHeight,
+                    ),
+                    config.legendHeight,
                 );
-                element
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-                clipRect
-                    .attr("width", rectWidth)
-                    .attr("height", rectHeight)
-                    .attr("x", 0)
-                    .attr("y", -rectHeight + 110);
-
-                legendText.attr("x", 10).attr("y", -rectHeight + 135);
             }
+            element
+                .attr("width", rectWidth)
+                .attr("height", rectHeight)
+                .attr("x", 0)
+                .attr("y", config.legendHeight - rectHeight);
+            clipRect
+                .attr("width", rectWidth)
+                .attr("height", rectHeight)
+                .attr("x", 0)
+                .attr("y", config.legendHeight - rectHeight);
+
+            legendText
+                .attr("x", 10)
+                .attr("y", -rectHeight + config.legendHeight + 25);
         },
         [isCountryMode],
     );
@@ -273,11 +306,9 @@ export function WorldMap({
 
             if (event.target.__data__.continentCode) {
                 d3.select(event.currentTarget).attr("opacity", (d: any) => {
-                    const know = isCountryMode
-                        ? pays_english.has(d.properties.name) ||
-                          d.properties.name === "France"
-                        : true;
-                    return know ? 0.6 : 1;
+                    return isKnownCountry(d.continentCode, isCountryMode)
+                        ? 0.6
+                        : 1;
                 });
                 d3.selectAll(".data-arrow").attr("opacity", (d: any) => {
                     if (d.continentCode !== event.target.__data__.continentCode)
@@ -287,18 +318,14 @@ export function WorldMap({
             } else
                 d3.select(event.currentTarget)
                     .attr("stroke-width", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name) ||
-                              d.properties.name === "France"
-                            : true;
-                        return know ? 1.5 : 0.5;
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? 1.5
+                            : 0.5;
                     })
                     .attr("opacity", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name) ||
-                              d.properties.name === "France"
-                            : true;
-                        return know ? 0.6 : 1;
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? 0.6
+                            : 1;
                     });
 
             // Tooltip data (read from ref to get current data)
@@ -335,7 +362,6 @@ export function WorldMap({
 
     // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)
     const handleCountryMouseout = useCallback((event: any) => {
-        console.log("Mouse out:", event.target.__data__);
         if (event.target.__data__.continentCode) {
             d3.selectAll(".data-arrow").attr("opacity", 1);
         } else
@@ -355,8 +381,13 @@ export function WorldMap({
             const savedTransform = currentTransformRef.current;
 
             // Create projection and path
-            const projection = d3
-                .geoNaturalEarth1()
+            const correctProjection = projections.find(
+                (p) => p.name === geoProjection,
+            );
+            if (!correctProjection) return;
+
+            const projection = correctProjection
+                .value()
                 .scale(310)
                 .translate(correctionSize);
             projectionRef.current = projection;
@@ -367,15 +398,27 @@ export function WorldMap({
             d3.select(svg).selectAll("*").remove();
 
             try {
+                console.log("Loading map data...");
                 // Fetch or use cached world topology data
-                let worldData = worldDataCache.current;
-                if (!worldData) {
-                    const url = `${basePath}/world/world-110m.json`;
+                let worldData = worldDataCache.current?.map;
+                if (
+                    !worldData ||
+                    worldDataCache.current?.size !== mapDefinition
+                ) {
+                    const size =
+                        config.mapDefinitions[
+                            mapDefinition as keyof typeof config.mapDefinitions
+                        ];
+                    const url = `${basePath}/world/world-${size}.json`;
                     const response = await fetch(url);
                     if (!response.ok)
                         throw new Error("Failed to load world data");
                     worldData = await response.json();
-                    worldDataCache.current = worldData;
+
+                    worldDataCache.current = {
+                        map: worldData,
+                        size: mapDefinition,
+                    };
                 }
 
                 // Extract country features (topojson.feature always returns FeatureCollection)
@@ -436,11 +479,11 @@ export function WorldMap({
                 // Create SVG
                 const mapSvg = d3
                     .select(svg)
-                    .attr("width", windowSize.width - 2)
+                    .attr("width", windowSize.width - 10)
                     .attr("height", windowSize.height)
                     .attr(
                         "viewBox",
-                        `0 0 ${windowSize.width - 2} ${windowSize.height}`,
+                        `0 0 ${windowSize.width - 10} ${windowSize.height}`,
                     );
 
                 const mapLayer = mapSvg.append("g").attr("class", "map-layer");
@@ -454,7 +497,7 @@ export function WorldMap({
                     )
                     .attr("pointer-events", "none");
 
-                const correctLegend = createLegend(legendLayer);
+                const correctLegend = createLegend(legendLayer, t("legend"));
 
                 setLayer(mapLayer);
                 setLegendLayer(correctLegend);
@@ -465,10 +508,23 @@ export function WorldMap({
                     .on("zoom", (event) => {
                         mapLayer.attr("transform", event.transform);
                         currentTransformRef.current = event.transform;
-                        applyLegendZoom(correctLegend, event.transform.k);
+
+                        applyLegendZoom(
+                            correctLegend,
+                            event.transform.k,
+                            legendScaleRef.current!,
+                        );
                     });
 
-                mapSvg.call(zoom);
+                if (correctProjection.drag) {
+                    mapSvg.call(
+                        simpleDrag({
+                            projection,
+                            pathGenerator,
+                            mapLayer,
+                        }),
+                    );
+                } else mapSvg.call(zoom);
 
                 // Restore previous transform
                 if (
@@ -486,35 +542,24 @@ export function WorldMap({
                     .enter()
                     .append("path")
                     .attr("class", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
-                        return know ? "country known-country" : "country";
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? "country known-country"
+                            : "country";
                     })
                     .attr("d", pathGenerator as any)
                     .attr("fill", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
                         return d.properties.name === "France"
                             ? "#ff6b6b"
-                            : know
-                              ? "#87ceeb"
-                              : "#d3d3d3";
+                            : isKnownCountry(d.properties.name, isCountryMode)
+                              ? config[theme].validCountry
+                              : config[theme].invalidCountry;
                     })
-                    .attr("stroke", "#999")
+                    .attr("stroke", "var(--low-border-color)")
                     .attr("stroke-width", 0.5)
                     .style("cursor", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
-                        return know ? "pointer" : "default";
-                    })
-                    .style("cursor", (d: any) => {
-                        const know = isCountryMode
-                            ? pays_english.has(d.properties.name)
-                            : true;
-                        return know ? "pointer" : "default";
+                        return isKnownCountry(d.properties.name, isCountryMode)
+                            ? "pointer"
+                            : "default";
                     });
 
                 // Create arrow layer after countries so arrows appear on top
@@ -537,12 +582,16 @@ export function WorldMap({
 
                         return {
                             countryName,
+                            lon: centroid[0],
+                            lat: centroid[1],
                             x: projectedCentroid[0],
                             y: projectedCentroid[1],
                         };
                     })
                     .filter(Boolean) as Array<{
                     countryName: string;
+                    lon: number;
+                    lat: number;
                     x: number;
                     y: number;
                 }>;
@@ -553,20 +602,28 @@ export function WorldMap({
                     .attr("x", correctionSize[0])
                     .attr("y", correctionSize[1])
                     .attr("text-anchor", "middle")
-                    .text("Error loading map data");
+                    .text(t("error-data"));
             }
         };
         loadMap();
-    }, [applyLegendZoom, isCountryMode, windowSize.height, windowSize.width]);
+    }, [
+        applyLegendZoom,
+        isCountryMode,
+        windowSize.height,
+        windowSize.width,
+        mapDefinition,
+        theme,
+        geoProjection,
+    ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
     useEffect(() => {
         if (!layer) return;
 
         layer.selectAll(".country").on("click", (_: any, d: any) => {
-            const countryName = d.properties.name;
             const countryCode = Object.keys(pays).find(
-                (key) => pays[key as keyof typeof pays].en === countryName,
+                (key) =>
+                    pays[key as keyof typeof pays].en === d.properties.name,
             );
             if (!countryCode) return;
 
@@ -583,12 +640,13 @@ export function WorldMap({
         });
     }, [countriesSelected, isMultipleMode, layer, setCountriesSelected]);
 
-    // Effect 7: Attach event handlers once when map loads
+    // Effect 7: Attach event handlers when map layer changes
     useEffect(() => {
         const svg = svgRef.current;
         if (!svg) return;
 
-        const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
+        const mapLayer =
+            layer ?? d3.select(svg).select<SVGGElement>(".map-layer");
         if (mapLayer.empty()) return;
 
         // Attach handlers (handlers are stable and read from ref)
@@ -603,7 +661,7 @@ export function WorldMap({
                 .on("mouseover", null)
                 .on("mouseout", null);
         };
-    }, [handleCountryMouseover, handleCountryMouseout]);
+    }, [handleCountryMouseover, handleCountryMouseout, layer]);
 
     // Effect 8: Update data circles based on filtered data
     useEffect(() => {
@@ -613,7 +671,8 @@ export function WorldMap({
         if (!svg) return;
 
         d3.select(svg).selectAll(".color-legend").remove();
-        const mapLayer = d3.select(svg).select<SVGGElement>(".map-layer");
+        const mapLayer =
+            layer ?? d3.select(svg).select<SVGGElement>(".map-layer");
         if (mapLayer.empty()) return;
 
         const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
@@ -629,6 +688,7 @@ export function WorldMap({
                 lectureData,
                 countries: isCountryMode ? dataPointOnMap : undefined,
                 continent: !isCountryMode ? continent : undefined,
+                isAbsolute,
             });
 
             const maxValue = Math.max(
@@ -686,12 +746,11 @@ export function WorldMap({
                 maxValue,
                 minValue,
             );
-            console.log("Color scale domain:", colorScale.domain());
             const colorLegend = Legend(colorScale, {
                 width: 50,
                 height: windowSize.height * 0.8,
                 ticks: 10,
-                title: "Balance commerciale",
+                title: t("balance"),
                 marginTop: 60,
                 marginLeft: 25,
             });
@@ -708,18 +767,16 @@ export function WorldMap({
                 y: number;
             }
         >(".country");
+
         countries
             .transition()
             .duration(animationDuration)
             .attr("fill", (d: any) => {
-                const know = isCountryMode
-                    ? pays_english.has(d.properties.name)
-                    : true;
                 return d.properties.name === "France"
                     ? "#ff6b6b"
-                    : know
-                      ? "#87ceeb"
-                      : "#d3d3d3";
+                    : isKnownCountry(d.properties.name, isCountryMode)
+                      ? config[theme].validCountry
+                      : config[theme].invalidCountry;
             });
 
         if (isCountryMode) {
@@ -734,6 +791,8 @@ export function WorldMap({
                     return {
                         countryName,
                         value,
+                        lon: point.lon,
+                        lat: point.lat,
                         x: point.x,
                         y: point.y,
                     };
@@ -743,6 +802,8 @@ export function WorldMap({
                 value: number;
                 x: number;
                 y: number;
+                lon: number;
+                lat: number;
             }>;
 
             // Find max value for scaling
@@ -784,6 +845,8 @@ export function WorldMap({
                             projection(
                                 values.center as [number, number],
                             )?.[1] || 0,
+                        lon: values.center[0],
+                        lat: values.center[1],
                     };
                 },
             );
@@ -811,6 +874,8 @@ export function WorldMap({
         isCountryMode,
         handleCountryMouseover,
         handleCountryMouseout,
+        theme,
+        isAbsolute,
     ]);
 
     return (
@@ -830,6 +895,7 @@ export function WorldMap({
 
 function createLegend(
     legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
+    name: string = "Légende :",
 ): d3.Selection<SVGGElement, unknown, null, undefined> {
     const clipId = "legend-clip";
 
@@ -839,38 +905,36 @@ function createLegend(
         .append("rect")
         .attr("x", 0)
         .attr("y", 0)
-        .attr("width", 140)
-        .attr("height", 110)
+        .attr("width", config.legendWidth)
+        .attr("height", config.legendHeight)
         .attr("rx", 8)
-        .attr("fill", "#ffffffaa")
-        .attr("stroke", "#999")
         .attr("class", "legend-clip-rect");
 
     legendLayer
         .append("rect")
         .attr("x", 0)
         .attr("y", 0)
-        .attr("width", 140)
-        .attr("height", 130)
+        .attr("width", config.legendWidth)
+        .attr("height", config.legendHeight)
         .attr("rx", 8)
-        .attr("fill", "#ffffffaa")
-        .attr("stroke", "#999")
+        .attr("fill", "var(--bg-legend)")
+        .attr("stroke", "var(--border-color)")
         .attr("class", "legend-background");
 
     legendLayer
         .append("text")
         .attr("x", 10)
         .attr("y", 25)
-        .attr("fill", "#333")
+        .attr("fill", "var(--fg)")
         .attr("font-size", 18)
         .attr("class", "legend-text")
-        .text(`Légende :`);
+        .text(name);
 
     const innerLegend = legendLayer
         .append("g")
         .attr("class", "inner-legend")
         .attr("clip-path", `url(#${clipId})`)
-        .attr("transform", `translate(0, -10)`);
+        .attr("transform", `translate(0, 10)`);
 
     return innerLegend;
 }
@@ -889,6 +953,7 @@ function makeCircleProjection(
     applyZoom: (
         legend: d3.Selection<SVGGElement, unknown, null, undefined>,
         zoomScale: number,
+        radiusScale: d3.ScaleLinear<number, number, never>,
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
@@ -909,11 +974,24 @@ function makeCircleProjection(
             .append("circle")
             .attr("class", "legend-circle")
             .attr("cx", 100)
-            .attr("cy", (d) => 50 + 30 * 2 - radiusScale(d))
+            .attr("cy", (d) => 110 - radiusScale(d))
             .attr("r", (d) => radiusScale(d))
             .attr("fill", "#ff9800")
             .attr("opacity", 0.7)
             .attr("stroke", "#e65100")
+            .attr("stroke-width", 1);
+
+        legendLayer
+            .selectAll(".legend-tick")
+            .data(legendValues)
+            .enter()
+            .append("line")
+            .attr("class", "legend-tick")
+            .attr("x1", 100)
+            .attr("y1", (d) => 110 - radiusScale(d) * 2)
+            .attr("x2", 60)
+            .attr("y2", (d) => 110 - radiusScale(d) * 2)
+            .attr("stroke", "var(--fg)")
             .attr("stroke-width", 1);
 
         legendLayer
@@ -923,25 +1001,12 @@ function makeCircleProjection(
             .append("text")
             .attr("class", "legend-label")
             .attr("x", 10)
-            .attr("y", (d) => 50 + 30 * 2 - radiusScale(d) * 2 + 5)
-            .attr("fill", "#333")
+            .attr("y", (d) => 115 - radiusScale(d) * 2)
+            .attr("fill", "var(--fg)")
             .attr("font-size", 12)
             .text((d) => (d / 1000).toFixed(0) + "000");
 
-        legendLayer
-            .selectAll(".legend-tick")
-            .data(legendValues)
-            .enter()
-            .append("line")
-            .attr("class", "legend-tick")
-            .attr("x1", 100)
-            .attr("y1", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
-            .attr("x2", 60)
-            .attr("y2", (d) => 50 + 30 * 2 - radiusScale(d) * 2)
-            .attr("stroke", "#333")
-            .attr("stroke-width", 1);
-
-        applyZoom(legendLayer, zoom);
+        applyZoom(legendLayer, zoom, radiusScale);
     }
 
     // Bind data to circles (only countries with data)
@@ -1002,6 +1067,7 @@ function makeArrowProjection(
     applyZoom: (
         legend: d3.Selection<SVGGElement, unknown, null, undefined>,
         zoomScale: number,
+        strokeScale: d3.ScaleLinear<number, number, never>,
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
@@ -1059,7 +1125,6 @@ function makeArrowProjection(
         .transition("exit")
         .duration(animationDuration)
         .attr("stroke-dashoffset", function () {
-            console.log("Exiting arc:", d3.select(this).datum());
             const length = (this as SVGPathElement).getTotalLength();
             return `${length}`;
         })
@@ -1169,11 +1234,11 @@ function makeArrowProjection(
             .attr("class", "legend-label")
             .attr("x", 10)
             .attr("y", (d, i) => 45 + 25 * i + (strokeScale(d) * (i - 2)) / 2)
-            .attr("fill", "#333")
+            .attr("fill", "var(--fg)")
             .attr("font-size", 12)
             .text((d) => (d / 1000).toFixed(0) + "000");
 
-        applyZoom(legendLayer, zoom);
+        applyZoom(legendLayer, zoom, strokeScale);
     }
     return strokeScale;
 }
@@ -1241,7 +1306,7 @@ function MakeHuexBalanceProjection(
         .attr("fill", (d: any) => {
             const countryName = d.properties.name;
             const point = pointData.find((p) => p.countryName === countryName);
-            return point ? colorScale(point.value) : "#d3d3d3";
+            return point ? colorScale(point.value) : "var(--invalid-country)";
         });
     return colorScale;
 }

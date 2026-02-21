@@ -1,0 +1,98 @@
+{
+    "HomePage": {
+        "title": "Wood international trade with France",
+        "parameters": "Visualization parameters"
+    },
+    "NotFound": {
+        "title": "404 - Page not found",
+        "text1": "Sorry, the page you are looking for does not exist.",
+        "text2": "Please check the URL or return to the homepage.",
+        "back-to-home": "Back to Home"
+    },
+    "ErrorPage": {
+        "title": "Oops! An error occurred",
+        "text1": "There seems to be a problem with your request.",
+        "retry": "Retry",
+        "back-to-home": "Back to Home"
+    },
+    "DefaultTexts": {
+        "selectAnOption": "Select an option",
+        "select-lang": "Select one or more programming languages",
+        "select-icon": "Select one or more event types",
+        "selectLanguage": "Select a language",
+        "search": "Search...",
+        "all": "All",
+        "clear": "Clear",
+        "close": "Close",
+        "switch-theme": "Switch theme",
+        "more": "{count, plural, =1 {option} other {options}}",
+        "clear-all": "Clear all selections",
+        "aria-search": "Search field",
+        "dropdown-explain": "Multi-select dropdown. Use the up and down arrows to navigate, spacebar to select or deselect an option, and escape to close the dropdown.",
+        "filter-explain": "Type to filter available options. Use the up and down arrows to navigate through the filtered options.",
+        "fr": "French",
+        "en": "English"
+    },
+    "Loading": {
+        "loading": "Load data for {year}...",
+        "loaded": "Data for {year} loaded!",
+        "close": "Close"
+    },
+    "ArrowUpDown": {
+        "scroll-up": "Scroll up",
+        "scroll-down": "Scroll down"
+    },
+    "ConfigBar": {
+        "close-config": "Close configuration bar",
+        "open-config": "Open configuration bar",
+        "config": "Configuration",
+        "study-scale": "Study scale:",
+        "country": "Country",
+        "continent": "Continent",
+        "data-type": "Data type:",
+        "export": "Exports",
+        "import": "Imports",
+        "balance": "Balance",
+        "volume": "Volume (tonnes)",
+        "value": "Value (k€)",
+        "date-choose": "Date choice:",
+        "decrease-year": "Go to previous year",
+        "increase-year": "Go to next year",
+        "product-choose": "Product choice:",
+        "country-choose": "Country choice:",
+        "continent-choose": "Continent choice:",
+        "multiple-selection": "Multiple selection mode",
+        "historic": "Historical events:",
+        "value-absolute": "Absolute",
+        "value-relative": "Relative",
+        "export-desc": "Show exports",
+        "import-desc": "Show imports",
+        "balance-desc": "Show trade balance",
+        "volume-desc": "Show traded volumes in tonnes",
+        "value-desc": "Show traded values in thousands of euros",
+        "value-absolute-desc": "Use absolute values",
+        "value-relative-desc": "Use relative values compared to total trade"
+    },
+    "Tooltip": {
+        "export-euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "import-euro": "Import: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "export-ton": "Export: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "import-ton": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "balance-euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "flag": "{country} flag"
+    },
+    "WorldMap": {
+        "error-data": "Error loading data",
+        "legend": "Legend:",
+        "balance": "Trade balance"
+    },
+    "ParamBar": {
+        "map-definition": "Map definition:",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "close": "Close parameters",
+        "select-language": "Select language:",
+        "select-theme": "Select theme:"
+    }
+}

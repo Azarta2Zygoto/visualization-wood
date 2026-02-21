@@ -108,7 +108,7 @@ export default function ArrowUpDown(): JSX.Element {
             >
                 <i
                     className="bi bi-arrow-up"
-                    aria-hidden="true"
+                    aria-hidden
                 />
             </button>
             <button
@@ -121,7 +121,7 @@ export default function ArrowUpDown(): JSX.Element {
             >
                 <i
                     className="bi bi-arrow-down"
-                    aria-hidden="true"
+                    aria-hidden
                 />
             </button>
         </div>

@@ -1,4 +1,8 @@
 {
+    "HomePage": {
+        "title": "Echanges internationaux de bois",
+        "parameters": "Paramètres de visualisation"
+    },
     "NotFound": {
         "title": "404 - Page non trouvée",
         "text1": "Désolé, la page que vous recherchez n'existe pas.",
@@ -15,15 +19,19 @@
         "selectAnOption": "Sélectionnez une option",
         "select-lang": "Sélectionner un ou des langages de programmation",
         "select-icon": "Sélectionner un ou des types d'événements",
+        "selectLanguage": "Sélectionner une langue",
         "search": "Rechercher...",
         "all": "Tous",
         "clear": "Effacer",
         "close": "Fermer",
+        "switch-theme": "Changer de thème",
         "more": "{count, plural, =1 {option} other {options}}",
         "clear-all": "Effacer toutes les sélections",
         "aria-search": "Champ de recherche",
         "dropdown-explain": "Sélecteur déroulant à plusieurs choix. Utilisez les flèches haut et bas pour naviguer, la barre d'espace pour sélectionner ou désélectionner une option, et la touche Échap pour fermer le sélecteur.",
-        "filter-explain": "Ecrivez pour filtrer les options disponibles. Utilisez les flèches haut et bas pour naviguer dans les options filtrées."
+        "filter-explain": "Ecrivez pour filtrer les options disponibles. Utilisez les flèches haut et bas pour naviguer dans les options filtrées.",
+        "fr": "Français",
+        "en": "Anglais"
     },
     "Loading": {
         "loading": "Chargement des données de {year}...",
@@ -33,5 +41,63 @@
     "ArrowUpDown": {
         "scroll-up": "Défiler vers le haut",
         "scroll-down": "Défiler vers le bas"
+    },
+    "ConfigBar": {
+        "close-config": "Fermer la barre de configuration",
+        "open-config": "Ouvrir la barre de configuration",
+        "config": "Configuration",
+        "study-scale": "Echelle d'étude :",
+        "country": "Pays",
+        "continent": "Continent",
+        "data-type": "Type de données :",
+        "export": "Exportations",
+        "import": "Importations",
+        "balance": "Balance",
+        "volume": "Volume (tonnes)",
+        "value": "Valeur (k€)",
+        "date-choose": "Choix de la date :",
+        "decrease-year": "Aller à l'année précédente",
+        "increase-year": "Aller à l'année suivante",
+        "product-choose": "Choix du produit :",
+        "country-choose": "Choix du pays :",
+        "continent-choose": "Choix du continent :",
+        "multiple-selection": "Mode de sélection multiple",
+        "historic": "Evènements historiques :",
+        "value-absolute": "Absolues",
+        "value-relative": "Relatives",
+        "export-desc": "Afficher les exportations",
+        "import-desc": "Afficher les importations",
+        "balance-desc": "Afficher la balance commerciale",
+        "volume-desc": "Afficher les volumes échangés en tonnes",
+        "value-desc": "Afficher les valeurs échangées en milliers d'euros",
+        "value-absolute-desc": "Utiliser les valeurs absolues",
+        "value-relative-desc": "Utiliser les valeurs relatives par rapport au total des échanges"
+    },
+    "Tooltip": {
+        "export-euro": "Export : {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "import-euro": "Import : {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "export-ton": "Export : {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "import-ton": "Import : {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "balance-euro": "Balance commerciale : {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "flag": "Drapeau de {country}"
+    },
+    "WorldMap": {
+        "error-data": "Erreur lors du chargement des données",
+        "legend": "Légende :",
+        "balance": "Balance commerciale"
+    },
+    "ParamBar": {
+        "map-definition": "Définition de la carte :",
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Elevée",
+        "close": "Fermer les paramètres",
+        "select-language": "Sélectionner la langue :",
+        "select-theme": "Sélectionner le thème :",
+        "map-projection": "Projection cartographique :",
+        "geoEqualEarth": "Equal Earth",
+        "geoNaturalEarth": "Natural Earth",
+        "geoMercator": "Mercator",
+        "geoOrthographic": "Orthographique"
     }
 }

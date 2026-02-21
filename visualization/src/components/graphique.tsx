@@ -1,15 +1,23 @@
 "use client";
 
-import { type JSX, RefObject, useEffect, useMemo, useRef, useState } from "react";
+import {
+    type JSX,
+    RefObject,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 import * as d3 from "d3";
 
+import updateMultiLines_with_icons from "@/components/line_chart_with_icons";
+import updateMirrorStackedAreaChart from "@/components/mirror_stacked_area_chart";
 import type_data from "@/data/N027_LIB.json";
-import list_products from "@/data/N890_LIB.json";
 import pays from "@/data/country_extended.json";
+import list_products from "@/data/products.json";
 import all_icons from "@/data/symboles.json";
-import updateMultiLines_with_icons from "@/components/line_chart_with_icons"
-import updateMirrorStackedAreaChart from "@/components/mirror_stacked_area_chart"
+
 import { useGlobal } from "./globalProvider";
 
 interface GraphiqueProps {
@@ -18,7 +26,7 @@ interface GraphiqueProps {
     productsSelected: number[];
     countriesSelected: number[];
     iconSelected: string[];
-    all_events: any;
+    allEvents: any;
 }
 type Country = {
     code: string;
@@ -45,18 +53,17 @@ type NestedMap3 = Map<
     >
 >;
 
-
 export default function Graphique({
     allData,
     type,
     productsSelected,
     countriesSelected,
     iconSelected,
-    all_events,
+    allEvents,
 }: GraphiqueProps): JSX.Element {
     const { windowSize } = useGlobal();
-    if ((type.length == 1) && (type[0] == 4)) {
-        type = [2, 3]//Si on est en balance, on charge les infos d'import et d'export en €
+    if (type.length == 1 && type[0] == 4) {
+        type = [2, 3]; //Si on est en balance, on charge les infos d'import et d'export en €
     }
     const containerRef = useRef<HTMLDivElement | null>(null);
     const svgRef = useRef<d3.Selection<
@@ -68,9 +75,9 @@ export default function Graphique({
     const knownSymbolsRef = useRef<Set<string>>(new Set()); //l'ensemble des symboles pour la légende
     // map globale : country → product → type → array de {date, value}
     // chaque année est contenue dans le tableau de chaque entrée
-    const globalNestedMap = useRef<NestedMap3>(new Map());//la big map
+    const globalNestedMap = useRef<NestedMap3>(new Map()); //la big map
     const processedYears = useRef<Set<string>>(new Set()); // années déjà calculées
-    const [dataVersion, setDataVersion] = useState(0);//cette variable sert a trigger le nouveau graphique quand les données changent
+    const [dataVersion, setDataVersion] = useState(0); //cette variable sert a trigger le nouveau graphique quand les données changent
     //countriesSelected = [34]; //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
     const current_graph = useRef<Number>(0)
     // ajouter toutes les nouvelles années dans la map
@@ -88,7 +95,7 @@ export default function Graphique({
         });
 
         if (updated) {
-            setDataVersion(v => v + 1);
+            setDataVersion((v) => v + 1);
         }
     }, [allData]);
 
@@ -97,7 +104,7 @@ export default function Graphique({
             globalNestedMap,
             type,
             productsSelected,
-            countriesSelected
+            countriesSelected,
         );
     }, [type, productsSelected, countriesSelected, dataVersion]);//on utilise dataVersion pour trigger le changement
 
@@ -132,7 +139,7 @@ export default function Graphique({
             (d) => d.pays,
             (d) => d.produit,
         );
-        console.timeEnd("groupedData")
+        console.timeEnd("groupedData");
 
         return Array.from(groupedData, ([key, values]) => ({
             symbol: key, // le nom de la série
@@ -157,9 +164,8 @@ export default function Graphique({
 
     const events_filtered = useMemo(() => {
         console.log("filter event");
-        return filterevents(all_events, map_icons, countriesSelected);
-    }, [all_events, map_icons, countriesSelected]);
-
+        return filterevents(allEvents, map_icons, countriesSelected);
+    }, [allEvents, map_icons, countriesSelected]);
 
     //init du SVG
     useEffect(() => {
@@ -193,7 +199,6 @@ export default function Graphique({
                 { x: (d) => d.date, y: (d) => d.value },
             );
         }
-
     }, [flatten_data_plot, map_icons, events_filtered]);
 
     //On retourne le container
@@ -208,13 +213,24 @@ function addYearToNestedMap(
     allData: { [key: string]: number[][] },
     year: string,
     nestedMapRef: RefObject<NestedMap3>,
-    processedYearsRef: RefObject<Set<string>>
+    processedYearsRef: RefObject<Set<string>>,
 ) {
     if (!allData[year] || processedYearsRef.current.has(year)) return;
 
     const parseDateMonth = d3.timeParse("%m %Y");
     const monthToJSMonth: Record<number, number> = {
-        6: 0, 11: 1, 1: 2, 12: 3, 5: 4, 10: 5, 4: 6, 8: 7, 2: 8, 3: 9, 9: 10, 7: 11,
+        6: 0,
+        11: 1,
+        1: 2,
+        12: 3,
+        5: 4,
+        10: 5,
+        4: 6,
+        8: 7,
+        2: 8,
+        3: 9,
+        9: 10,
+        7: 11,
     };
 
     const yearData = allData[year];
@@ -229,7 +245,9 @@ function addYearToNestedMap(
         if (monthId === 0 || isNaN(value)) continue;
 
         const date =
-            parseDateMonth(`${monthToJSMonth[monthId as keyof typeof monthToJSMonth]} ${year}`) ?? new Date(0);
+            parseDateMonth(
+                `${monthToJSMonth[monthId as keyof typeof monthToJSMonth]} ${year}`,
+            ) ?? new Date(0);
 
         const nestedMap = nestedMapRef.current;
 
@@ -259,16 +277,22 @@ function flattenGlobalMap(
 ): DataPoint[] {
     const countryMap = new Map<string, Country>(Object.entries(pays));
     const typeMap: Record<string, string> = type_data;
-    const produitMap: Record<string, string> = list_products;
+    const produitMap: Record<string, { name: string; code: string }> =
+        list_products;
 
     const result: DataPoint[] = [];
     const nestedMap = nestedMapRef.current;
 
     for (const [countryId, productMap] of nestedMap) {
-        if (countriesSelected.length && !countriesSelected.includes(countryId)) continue;
+        if (countriesSelected.length && !countriesSelected.includes(countryId))
+            continue;
 
         for (const [productId, typeMapLevel] of productMap) {
-            if (productsSelected.length && !productsSelected.includes(productId)) continue;
+            if (
+                productsSelected.length &&
+                !productsSelected.includes(productId)
+            )
+                continue;
 
             for (const [typeId, entries] of typeMapLevel) {
                 if (type.length && !type.includes(typeId)) continue;
@@ -277,7 +301,7 @@ function flattenGlobalMap(
                     result.push({
                         date: e.date,
                         pays: countryMap.get(String(countryId))?.fr,
-                        produit: produitMap[String(productId)],
+                        produit: produitMap[String(productId)].name,
                         type: typeMap[String(typeId)],
                         value: e.value,
                     });
@@ -288,7 +312,6 @@ function flattenGlobalMap(
 
     return result.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
-
 
 function filterData(
     allData: { [key: string]: number[][] },
@@ -324,7 +347,8 @@ function filterData(
 
     const countryMap = new Map<string, Country>(Object.entries(pays));
     const typeMap: Record<string, string> = type_data;
-    const produitMap: Record<string, string> = list_products;
+    const produitMap: Record<string, { name: string; code: string }> =
+        list_products;
     return Object.entries(allData) //il faut ajouter l'attribut year pour chaque année
         .flatMap(([year, yearData]) =>
             yearData.map((d: any) => ({
@@ -372,7 +396,7 @@ function filterData(
             return {
                 date: parsedDate ?? new Date(0), // si parseDateMonth retourne null, on met 1er Jan 1970
                 pays: countryMap.get(String(d[0]))?.fr,
-                produit: produitMap[String(d[3])],
+                produit: produitMap[String(d[3])].name,
                 type: typeMap[String(d[1])],
                 value: +d[4],
             } as DataPoint;
@@ -444,7 +468,7 @@ function filterevents(
 
 function flattenGroupedData3(groupedData: any[]) {
     //utilisé pour flatten un groupe avec 3 éléments
-    console.time("flattenGroupedData3")
+    console.time("flattenGroupedData3");
     const flattened: {
         symbol: string;
         type: any;
@@ -466,30 +490,34 @@ function flattenGroupedData3(groupedData: any[]) {
             });
         });
     });
-    console.timeEnd("flattenGroupedData3")
+    console.timeEnd("flattenGroupedData3");
     return flattened;
 }
 
 function cssSafe(str: string) {
     return str.replace(/[^a-zA-Z0-9_-]/g, "_");
-};
-
+}
 
 function format_stacked_area_from_flatten(flatten: any[]) {
-    return flatten.flatMap(stock =>
+    return flatten.flatMap((stock) =>
         stock.values.map((d: any) => ({
             date: new Date(d.date), // assure-toi que c'est un objet Date
             product: stock.product,
-            type: stock.type.includes("Importation") ? "Importation" : "Exportation",
-            value: +d.value
-        }))
+            type: stock.type.includes("Importation")
+                ? "Importation"
+                : "Exportation",
+            value: +d.value,
+        })),
     );
-
 }
 
-function update_current_graphique(current_graph: RefObject<Number>, new_num: number, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
+function update_current_graphique(
+    current_graph: RefObject<Number>,
+    new_num: number,
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+) {
     if (current_graph.current != new_num) {
-        current_graph.current = new_num
+        current_graph.current = new_num;
         svg.selectAll("*").remove();
     }
 }

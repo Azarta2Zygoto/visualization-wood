@@ -33,7 +33,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-import MakeIcon from "../personal.tsx/makeIcon";
+import MakeIcon from "../personal/makeIcon";
 
 /**
  * Animation types and configurations
