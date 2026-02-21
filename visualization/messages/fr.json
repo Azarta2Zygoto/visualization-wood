@@ -71,7 +71,8 @@
         "volume-desc": "Afficher les volumes échangés en tonnes",
         "value-desc": "Afficher les valeurs échangées en milliers d'euros",
         "value-absolute-desc": "Utiliser les valeurs absolues",
-        "value-relative-desc": "Utiliser les valeurs relatives par rapport au total des échanges"
+        "value-relative-desc": "Utiliser les valeurs relatives par rapport au total des échanges",
+        "select-products": "Sélectionner les produits"
     },
     "Tooltip": {
         "export-euro": "Export : {value, plural, =-1 {No data} other {{value, number} k€}}",
@@ -99,5 +100,11 @@
         "geoNaturalEarth": "Natural Earth",
         "geoMercator": "Mercator",
         "geoOrthographic": "Orthographique"
+    },
+    "MODOpener": {
+        "title": "Sélection des produits",
+        "select-all": "Tout sélectionner",
+        "deselect-all": "Tout désélectionner",
+        "close": "Fermer la sélection de produits"
     }
 }

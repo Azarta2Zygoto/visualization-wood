@@ -7,6 +7,7 @@ import "./checkbox.css";
  * @param param - The properties for the Checkbox component.
  * @param param.id - The unique identifier for the checkbox.
  * @param param.label - The label text for the checkbox.
+ * @param param.title - The title text for the checkbox.
  * @param param.checked - The checked state of the checkbox.
  * @param param.className - Optional additional class name for custom styling.
  * @param param.name - Optional name attribute for the checkbox input.
@@ -28,6 +29,7 @@ interface CheckboxProps {
     checked: boolean;
     className?: string;
     name?: string;
+    title?: string;
     side?: "left" | "right";
     sideOffset?: number;
     hideLabel?: boolean;
@@ -44,6 +46,7 @@ export default function Checkbox({
     label,
     checked,
     className,
+    title,
     name,
     side = "right",
     sideOffset = 0,
@@ -66,6 +69,8 @@ export default function Checkbox({
             id={id + "-label"}
             style={boxStyle}
             htmlFor={id}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
         >
             {!hideLabel ? label : null}
             {required && (
@@ -83,10 +88,13 @@ export default function Checkbox({
                 disabled={disabled}
                 name={name ?? id}
                 required={required}
+                title={title}
                 aria-checked={checked}
                 aria-required={required}
                 aria-disabled={disabled}
                 onChange={onChange}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 {...(hideLabel ? { "aria-label": label } : {})}
             />
             <span

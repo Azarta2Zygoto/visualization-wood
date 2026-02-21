@@ -163,6 +163,7 @@ export default function HomePage(): JSX.Element {
                 isMultipleMode={isMultipleMode}
                 isCountryMode={isCountryMode}
                 isAbsolute={isAbsolute}
+                productsSelected={productsSelected}
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
                 setCurrentMonth={setCurrentMonth}
@@ -175,7 +176,7 @@ export default function HomePage(): JSX.Element {
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
-            <Graphique
+            {/**<Graphique
                 allData={allData}
                 type={[typeData]}
                 productsSelected={productsSelected}
@@ -183,6 +184,7 @@ export default function HomePage(): JSX.Element {
                 iconSelected={iconSelected}
                 allEvents={allEvents}
             />
+                */}
         </Fragment>
     );
 }

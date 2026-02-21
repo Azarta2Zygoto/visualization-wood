@@ -71,7 +71,8 @@
         "volume-desc": "Show traded volumes in tonnes",
         "value-desc": "Show traded values in thousands of euros",
         "value-absolute-desc": "Use absolute values",
-        "value-relative-desc": "Use relative values compared to total trade"
+        "value-relative-desc": "Use relative values compared to total trade",
+        "select-products": "Select products"
     },
     "Tooltip": {
         "export-euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",
@@ -93,6 +94,17 @@
         "high": "High",
         "close": "Close parameters",
         "select-language": "Select language:",
-        "select-theme": "Select theme:"
+        "select-theme": "Select theme:",
+        "map-projection": "Map projection:",
+        "geoEqualEarth": "Equal Earth",
+        "geoNaturalEarth": "Natural Earth",
+        "geoMercator": "Mercator",
+        "geoOrthographic": "Orthographic"
+    },
+    "MODOpener": {
+        "title": "Product selection",
+        "select-all": "Select all",
+        "deselect-all": "Deselect all",
+        "close": "Close product selection"
     }
 }

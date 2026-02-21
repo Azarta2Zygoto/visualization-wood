@@ -4,9 +4,9 @@ import { useTranslations } from "next-intl";
 import { type JSX, useState } from "react";
 
 import metadata from "@/data/metadata.json";
-import list_products from "@/data/products.json";
 import icon_symbol from "@/data/symboles.json";
 
+import MODOpener from "./MOD_opener";
 import Checkbox from "./personal/checkbox";
 import MonthSelector from "./personal/monthSelector";
 import SelectMenu from "./personal/selectMenu";
@@ -19,6 +19,7 @@ interface ConfigBarProps {
     isMultipleMode: boolean;
     isCountryMode: boolean;
     isAbsolute: boolean;
+    productsSelected: number[];
     setTypeData: (type: number) => void;
     setCurrentYear: (year: number) => void;
     setCurrentMonth: (month: number) => void;
@@ -37,6 +38,7 @@ export default function ConfigBar({
     isMultipleMode,
     isCountryMode,
     isAbsolute,
+    productsSelected,
     setTypeData,
     setCurrentYear,
     setCurrentMonth,
@@ -51,6 +53,7 @@ export default function ConfigBar({
 
     const [isVolume, setIsVolume] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(true);
+    const [isOpenProducts, setIsOpenProducts] = useState<boolean>(false);
 
     function handleYearChange(newYear: number) {
         if (
@@ -78,11 +81,6 @@ export default function ConfigBar({
         }
     }
 
-    function handleNewProductsSelected(newProducts: string[]) {
-        const numericProducts = newProducts.map((prod) => parseInt(prod, 10));
-        setProductsSelected(numericProducts);
-    }
-
     function handleCountryModeChange(isCountryMode: boolean) {
         setIsCountryMode(isCountryMode);
         setCountriesSelected([]); // reset selected countries when changing mode
@@ -90,6 +88,13 @@ export default function ConfigBar({
 
     function handleNewIconSelected(newIcons: string[]) {
         setIconSelected(newIcons);
+    }
+
+    function handleCloseProducts() {
+        setIsOpenProducts(false);
+        if (productsSelected.length === 0) {
+            setProductsSelected([0]); // select all if none selected
+        }
     }
 
     return (
@@ -340,15 +345,14 @@ export default function ConfigBar({
             />
 
             <p>{t("product-choose")}</p>
-            <MultiSelect
-                id="lang"
-                options={Object.entries(list_products).map(([key, value]) => ({
-                    label: value.name,
-                    value: key,
-                }))}
-                onValueChange={handleNewProductsSelected}
+            <button
+                className="btn"
+                type="button"
+                onClick={() => setIsOpenProducts(true)}
                 style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
-            />
+            >
+                {t("select-products")}
+            </button>
             <p>{isCountryMode ? t("country-choose") : t("continent-choose")}</p>
             <Checkbox
                 id="multiple-mode-checkbox"
@@ -366,6 +370,12 @@ export default function ConfigBar({
                 }))}
                 onValueChange={handleNewIconSelected}
                 style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
+            />
+            <MODOpener
+                isOpen={isOpenProducts}
+                onOpen={handleCloseProducts}
+                setProductsSelected={setProductsSelected}
+                productsSelected={productsSelected}
             />
         </div>
     );
