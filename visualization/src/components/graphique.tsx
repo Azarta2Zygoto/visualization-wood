@@ -79,15 +79,7 @@ export default function Graphique({
     const processedYears = useRef<Set<string>>(new Set()); // années déjà calculées
     const [dataVersion, setDataVersion] = useState(0); //cette variable sert a trigger le nouveau graphique quand les données changent
     //countriesSelected = [34]; //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
-    const previousFilterRef = useRef({
-        data: [] as any, // dernière donnée filtrée
-        filters: {
-            type: [] as number[],
-            productsSelected: [] as number[],
-            countriesSelected: [] as number[],
-        },
-    });
-    const current_graph = useRef<Number>(0);
+    const current_graph = useRef<Number>(0)
     // ajouter toutes les nouvelles années dans la map
     useEffect(() => {
         let updated = false;
@@ -114,7 +106,28 @@ export default function Graphique({
             productsSelected,
             countriesSelected,
         );
-    }, [type, productsSelected, countriesSelected, dataVersion]); //on utilise dataVersion pour trigger le changement
+    }, [type, productsSelected, countriesSelected, dataVersion]);//on utilise dataVersion pour trigger le changement
+
+    const globalAllDates = useMemo(() => {
+        const dates = new Set<number>();
+
+        const nestedMap = globalNestedMap.current;
+
+        for (const [, productMap] of nestedMap) {
+            for (const [, typeMap] of productMap) {
+                for (const [, entries] of typeMap) {
+                    entries.forEach(e => {
+                        dates.add(+e.date);
+                    });
+                }
+            }
+        }
+
+        return Array.from(dates)
+            .map(d => new Date(d))
+            .sort(d3.ascending);
+
+    }, [dataVersion]);
 
     const groupedData_plot = useMemo(() => {
         console.log("group data");
@@ -172,13 +185,11 @@ export default function Graphique({
     useEffect(() => {
         if (!svgRef.current || flatten_data_plot.length === 0) return;
         if (countriesSelected.length == 1 && type.length == 2) {
-            update_current_graphique(current_graph, 1, svgRef.current);
-            updateMirrorStackedAreaChart(
-                format_stacked_area_from_flatten(flatten_data_plot),
-                svgRef.current,
-            );
-        } else {
-            update_current_graphique(current_graph, 0, svgRef.current);
+            update_current_graphique(current_graph, 1, svgRef.current)
+            updateMirrorStackedAreaChart(format_stacked_area_from_flatten(flatten_data_plot), svgRef.current, globalAllDates)
+        }
+        else {
+            update_current_graphique(current_graph, 0, svgRef.current)
             updateMultiLines_with_icons(
                 flatten_data_plot,
                 svgRef.current, // c'est déjà une D3 selection
@@ -418,8 +429,8 @@ function filterevents(
             const dateParsed = parseDate1(event.date_debut)
                 ? parseDate1(event.date_debut)
                 : parseDate2(event.date_debut)
-                  ? parseDate2(event.date_debut)
-                  : null;
+                    ? parseDate2(event.date_debut)
+                    : null;
             if (!dateParsed) return null;
 
             // catégorie / icône
