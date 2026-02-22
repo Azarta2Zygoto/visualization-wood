@@ -12,7 +12,9 @@ export interface MirrorDataPoint {
 export default function updateMirrorStackedAreaChart(
     data: MirrorDataPoint[],
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
-    globalAllDates: Date[]
+    globalAllDates: Date[],
+    events: any[],//la liste des évènement qui a été filtré, on a ajouté la date parsé, la catégorie, et l'iconid associé
+    map_icons: Record<string, any>
 ) {
     if (!data || data.length === 0) return;
 
@@ -23,6 +25,7 @@ export default function updateMirrorStackedAreaChart(
     const marginRight = 100;
     const marginBottom = 40;
     const marginLeft = 50;
+    const iconSize = 30; // taille d'affichage des icones
 
     /* =========================
        ROOT GROUP (create once)
@@ -201,7 +204,11 @@ export default function updateMirrorStackedAreaChart(
             .style("border", "1px solid #999")
             .style("border-radius", "4px")
             .style("pointer-events", "none")
-            .style("opacity", 0);
+            .style("opacity", 0)
+            .style("z-index", 9999)
+            .style("max-width", "250px")          // largeur max
+            .style("white-space", "normal")      // permet le retour à la ligne
+            .style("overflow-wrap", "break-word"); // coupe les mots trop longs
     }
 
 
@@ -361,6 +368,73 @@ export default function updateMirrorStackedAreaChart(
         });
 
     /* =========================
+   ICONS
+    ========================= */
+
+    Object.entries(map_icons).forEach(([category, icon]) => {
+        const id = `icon-${category.toLowerCase().replace(/\s+/g, "-")}`;
+        let iconDef = defs.select<SVGSVGElement>(`#${id}`);
+        if (iconDef.empty()) {
+            iconDef = defs.append("svg")
+                .attr("id", id)
+                .attr("viewBox", icon.viewBox)
+                .attr("width", icon.viewBox.split(" ")[2])
+                .attr("height", icon.viewBox.split(" ")[3]);
+
+            iconDef.append("path")
+                .attr("d", icon.path)
+                .attr("fill", icon.fill)
+                .attr("stroke", icon.stroke)
+                .attr("stroke-width", icon["stroke-width"])
+                .attr("stroke-linecap", icon.linecap)
+                .attr("stroke-linejoin", icon.linejoin)
+                .attr("transform", icon.transform || null);
+        }
+    });
+
+    let iconsGroup = root.select<SVGGElement>(".icons");
+    if (iconsGroup.empty()) iconsGroup = root.append("g").attr("class", "icons").attr("clip-path", "url(#mirror-clip)");
+
+    iconsGroup.selectAll("use.event-icon")
+        .data(events, (d: any) => d.titre_court)
+        .join(
+            enter => enter.append("use")
+                .attr("class", "event-icon")
+                .attr("xlink:href", d => `#${d.id}`)
+                .attr("x", d => x0(d.dateParsed) - iconSize / 2)
+                .attr("y", 0)
+                .attr("width", iconSize)
+                .attr("height", iconSize)
+                .style("opacity", 0)
+                .call((enter) =>
+                    enter.transition()
+                        .duration(500)
+                        .style("opacity", 1)
+                        .attr("y", marginTop)
+                ),
+
+            update => update.transition().duration(500)
+                .attr("x", d => x0(d.dateParsed) - iconSize / 2)
+                .style("opacity", 1),
+
+            exit => exit.transition().duration(300).attr("y", -20)
+                .style("opacity", 0).remove()
+        )
+        .on("mouseover", (event, d: any) => {
+            Tooltip.style("opacity", 1)
+                .html(`
+                    <strong>Titre :</strong> ${d.titre_court}<br>
+                    <strong>Description :</strong> ${d.description_rapide}<br>
+                    <strong>Date :</strong> ${d3.timeFormat("%Y-%m-%d")(d.dateParsed)}
+                `);
+        })
+        .on("mousemove", (event) => {
+            Tooltip.style("left", `${event.pageX + 10}px`)
+                .style("top", `${event.pageY - 10}px`);
+        })
+        .on("mouseleave", () => Tooltip.style("opacity", 0));
+
+    /* =========================
        ZOOM (attach once)
     ========================= */
 
@@ -385,7 +459,8 @@ export default function updateMirrorStackedAreaChart(
 
             gExport.selectAll("path").attr("d", areaExport as any);
             gImport.selectAll("path").attr("d", areaImport as any);
-
+            iconsGroup.selectAll(".event-icon")
+                .attr("x", (d: any) => zx(d.dateParsed) - iconSize / 2);
             yAxis
                 .call(d3.axisLeft(y))
                 .call(g => g.select(".domain").remove());

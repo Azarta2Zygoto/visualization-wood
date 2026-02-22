@@ -186,7 +186,7 @@ export default function Graphique({
         if (!svgRef.current || flatten_data_plot.length === 0) return;
         if (countriesSelected.length == 1 && type.length == 2) {
             update_current_graphique(current_graph, 1, svgRef.current)
-            updateMirrorStackedAreaChart(format_stacked_area_from_flatten(flatten_data_plot), svgRef.current, globalAllDates)
+            updateMirrorStackedAreaChart(format_stacked_area_from_flatten(flatten_data_plot), svgRef.current, globalAllDates, events_filtered, map_icons)
         }
         else {
             update_current_graphique(current_graph, 0, svgRef.current)
