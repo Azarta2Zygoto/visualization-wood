@@ -9,6 +9,10 @@ import { hasFlag } from "country-flag-icons";
 import pays from "@/data/country_extended.json";
 import metadata from "@/data/metadata.json";
 import icon_symbol from "@/data/symboles.json";
+import {
+    NBMaxElement,
+    calculateNBSingleElementSelected,
+} from "@/utils/MODLecture";
 
 import MODOpener from "./MOD_opener";
 import { useGlobal } from "./globalProvider";
@@ -360,7 +364,17 @@ export default function ConfigBar({
                 />
             </div>
 
-            <p>{t("product-choose")}</p>
+            <div
+                className="rows"
+                style={{ justifyContent: "space-between" }}
+            >
+                <p>{t("product-choose")}</p>
+
+                <p title={t("nb-product")}>
+                    {calculateNBSingleElementSelected(productsSelected)} /{" "}
+                    {NBMaxElement}
+                </p>
+            </div>
             <button
                 className="btn"
                 type="button"

@@ -76,6 +76,7 @@
         "value-relative-desc": "Use relative values compared to total trade",
         "select-products": "Select products",
         "nb-country": "Number of countries selected",
+        "nb-product": "Number of products selected",
         "flag": "{country} flag"
     },
     "Tooltip": {
