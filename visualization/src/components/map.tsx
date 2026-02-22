@@ -914,6 +914,9 @@ export function WorldMap({
             }
         >(".country");
 
+        const correctProjection = projections.find(
+            (p) => p.name === geoProjection,
+        );
         if (isCountryMode) {
             const typeKey = type.toString() as keyof typeof type_data;
             // Build point data ONLY for countries with values
@@ -963,9 +966,6 @@ export function WorldMap({
             // Find max value for scaling
             const maxValue = Math.max(...pointData.map((d) => d.value), 1);
 
-            const correctProjection = projections.find(
-                (p) => p.name === geoProjection,
-            );
             legendScaleRef.current = makeCircleProjection(
                 mapLayer,
                 legendLayer,
@@ -1055,6 +1055,7 @@ export function WorldMap({
                 applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
+                correctProjection?.drag || false,
                 isStatic,
             );
         }
@@ -1160,7 +1161,9 @@ function makeCircleProjection(
     // When isStatic, divide radius by zoom to keep constant visual size
     const effectiveRadius = (d: { value: number }) =>
         isStatic
-            ? radiusScale(d.value) / zoom
+            ? isGlobe
+                ? radiusScale(d.value)
+                : radiusScale(d.value) / zoom
             : isGlobe
               ? radiusScale(d.value) * zoom
               : radiusScale(d.value);
@@ -1277,12 +1280,19 @@ function makeArrowProjection(
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
+    isGlobe: boolean = false,
     isStatic: boolean = false,
 ): d3.ScaleLinear<number, number, never> {
     const continents = Object.keys(continent);
 
     const effectiveRadius = (d: number) =>
-        isStatic ? strokeScale(d) / zoom : strokeScale(d);
+        isStatic
+            ? isGlobe
+                ? strokeScale(d)
+                : strokeScale(d) / zoom
+            : isGlobe
+              ? strokeScale(d) * zoom
+              : strokeScale(d);
 
     // Build arcs and associated data for each continent
     const arcsData = continents
@@ -1302,8 +1312,9 @@ function makeArrowProjection(
             const interpolate = d3.geoInterpolate(ParisCoord, targetGeoCoords);
 
             // Generate arc points by interpolating and then projecting to screen coordinates
+            // Use fine sampling (0.01 = 100 points) to handle arcs that cross behind the globe
             const arcPoints = d3
-                .range(0, 1.001, 0.05)
+                .range(0, 1.001, 0.01)
                 .map((t) => {
                     const geoCoords = interpolate(t);
                     return projection(geoCoords as [number, number]);

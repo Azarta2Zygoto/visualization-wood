@@ -2,6 +2,10 @@
 import * as d3 from "d3";
 import versor from "versor";
 
+import continent from "@/data/continent.json";
+
+const ParisCoord: [number, number] = [2.3522, 48.8566];
+
 interface SimpleDragProps {
     projection: d3.GeoProjection;
     pathGenerator: d3.GeoPath<any, d3.GeoPermissibleObjects>;
@@ -127,12 +131,13 @@ export function simpleDrag({
         projection.rotate(newRotation);
 
         // Notify about zoom/rotation changes
+        const zoomScale = event.transform.k / projectionScale;
         if (onZoomChange) {
-            const zoomScale = event.transform.k / projectionScale;
             onZoomChange(zoomScale, newRotation);
         }
 
         mapLayer.selectAll(".country").attr("d", pathGenerator as any);
+
         mapLayer.selectAll(".data-point").each(function (d: any) {
             const center = getMapCenter(projection);
 
@@ -144,9 +149,126 @@ export function simpleDrag({
 
             if (!isStatic) {
                 // Adjust circle size based on zoom level to maintain visibility
-                const zoomScale = event.transform.k / projectionScale;
                 d3.select(this).attr("r", legendScale(d.value) * zoomScale); // Base radius of 5, adjust by zoom
             }
+        });
+
+        // Update data-arrow paths (not arrowheads)
+        const center = getMapCenter(projection);
+        const line = d3
+            .line<[number, number]>()
+            .curve(d3.curveBasis)
+            .defined((p) => !!p);
+
+        mapLayer
+            .selectAll<SVGPathElement, any>(".data-arrow:not(.arrow-head)")
+            .each(function (d: any) {
+                if (!d.continentCode) return;
+
+                const continentInfo =
+                    continent[d.continentCode as keyof typeof continent];
+                if (!continentInfo) return;
+
+                const continentCenter = continentInfo.center as [
+                    number,
+                    number,
+                ];
+                // Center is in [lat, lon] format, convert to [lon, lat] for d3
+                const targetGeoCoords: [number, number] = [
+                    continentCenter[1],
+                    continentCenter[0],
+                ];
+
+                // Recompute arc points using geographic interpolation
+                // Use fine sampling (0.01 = 100 points) to handle arcs that cross behind the globe
+                const interpolate = d3.geoInterpolate(
+                    ParisCoord,
+                    targetGeoCoords,
+                );
+                const arcPoints = d3
+                    .range(0, 1.001, 0.01)
+                    .map((t) => projection(interpolate(t)))
+                    .filter((p): p is [number, number] => !!p);
+
+                // Update stored arcPoints for arrowhead use
+                d.arcPoints = arcPoints;
+
+                if (!isStatic) {
+                    d3.select(this).attr(
+                        "stroke-width",
+                        legendScale(d.value) * zoomScale,
+                    );
+                }
+                // Check visibility of start and end points
+                const startVisible = isVisible(center, ParisCoord);
+                const endVisible = isVisible(center, targetGeoCoords);
+
+                d3.select(this)
+                    .attr("d", line(arcPoints) || "")
+                    .attr("opacity", startVisible || endVisible ? "1" : "0");
+            });
+
+        // Get max value from all arrows for sizing
+        const allArrowData = mapLayer
+            .selectAll<SVGPathElement, any>(".arrow-head")
+            .data();
+        const maxValue = d3.max(allArrowData, (a) => a.value) || 1;
+        // Update arrow-head positions
+        mapLayer.selectAll<SVGPathElement, any>(".arrow-head").each(function (
+            d: any,
+        ) {
+            if (!d.arcPoints || d.arcPoints.length < 2) {
+                d3.select(this).attr("opacity", "0");
+                return;
+            }
+
+            const end = d.arcPoints[d.arcPoints.length - 1];
+            const prev = d.arcPoints[d.arcPoints.length - 2];
+
+            // Calculate angle for arrowhead rotation
+            const angle = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
+
+            // Calculate arrowhead size
+            const zoomScale = event.transform.k / projectionScale;
+            const baseSize = isStatic ? 17 : 17 * zoomScale;
+            const size = 3 + baseSize * (d.value / maxValue) ** 0.5;
+
+            const tipX = end[0];
+            const tipY = end[1];
+
+            // Point 1: tip of arrow
+            const p1X = tipX + size * Math.cos(angle);
+            const p1Y = tipY + size * Math.sin(angle);
+
+            // Point 2: left side of arrow base
+            const p2X = end[0] - size * Math.cos(angle - Math.PI / 6);
+            const p2Y = end[1] - size * Math.sin(angle - Math.PI / 6);
+
+            // Point 3: right side of arrow base
+            const p3X = end[0] - size * Math.cos(angle + Math.PI / 6);
+            const p3Y = end[1] - size * Math.sin(angle + Math.PI / 6);
+
+            // Check visibility
+            if (!d.continentCode) {
+                d3.select(this).attr("opacity", "0");
+                return;
+            }
+            const continentInfo =
+                continent[d.continentCode as keyof typeof continent];
+            if (!continentInfo) {
+                d3.select(this).attr("opacity", "0");
+                return;
+            }
+            const continentCenter = continentInfo.center as [number, number];
+            const targetGeoCoords: [number, number] = [
+                continentCenter[1],
+                continentCenter[0],
+            ];
+            const endVisible = isVisible(center, targetGeoCoords);
+
+            d3.select(this)
+                .attr("d", `M${p1X},${p1Y}L${p2X},${p2Y}L${p3X},${p3Y}Z`)
+                .attr("opacity", endVisible ? "1" : "0");
         });
 
         // In vicinity of the antipode (unstable) of q0, restart.
@@ -158,12 +280,129 @@ export function simpleDrag({
     ) => {
         // Use unified zoom scale from initialTransform
         const initialScale = initialTransform.k * projectionScale;
+        const zoomScale = initialTransform.k;
         selection
             .property("__zoom", d3.zoomIdentity.scale(initialScale))
             .call(zoom);
         // Redraw the map with the new scale
         projection.scale(initialScale);
         mapLayer.selectAll(".country").attr("d", pathGenerator as any);
+
+        // Initialize data points position
+        const center = getMapCenter(projection);
+        mapLayer.selectAll(".data-point").each(function (d: any) {
+            const p = projection([d.lon, d.lat]);
+            const sel = d3.select(this);
+            sel.attr("cx", p ? p[0] : null)
+                .attr("cy", p ? p[1] : null)
+                .attr("opacity", isVisible(center, [d.lon, d.lat]) ? "1" : "0");
+
+            if (!isStatic) {
+                console.log(
+                    "Setting initial radius for data point with value",
+                    d.value,
+                );
+                sel.attr("r", legendScale(d.value) * zoomScale);
+            }
+        });
+
+        // Initialize arrow paths
+        const line = d3
+            .line<[number, number]>()
+            .curve(d3.curveBasis)
+            .defined((p) => !!p);
+
+        mapLayer
+            .selectAll<SVGPathElement, any>(".data-arrow:not(.arrow-head)")
+            .each(function (d: any) {
+                if (!d.continentCode) return;
+
+                const continentInfo =
+                    continent[d.continentCode as keyof typeof continent];
+                if (!continentInfo) return;
+
+                const continentCenter = continentInfo.center as [
+                    number,
+                    number,
+                ];
+                const targetGeoCoords: [number, number] = [
+                    continentCenter[1],
+                    continentCenter[0],
+                ];
+
+                // Use fine sampling (0.01 = 100 points) to handle arcs that cross behind the globe
+                const interpolate = d3.geoInterpolate(
+                    ParisCoord,
+                    targetGeoCoords,
+                );
+                const arcPoints = d3
+                    .range(0, 1.001, 0.01)
+                    .map((t) => projection(interpolate(t)))
+                    .filter((p): p is [number, number] => !!p);
+
+                d.arcPoints = arcPoints;
+
+                const startVisible = isVisible(center, ParisCoord);
+                const endVisible = isVisible(center, targetGeoCoords);
+
+                const sel = d3.select(this);
+                sel.attr("d", line(arcPoints) || "").attr(
+                    "opacity",
+                    startVisible || endVisible ? "1" : "0",
+                );
+            });
+
+        // Initialize arrowheads
+        mapLayer.selectAll<SVGPathElement, any>(".arrow-head").each(function (
+            d: any,
+        ) {
+            if (!d.arcPoints || d.arcPoints.length < 2) {
+                d3.select(this).attr("opacity", "0");
+                return;
+            }
+
+            const end = d.arcPoints[d.arcPoints.length - 1];
+            const prev = d.arcPoints[d.arcPoints.length - 2];
+            const angle = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
+
+            const allArrowData = mapLayer
+                .selectAll<SVGPathElement, any>(".arrow-head")
+                .data();
+            const maxValue = d3.max(allArrowData, (a) => a.value) || 1;
+
+            const baseSize = isStatic ? 17 : 17 * zoomScale;
+            const size = 3 + baseSize * (d.value / maxValue) ** 0.5;
+
+            const tipX = end[0];
+            const tipY = end[1];
+            const p1X = tipX + size * Math.cos(angle);
+            const p1Y = tipY + size * Math.sin(angle);
+            const p2X = end[0] - size * Math.cos(angle - Math.PI / 6);
+            const p2Y = end[1] - size * Math.sin(angle - Math.PI / 6);
+            const p3X = end[0] - size * Math.cos(angle + Math.PI / 6);
+            const p3Y = end[1] - size * Math.sin(angle + Math.PI / 6);
+
+            if (!d.continentCode) {
+                d3.select(this).attr("opacity", "0");
+                return;
+            }
+            const continentInfo =
+                continent[d.continentCode as keyof typeof continent];
+            if (!continentInfo) {
+                d3.select(this).attr("opacity", "0");
+                return;
+            }
+            const continentCenter = continentInfo.center as [number, number];
+            const targetGeoCoords: [number, number] = [
+                continentCenter[1],
+                continentCenter[0],
+            ];
+            const endVisible = isVisible(center, targetGeoCoords);
+
+            d3.select(this)
+                .attr("d", `M${p1X},${p1Y}L${p2X},${p2Y}L${p3X},${p3Y}Z`)
+                .attr("opacity", endVisible ? "1" : "0");
+        });
 
         return selection;
     };
