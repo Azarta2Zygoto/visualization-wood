@@ -105,8 +105,7 @@ export function WorldMap({
         year: number;
         month: number;
         country: string;
-        value: number;
-    }>({ appear: false, year: 0, month: 0, country: "", value: 0 });
+    }>({ appear: false, year: 0, month: 0, country: "" });
     const [tooltipPosition, setTooltipPosition] = useState<{
         x: number;
         y: number;
@@ -349,22 +348,19 @@ export function WorldMap({
                     pays[continentInt as keyof typeof pays]?.en ||
                     continentCode;
             }
-            if (!lectureData[currentCountryName] && isCountryMode) return;
 
-            const typeKey = type.toString() as keyof typeof type_data;
             setTooltipData({
                 appear: true,
                 year,
                 month,
                 country: currentCountryName,
-                value: lectureData[currentCountryName][typeKey] || 0,
             });
             setTooltipPosition({
                 x: event.pageX,
                 y: event.pageY,
             });
         },
-        [lectureData, isCountryMode, type, year, month],
+        [isCountryMode, year, month],
     );
 
     // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)

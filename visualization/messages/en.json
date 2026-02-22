@@ -82,7 +82,8 @@
         "export-ton": "Export: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
         "import-ton": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
         "balance-euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
-        "flag": "{country} flag"
+        "flag": "{country} flag",
+        "no-data": "No data available"
     },
     "WorldMap": {
         "error-data": "Error loading data",

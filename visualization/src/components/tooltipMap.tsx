@@ -5,12 +5,22 @@ import Image from "next/image";
 import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
+import { stringify } from "querystring";
 
 import type_data from "@/data/N027_LIB.json";
 import month_names from "@/data/N053_LIB.json";
 import countryConversion from "@/data/country_extended.json";
 
 import { useGlobal } from "./globalProvider";
+
+const defaultNoData = -1;
+const AllNoData = {
+    export_euro: defaultNoData,
+    import_euro: defaultNoData,
+    export_tonnes: defaultNoData,
+    import_tonnes: defaultNoData,
+    balance_euro: defaultNoData,
+};
 
 interface TooltipMapProps {
     appear: boolean;
@@ -116,45 +126,40 @@ export default function TooltipMap({
                     {year}
                 </h3>
             </div>
-            <ul>
-                <li>
-                    <strong>
-                        {t("export-euro", { value: values.export_euro })}
-                    </strong>
-                </li>
-                <li>
-                    <strong>
-                        {t("import-euro", { value: values.import_euro })}
-                    </strong>
-                </li>
-                <li>
-                    <strong>
-                        {t("balance-euro", { value: values.balance_euro })}
-                    </strong>
-                </li>
-                <li>
-                    <strong>
-                        {t("export-ton", { value: values.export_tonnes })}
-                    </strong>
-                </li>
-                <li>
-                    <strong>
-                        {t("import-ton", { value: values.import_tonnes })}
-                    </strong>
-                </li>
-            </ul>
+            {JSON.stringify(values) === JSON.stringify(AllNoData) ? (
+                <p>{t("no-data")}</p>
+            ) : (
+                <ul>
+                    <li>
+                        <strong>
+                            {t("export-euro", { value: values.export_euro })}
+                        </strong>
+                    </li>
+                    <li>
+                        <strong>
+                            {t("import-euro", { value: values.import_euro })}
+                        </strong>
+                    </li>
+                    <li>
+                        <strong>
+                            {t("balance-euro", { value: values.balance_euro })}
+                        </strong>
+                    </li>
+                    <li>
+                        <strong>
+                            {t("export-ton", { value: values.export_tonnes })}
+                        </strong>
+                    </li>
+                    <li>
+                        <strong>
+                            {t("import-ton", { value: values.import_tonnes })}
+                        </strong>
+                    </li>
+                </ul>
+            )}
         </div>
     );
 }
-
-const defaultNoData = -1;
-const AllNoData = {
-    export_euro: defaultNoData,
-    import_euro: defaultNoData,
-    export_tonnes: defaultNoData,
-    import_tonnes: defaultNoData,
-    balance_euro: defaultNoData,
-};
 
 function calculateData(
     usefullData: {
