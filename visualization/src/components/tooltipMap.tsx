@@ -67,14 +67,14 @@ export default function TooltipMap({
             const { width, height } =
                 tooltipRef.current.getBoundingClientRect();
             const left =
-                x + width > windowSize.width
+                x + width + 10 > windowSize.width
                     ? windowSize.width - width / 2 - 10
                     : x < width / 2
                       ? width / 2 + 10
                       : x;
 
             const top =
-                y + height > windowSize.height
+                y + height + 10 > windowSize.height
                     ? Math.min(y, windowSize.height) - height - 10
                     : y + 20;
             setCurrentPosition({ x: left, y: top });
