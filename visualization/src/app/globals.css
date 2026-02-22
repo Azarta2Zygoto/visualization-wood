@@ -28,7 +28,7 @@
     --fg: #171717;
     --color-special: #6496fa;
     --color-special-shadow: #6496fa88;
-    --color-mat: #b9d7ffbb;
+    --color-mat: #b2d3ffbb;
     --color-page: #f3ede6;
     --low-border-color: #666;
     --border-color: #333;
@@ -327,6 +327,9 @@ main {
     position: fixed;
     right: 1rem;
     top: 10rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
     border-radius: 8px;
