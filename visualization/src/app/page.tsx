@@ -41,6 +41,7 @@ export default function HomePage(): JSX.Element {
     const [geoProjection, setGeoProjection] =
         useState<string>("geoNaturalEarth");
     const [IsStatic, setIsStatic] = useState<boolean>(false);
+    const [NBCountryWithData, setNBCountryWithData] = useState<number>(0);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -154,7 +155,9 @@ export default function HomePage(): JSX.Element {
                 isAbsolute={isAbsolute}
                 geoProjection={geoProjection}
                 isStatic={IsStatic}
+                NBCountryWithData={NBCountryWithData}
                 setCountriesSelected={setCountriesSelected}
+                setNBCountryWithData={setNBCountryWithData}
             />
 
             <ConfigBar

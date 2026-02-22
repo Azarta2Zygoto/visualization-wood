@@ -19,7 +19,7 @@ import { MAP_DEFINITIONS, type definitions } from "@/data/constants";
 import continent from "@/data/continent.json";
 import pays from "@/data/country_extended.json";
 import { projections } from "@/data/geoprojection";
-import type { CountryData } from "@/data/types";
+import type { CountryData, Themes } from "@/data/types";
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";
@@ -41,10 +41,12 @@ const config = {
     light: {
         validCountry: "#87ceeb",
         invalidCountry: "#d3d3d3",
+        nullCountry: "#d8dee6",
     },
     dark: {
         validCountry: "#116383",
         invalidCountry: "#666",
+        nullCountry: "#40404a",
     },
 };
 
@@ -61,7 +63,9 @@ interface WorldMapProps {
     isAbsolute: boolean;
     geoProjection: string;
     isStatic: boolean;
+    NBCountryWithData: number;
     setCountriesSelected: (countries: number[]) => void;
+    setNBCountryWithData: (nb: number) => void;
 }
 
 export function WorldMap({
@@ -78,6 +82,7 @@ export function WorldMap({
     geoProjection,
     isStatic,
     setCountriesSelected,
+    setNBCountryWithData,
 }: WorldMapProps): JSX.Element {
     const t = useTranslations("WorldMap");
     const { windowSize, theme } = useGlobal();
@@ -379,7 +384,6 @@ export function WorldMap({
             console.log("Initializing map...");
             // Mark this async init with a token
             const token = ++loadTokenRef.current;
-            console.log("map init token", token);
             const svg = svgRef.current;
             if (!svg) return;
 
@@ -403,11 +407,9 @@ export function WorldMap({
             // Clear any previous map root to avoid duplicate renderings
             // (use a single root group so repeated inits remove prior map)
             const svgSel = d3.select(svg);
-            console.log("Clearing previous map...");
             svgSel.selectAll(".map-root").remove();
 
             try {
-                console.log("Loading map data...");
                 // Fetch or use cached world topology data
                 const worldDataCached = worldDataCache.current;
                 const cachedEntry = worldDataCached.find(
@@ -429,10 +431,7 @@ export function WorldMap({
                 }
 
                 // If another load started after this one, abort this init
-                if (token !== loadTokenRef.current) {
-                    console.log("Aborting stale map init", token);
-                    return;
-                }
+                if (token !== loadTokenRef.current) return;
 
                 // Extract country features (topojson.feature always returns FeatureCollection)
                 let features: CountryData[] = [];
@@ -717,7 +716,7 @@ export function WorldMap({
         };
     }, [handleCountryMouseover, handleCountryMouseout, layer]);
 
-    // Effect 8: Update data circles based on filtered data
+    // Effect 8: Update data based on filtered data
     useEffect(() => {
         if (!lectureData || Object.keys(lectureData).length === 0) return;
 
@@ -799,6 +798,7 @@ export function WorldMap({
                 pointData,
                 maxValue,
                 minValue,
+                theme,
             );
             const colorLegend = Legend(colorScale, {
                 width: 50,
@@ -822,26 +822,17 @@ export function WorldMap({
             }
         >(".country");
 
-        countries
-            .transition()
-            .duration(animationDuration)
-            .attr("fill", (d: any) => {
-                return d.properties.name === "France"
-                    ? "#ff6b6b"
-                    : isKnownCountry(d.properties.name, isCountryMode)
-                      ? config[theme].validCountry
-                      : config[theme].invalidCountry;
-            });
-
         if (isCountryMode) {
             const typeKey = type.toString() as keyof typeof type_data;
             // Build point data ONLY for countries with values
+            let newNBCountryWithData = 0;
             const pointData = dataPointOnMap
                 .map((point) => {
                     const countryName = point.countryName;
                     const value = lectureData[countryName]?.[typeKey];
 
                     if (!value) return null;
+                    newNBCountryWithData++;
                     return {
                         countryName,
                         value,
@@ -859,6 +850,23 @@ export function WorldMap({
                 lon: number;
                 lat: number;
             }>;
+            setNBCountryWithData(newNBCountryWithData);
+
+            countries
+                .transition()
+                .duration(animationDuration)
+                .attr("fill", (d: any) => {
+                    const isData = pointData.find(
+                        (p) => p.countryName === d.properties.name,
+                    );
+                    return d.properties.name === "France"
+                        ? "#ff6b6b"
+                        : isKnownCountry(d.properties.name, isCountryMode)
+                          ? isData
+                              ? config[theme].validCountry
+                              : config[theme].nullCountry
+                          : config[theme].invalidCountry;
+                });
 
             // Find max value for scaling
             const maxValue = Math.max(...pointData.map((d) => d.value), 1);
@@ -878,20 +886,25 @@ export function WorldMap({
             const projection = projectionRef.current;
             if (!projection) return;
 
-            const pointData = Object.entries(continent).map(
-                ([cont, values]) => {
+            let newNBCountryWithData = 0;
+            const pointData = Object.entries(continent)
+                .map(([cont, values]) => {
                     const countryCode = Object.keys(pays).find(
                         (key) => pays[key as keyof typeof pays].code === cont,
                     );
                     const countryName =
                         pays[countryCode as keyof typeof pays]?.en || cont;
 
+                    const value =
+                        lectureData[countryName]?.[
+                            type.toString() as keyof typeof type_data
+                        ];
+                    if (!value) return null;
+                    newNBCountryWithData++;
+
                     return {
                         countryName: cont,
-                        value:
-                            lectureData[countryName]?.[
-                                type.toString() as keyof typeof type_data
-                            ] || 0,
+                        value: value,
                         x:
                             projection(
                                 values.center as [number, number],
@@ -903,8 +916,37 @@ export function WorldMap({
                         lon: values.center[0],
                         lat: values.center[1],
                     };
-                },
-            );
+                })
+                .filter(Boolean) as Array<{
+                countryName: string;
+                value: number;
+                x: number;
+                y: number;
+                lon: number;
+                lat: number;
+            }>;
+            setNBCountryWithData(newNBCountryWithData);
+
+            countries
+                .transition()
+                .duration(animationDuration)
+                .attr("fill", (d: any) => {
+                    const findNumberCode = Object.keys(pays).find(
+                        (key) =>
+                            pays[key as keyof typeof pays].en ===
+                            d.properties.name,
+                    );
+                    const isData = pointData.find(
+                        (p) =>
+                            p.countryName ===
+                            pays[findNumberCode as keyof typeof pays]?.code,
+                    );
+                    return isKnownCountry(d.properties.name, isCountryMode)
+                        ? isData
+                            ? config[theme].validCountry
+                            : config[theme].nullCountry
+                        : config[theme].invalidCountry;
+                });
 
             const maxValue = Math.max(...pointData.map((d) => d.value), 1);
             legendScaleRef.current = makeArrowProjection(
@@ -1359,6 +1401,7 @@ function MakeHuexBalanceProjection(
     }>,
     maxValue: number,
     minValue: number,
+    theme: Themes = "light",
 ): d3.ScaleLinear<string, string, never> {
     const colorScale = d3
         .scaleLinear<string>()
@@ -1376,7 +1419,12 @@ function MakeHuexBalanceProjection(
         .attr("fill", (d: any) => {
             const countryName = d.properties.name;
             const point = pointData.find((p) => p.countryName === countryName);
-            return point ? colorScale(point.value) : "var(--invalid-country)";
+            const isCountry = isKnownCountry(countryName, true);
+            return point
+                ? colorScale(point.value)
+                : isCountry
+                  ? config[theme].nullCountry
+                  : config[theme].invalidCountry;
         });
     return colorScale;
 }

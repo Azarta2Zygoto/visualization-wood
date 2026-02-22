@@ -37,14 +37,14 @@ export function MakeBalance({
         y: number;
     }[] = [];
 
-    console.log("Lecture Data:", lectureData);
     if (countries) {
         countries.forEach((country) => {
             if (!lectureData[country.countryName]) return; // Skip if no data for the country
 
             const valueExport = lectureData[country.countryName][2] || 0;
             const valueImport = lectureData[country.countryName][3] || 0;
-            if (valueExport === 0 && valueImport === 0) return; // Skip countries with no data
+
+            if (valueExport === 0 || valueImport === 0) return; // Skip countries with no data
 
             const balance = isAbsolute
                 ? valueExport - valueImport
@@ -67,7 +67,8 @@ export function MakeBalance({
 
             const valueExport = lectureData[countryName]?.[2] || 0;
             const valueImport = lectureData[countryName]?.[3] || 0;
-            if (valueExport === 0 && valueImport === 0) return; // Skip countries with no data
+
+            if (valueExport === 0 || valueImport === 0) return; // Skip countries with no data
             const balance = isAbsolute
                 ? valueExport - valueImport
                 : (valueExport - valueImport) / (valueExport + valueImport); // Calculate balance as a percentage of exports
