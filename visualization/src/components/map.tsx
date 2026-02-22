@@ -48,6 +48,8 @@ const config = {
         invalidCountry: "#666",
         nullCountry: "#40404a",
     },
+    projectionScale: 310,
+    scaleExtent: [0.5, 10] as [number, number],
 };
 
 interface WorldMapProps {
@@ -86,10 +88,10 @@ export function WorldMap({
     const t = useTranslations("WorldMap");
     const { windowSize, theme } = useGlobal();
 
-    const correctionSize: [number, number] = [
-        windowSize.width / 2 - 5,
-        windowSize.height / 2,
-    ] as const;
+    const correctionSize = useMemo<[number, number]>(
+        () => [windowSize.width / 2 - 5, windowSize.height / 2],
+        [windowSize.width, windowSize.height],
+    );
 
     const svgRef = useRef<SVGSVGElement>(null);
     const worldDataCache = useRef<{ map: any; size: definitions }[]>([]);
@@ -98,6 +100,47 @@ export function WorldMap({
     const projectionRef = useRef<d3.GeoProjection | null>(null);
     const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
     const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
+    // Unified zoom scale that works across both projection types
+    const unifiedZoomScaleRef = useRef<number>(1);
+    // Store geographic center [lon, lat] for preserving view across projection changes
+    const mapCenterRef = useRef<[number, number]>(ParisCoord);
+
+    // Helper to get geographic center from planar transform
+    const getGeoCenterFromTransform = useCallback(
+        (
+            transform: d3.ZoomTransform,
+            proj: d3.GeoProjection,
+        ): [number, number] | null => {
+            // Screen center in untransformed coordinates
+            const screenCenter: [number, number] = [
+                correctionSize[0],
+                correctionSize[1],
+            ];
+            const untransformed = transform.invert(screenCenter);
+            const geoCenter = proj.invert?.(untransformed);
+            return geoCenter ? [geoCenter[0], geoCenter[1]] : null;
+        },
+        [correctionSize],
+    );
+
+    // Helper to calculate transform that centers on a geographic point
+    const getTransformForGeoCenter = useCallback(
+        (
+            center: [number, number],
+            proj: d3.GeoProjection,
+            scale: number,
+        ): d3.ZoomTransform => {
+            const projected = proj(center);
+            if (!projected) return d3.zoomIdentity.scale(scale);
+            // We want the projected point to appear at screen center
+            // transform applies as: screenX = projectedX * k + x
+            // So: correctionSize[0] = projected[0] * scale + x => x = correctionSize[0] - projected[0] * scale
+            const x = correctionSize[0] - projected[0] * scale;
+            const y = correctionSize[1] - projected[1] * scale;
+            return d3.zoomIdentity.translate(x, y).scale(scale);
+        },
+        [correctionSize],
+    );
 
     const [tooltipData, setTooltipData] = useState<{
         appear: boolean;
@@ -382,9 +425,6 @@ export function WorldMap({
             const svg = svgRef.current;
             if (!svg) return;
 
-            // Save current transform before clearing
-            const savedTransform = currentTransformRef.current;
-
             // Create projection and path
             const correctProjection = projections.find(
                 (p) => p.name === geoProjection,
@@ -393,7 +433,7 @@ export function WorldMap({
 
             const projection = correctProjection
                 .value()
-                .scale(310)
+                .scale(config.projectionScale)
                 .translate(correctionSize);
             projectionRef.current = projection;
 
@@ -512,10 +552,21 @@ export function WorldMap({
 
                 const zoom = d3
                     .zoom<SVGSVGElement, unknown>()
-                    .scaleExtent([0.5, 10])
+                    .scaleExtent(config.scaleExtent)
                     .on("zoom", (event) => {
                         mapLayer.attr("transform", event.transform);
                         currentTransformRef.current = event.transform;
+                        // Update unified zoom scale for cross-projection sync
+                        unifiedZoomScaleRef.current = event.transform.k;
+
+                        // Update geographic center for cross-projection sync
+                        const geoCenter = getGeoCenterFromTransform(
+                            event.transform,
+                            projection,
+                        );
+                        if (geoCenter) {
+                            mapCenterRef.current = geoCenter;
+                        }
 
                         applyLegendZoom(
                             correctLegend,
@@ -564,22 +615,52 @@ export function WorldMap({
                     });
 
                 if (correctProjection.drag) {
+                    // Convert geographic center to rotation for globe: rotation = [-lon, -lat, 0]
+                    const initialRotation: [number, number, number] = [
+                        -mapCenterRef.current[0],
+                        -mapCenterRef.current[1],
+                        0,
+                    ];
                     mapSvg.call(
                         simpleDrag({
                             projection,
                             pathGenerator,
                             mapLayer,
+                            projectionScale: config.projectionScale,
+                            scaleExtent: config.scaleExtent,
+                            isStatic,
+                            legendScale: legendScaleRef.current!,
+                            // Use unified zoom scale to sync with planar projection zoom
+                            initialTransform: d3.zoomIdentity.scale(
+                                unifiedZoomScaleRef.current,
+                            ),
+                            initialRotation,
+                            onZoomChange: (zoomScale, rotation) => {
+                                // Sync unified zoom scale when globe changes
+                                unifiedZoomScaleRef.current = zoomScale;
+                                // Convert rotation back to geographic center: center = [-rotation[0], -rotation[1]]
+                                mapCenterRef.current = [
+                                    -rotation[0],
+                                    -rotation[1],
+                                ];
+                                // Also update legend
+                                applyLegendZoom(
+                                    correctLegend,
+                                    zoomScale,
+                                    legendScaleRef.current!,
+                                );
+                            },
                         }),
                     );
-                } else mapSvg.call(zoom);
-
-                // Restore previous transform
-                if (
-                    (savedTransform && savedTransform.k !== 1) ||
-                    savedTransform.x !== 0 ||
-                    savedTransform.y !== 0
-                ) {
-                    mapSvg.call(zoom.transform, savedTransform);
+                } else {
+                    mapSvg.call(zoom);
+                    // Restore view centered on mapCenterRef with unified zoom scale
+                    const restoredTransform = getTransformForGeoCenter(
+                        mapCenterRef.current,
+                        projection,
+                        unifiedZoomScaleRef.current,
+                    );
+                    mapSvg.call(zoom.transform, restoredTransform);
                 }
 
                 // Draw countries
@@ -655,6 +736,9 @@ export function WorldMap({
         loadMap();
     }, [
         applyLegendZoom,
+        correctionSize,
+        getGeoCenterFromTransform,
+        getTransformForGeoCenter,
         isCountryMode,
         windowSize.height,
         windowSize.width,
@@ -662,6 +746,7 @@ export function WorldMap({
         theme,
         geoProjection,
         isStatic,
+        legendScaleRef,
     ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
@@ -677,9 +762,7 @@ export function WorldMap({
 
             const hasCountryData =
                 lectureData[d.properties.name]?.[type.toString()] !== undefined;
-            console.log(
-                `Clicked on ${d.properties.name} (code: ${countryCode}), has data: ${hasCountryData}`,
-            );
+
             if (!hasCountryData) return;
 
             if (isMultipleMode) {
@@ -880,6 +963,9 @@ export function WorldMap({
             // Find max value for scaling
             const maxValue = Math.max(...pointData.map((d) => d.value), 1);
 
+            const correctProjection = projections.find(
+                (p) => p.name === geoProjection,
+            );
             legendScaleRef.current = makeCircleProjection(
                 mapLayer,
                 legendLayer,
@@ -889,6 +975,7 @@ export function WorldMap({
                 applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
+                correctProjection?.drag || false,
                 isStatic,
             );
         } else {
@@ -984,6 +1071,7 @@ export function WorldMap({
         theme,
         isAbsolute,
         isStatic,
+        geoProjection,
     ]);
 
     return (
@@ -1065,12 +1153,17 @@ function makeCircleProjection(
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
+    isGlobe: boolean = false,
     isStatic: boolean = false,
 ): d3.ScaleLinear<number, number, never> {
     const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, 30]);
     // When isStatic, divide radius by zoom to keep constant visual size
     const effectiveRadius = (d: { value: number }) =>
-        isStatic ? radiusScale(d.value) / zoom : radiusScale(d.value);
+        isStatic
+            ? radiusScale(d.value) / zoom
+            : isGlobe
+              ? radiusScale(d.value) * zoom
+              : radiusScale(d.value);
 
     if (legendLayer) {
         legendLayer
@@ -1125,7 +1218,7 @@ function makeCircleProjection(
     const circles = mapLayer
         .selectAll<SVGCircleElement, (typeof pointData)[number]>(".data-point")
         .data(pointData, (d) => d.countryName);
-
+    console.log("Updating circles with data:", circles);
     circles
         .exit()
         .transition()
@@ -1148,7 +1241,11 @@ function makeCircleProjection(
         .style("cursor", "pointer")
         .transition()
         .duration(animationDuration)
-        .attr("r", effectiveRadius);
+        .attr("r", (d: any) => {
+            console.log(d);
+            console.log(effectiveRadius(d));
+            return effectiveRadius(d);
+        });
 
     circles.transition().duration(animationDuration).attr("r", effectiveRadius);
 

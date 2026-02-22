@@ -6,6 +6,16 @@ interface SimpleDragProps {
     projection: d3.GeoProjection;
     pathGenerator: d3.GeoPath<any, d3.GeoPermissibleObjects>;
     mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    projectionScale: number;
+    scaleExtent?: [number, number];
+    initialTransform?: d3.ZoomTransform;
+    initialRotation?: [number, number, number];
+    legendScale: d3.ScaleLinear<number, number>;
+    isStatic?: boolean; // If false, need to adapt circle sizes on zoom
+    onZoomChange?: (
+        zoomScale: number,
+        rotation: [number, number, number],
+    ) => void;
 }
 
 /**
@@ -44,13 +54,17 @@ export function simpleDrag({
     projection,
     pathGenerator,
     mapLayer,
+    projectionScale,
+    initialTransform = d3.zoomIdentity,
+    initialRotation = [0, 0, 0],
+    scaleExtent = [0.5, 10],
+    legendScale,
+    isStatic = false,
+    onZoomChange,
 }: SimpleDragProps) {
     // Capture the projection's original scale, before any zooming.
-    const scale =
-        (projection as any)._scale === undefined
-            ? ((projection as any)._scale = projection.scale())
-            : (projection as any)._scale;
-    console.log("Original projection scale:", scale);
+    // Apply initial rotation if provided
+    projection.rotate(initialRotation);
 
     let v0: [number, number, number];
     let q0: [number, number, number, number];
@@ -59,7 +73,9 @@ export function simpleDrag({
 
     const zoom = d3
         .zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.5, 10].map((x) => x * scale) as [number, number])
+        .scaleExtent(
+            scaleExtent.map((x) => x * projectionScale) as [number, number],
+        )
         .on("start", zoomstarted)
         .on("zoom", zoomed);
 
@@ -107,20 +123,30 @@ export function simpleDrag({
         const delta = versor.delta(v0, v1);
         const q1 = versor.multiply(q0, delta);
 
-        projection.rotate(versor.rotation(q1));
+        const newRotation = versor.rotation(q1) as [number, number, number];
+        projection.rotate(newRotation);
+
+        // Notify about zoom/rotation changes
+        if (onZoomChange) {
+            const zoomScale = event.transform.k / projectionScale;
+            onZoomChange(zoomScale, newRotation);
+        }
 
         mapLayer.selectAll(".country").attr("d", pathGenerator as any);
         mapLayer.selectAll(".data-point").each(function (d: any) {
             const center = getMapCenter(projection);
-            console.log(
-                `Map center: lat=${center.lat.toFixed(2)}, lon=${center.lon.toFixed(2)}`,
-            );
 
             const p = projection([d.lon, d.lat]);
             d3.select(this)
                 .attr("cx", p ? p[0] : null)
                 .attr("cy", p ? p[1] : null)
                 .attr("opacity", isVisible(center, [d.lon, d.lat]) ? "1" : "0");
+
+            if (!isStatic) {
+                // Adjust circle size based on zoom level to maintain visibility
+                const zoomScale = event.transform.k / projectionScale;
+                d3.select(this).attr("r", legendScale(d.value) * zoomScale); // Base radius of 5, adjust by zoom
+            }
         });
 
         // In vicinity of the antipode (unstable) of q0, restart.
@@ -130,9 +156,15 @@ export function simpleDrag({
     return (
         selection: d3.Selection<SVGSVGElement, unknown, null, undefined>,
     ) => {
+        // Use unified zoom scale from initialTransform
+        const initialScale = initialTransform.k * projectionScale;
         selection
-            .property("__zoom", d3.zoomIdentity.scale(projection.scale()))
+            .property("__zoom", d3.zoomIdentity.scale(initialScale))
             .call(zoom);
+        // Redraw the map with the new scale
+        projection.scale(initialScale);
+        mapLayer.selectAll(".country").attr("d", pathGenerator as any);
+
         return selection;
     };
 }
