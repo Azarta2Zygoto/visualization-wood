@@ -74,7 +74,9 @@
         "value-desc": "Show traded values in thousands of euros",
         "value-absolute-desc": "Use absolute values",
         "value-relative-desc": "Use relative values compared to total trade",
-        "select-products": "Select products"
+        "select-products": "Select products",
+        "nb-country": "Number of countries selected",
+        "flag": "{country} flag"
     },
     "Tooltip": {
         "export-euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",

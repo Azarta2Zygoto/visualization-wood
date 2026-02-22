@@ -155,7 +155,6 @@ export default function HomePage(): JSX.Element {
                 isAbsolute={isAbsolute}
                 geoProjection={geoProjection}
                 isStatic={IsStatic}
-                NBCountryWithData={NBCountryWithData}
                 setCountriesSelected={setCountriesSelected}
                 setNBCountryWithData={setNBCountryWithData}
             />
@@ -168,6 +167,8 @@ export default function HomePage(): JSX.Element {
                 isCountryMode={isCountryMode}
                 isAbsolute={isAbsolute}
                 productsSelected={productsSelected}
+                NBCountryWithData={NBCountryWithData}
+                countriesSelected={countriesSelected}
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
                 setCurrentMonth={setCurrentMonth}

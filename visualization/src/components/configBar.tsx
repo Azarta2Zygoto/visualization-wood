@@ -1,12 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { type JSX, useState } from "react";
 
+import { hasFlag } from "country-flag-icons";
+
+import pays from "@/data/country_extended.json";
 import metadata from "@/data/metadata.json";
 import icon_symbol from "@/data/symboles.json";
 
 import MODOpener from "./MOD_opener";
+import { useGlobal } from "./globalProvider";
 import Checkbox from "./personal/checkbox";
 import MonthSelector from "./personal/monthSelector";
 import SelectMenu from "./personal/selectMenu";
@@ -20,6 +25,8 @@ interface ConfigBarProps {
     isCountryMode: boolean;
     isAbsolute: boolean;
     productsSelected: number[];
+    countriesSelected: number[];
+    NBCountryWithData: number;
     setTypeData: (type: number) => void;
     setCurrentYear: (year: number) => void;
     setCurrentMonth: (month: number) => void;
@@ -39,6 +46,8 @@ export default function ConfigBar({
     isCountryMode,
     isAbsolute,
     productsSelected,
+    countriesSelected,
+    NBCountryWithData,
     setTypeData,
     setCurrentYear,
     setCurrentMonth,
@@ -50,6 +59,7 @@ export default function ConfigBar({
     setIsAbsolute,
 }: ConfigBarProps): JSX.Element {
     const t = useTranslations("ConfigBar");
+    const { locale } = useGlobal();
 
     const [isVolume, setIsVolume] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -353,7 +363,56 @@ export default function ConfigBar({
             >
                 {t("select-products")}
             </button>
-            <p>{isCountryMode ? t("country-choose") : t("continent-choose")}</p>
+            <div
+                className="rows"
+                style={{ justifyContent: "space-between" }}
+            >
+                <p>
+                    {isCountryMode
+                        ? t("country-choose")
+                        : t("continent-choose")}
+                </p>
+                <div className="infinite-element">
+                    {countriesSelected.map((countryNumberCode) => {
+                        const country =
+                            pays[
+                                String(countryNumberCode) as keyof typeof pays
+                            ];
+                        if (!country) return null;
+                        if (hasFlag(country.code))
+                            return (
+                                <Image
+                                    key={countryNumberCode}
+                                    className="tooltip-country"
+                                    alt={t("flag", {
+                                        country:
+                                            locale === "en"
+                                                ? country.en
+                                                : country.fr || "unknown",
+                                    })}
+                                    aria-label={t("flag", {
+                                        country:
+                                            locale === "en"
+                                                ? country.en
+                                                : country.fr || "unknown",
+                                    })}
+                                    width={24}
+                                    height={18}
+                                    src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`}
+                                />
+                            );
+                        else
+                            return (
+                                <p key={countryNumberCode}>
+                                    {locale === "en" ? country.en : country.fr}
+                                </p>
+                            );
+                    })}
+                </div>
+                <p title={t("nb-country")}>
+                    {countriesSelected.length} / {NBCountryWithData}
+                </p>
+            </div>
             <Checkbox
                 id="multiple-mode-checkbox"
                 label={t("multiple-selection")}

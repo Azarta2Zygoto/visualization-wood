@@ -63,7 +63,6 @@ interface WorldMapProps {
     isAbsolute: boolean;
     geoProjection: string;
     isStatic: boolean;
-    NBCountryWithData: number;
     setCountriesSelected: (countries: number[]) => void;
     setNBCountryWithData: (nb: number) => void;
 }
@@ -676,6 +675,13 @@ export function WorldMap({
             );
             if (!countryCode) return;
 
+            const hasCountryData =
+                lectureData[d.properties.name]?.[type.toString()] !== undefined;
+            console.log(
+                `Clicked on ${d.properties.name} (code: ${countryCode}), has data: ${hasCountryData}`,
+            );
+            if (!hasCountryData) return;
+
             if (isMultipleMode) {
                 const newSelection: number[] = countriesSelected.includes(
                     Number(countryCode),
@@ -687,7 +693,14 @@ export function WorldMap({
                 setCountriesSelected(newSelection);
             } else setCountriesSelected([Number(countryCode)]);
         });
-    }, [countriesSelected, isMultipleMode, layer, setCountriesSelected]);
+    }, [
+        countriesSelected,
+        isMultipleMode,
+        layer,
+        lectureData,
+        setCountriesSelected,
+        type,
+    ]);
 
     // Effect 7: Attach event handlers when map layer changes
     useEffect(() => {
@@ -827,8 +840,8 @@ export function WorldMap({
                     const countryName = point.countryName;
                     const value = lectureData[countryName]?.[typeKey];
 
-                    if (!value) return null;
                     newNBCountryWithData++;
+                    if (!value && value !== 0) return null;
                     return {
                         countryName,
                         value,
@@ -858,7 +871,7 @@ export function WorldMap({
                     return d.properties.name === "France"
                         ? "#ff6b6b"
                         : isKnownCountry(d.properties.name, isCountryMode)
-                          ? isData
+                          ? isData !== undefined
                               ? config[theme].validCountry
                               : config[theme].nullCountry
                           : config[theme].invalidCountry;
@@ -895,8 +908,8 @@ export function WorldMap({
                         lectureData[countryName]?.[
                             type.toString() as keyof typeof type_data
                         ];
-                    if (!value) return null;
                     newNBCountryWithData++;
+                    if (!value) return null;
 
                     return {
                         countryName: cont,
@@ -938,7 +951,7 @@ export function WorldMap({
                             pays[findNumberCode as keyof typeof pays]?.code,
                     );
                     return isKnownCountry(d.properties.name, isCountryMode)
-                        ? isData
+                        ? isData !== undefined
                             ? config[theme].validCountry
                             : config[theme].nullCountry
                         : config[theme].invalidCountry;

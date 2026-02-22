@@ -628,3 +628,14 @@ label {
     font-weight: 600;
     padding-left: 0.5rem;
 }
+.infinite-element {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    max-width: clamp(90px, 15vw, 180px);
+    max-height: 125px;
+    overflow-y: auto;
+}

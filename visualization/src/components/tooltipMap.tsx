@@ -5,7 +5,6 @@ import Image from "next/image";
 import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
-import { stringify } from "querystring";
 
 import type_data from "@/data/N027_LIB.json";
 import month_names from "@/data/N053_LIB.json";
