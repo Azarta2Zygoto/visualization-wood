@@ -181,7 +181,7 @@ export default function HomePage(): JSX.Element {
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
-            {/**<Graphique
+            <Graphique
                 allData={allData}
                 type={[typeData]}
                 productsSelected={productsSelected}
@@ -189,7 +189,6 @@ export default function HomePage(): JSX.Element {
                 iconSelected={iconSelected}
                 allEvents={allEvents}
             />
-                */}
         </Fragment>
     );
 }
