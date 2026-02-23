@@ -2,7 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+    Fragment,
+    type JSX,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 import { hasFlag } from "country-flag-icons";
 
@@ -93,68 +100,116 @@ export default function TooltipMap({
                 opacity: appear ? 1 : 0,
             }}
         >
-            <div className="rows">
-                {hasFlag(countryValue?.code || "") && countryValue?.code ? (
-                    <Image
-                        className="tooltip-country"
-                        alt={t("flag", {
-                            country:
-                                locale === "en"
-                                    ? countryValue?.en
-                                    : countryValue?.fr || "unknown",
-                        })}
-                        aria-label={t("flag", {
-                            country:
-                                locale === "en"
-                                    ? countryValue?.en
-                                    : countryValue?.fr || "unknown",
-                        })}
-                        width={32}
-                        height={24}
-                        src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryValue?.code}.svg`}
-                    />
-                ) : null}
-                <h3>
-                    {locale === "en"
-                        ? countryValue?.en + " - "
-                        : countryValue?.fr + " - "}
-                    {month !== 0 &&
-                        month_names[
-                            month?.toString() as keyof typeof month_names
-                        ] + " / "}
-                    {year}
-                </h3>
-            </div>
-            {JSON.stringify(values) === JSON.stringify(AllNoData) ? (
-                <p>{t("no-data")}</p>
+            {countryValue?.fr === "France" ? (
+                <Fragment>
+                    <div className="rows">
+                        {hasFlag(countryValue?.code || "") &&
+                        countryValue?.code ? (
+                            <Image
+                                className="tooltip-country"
+                                alt={t("flag", {
+                                    country:
+                                        locale === "en"
+                                            ? countryValue?.en
+                                            : countryValue?.fr || "unknown",
+                                })}
+                                aria-label={t("flag", {
+                                    country:
+                                        locale === "en"
+                                            ? countryValue?.en
+                                            : countryValue?.fr || "unknown",
+                                })}
+                                width={32}
+                                height={24}
+                                src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryValue?.code}.svg`}
+                            />
+                        ) : null}
+
+                        <h3>
+                            {locale === "en"
+                                ? countryValue?.en
+                                : countryValue?.fr}
+                        </h3>
+                    </div>
+                    <p className="france-tooltip">{t("france-tooltip")}</p>
+                </Fragment>
             ) : (
-                <ul>
-                    <li>
-                        <strong>
-                            {t("export-euro", { value: values.export_euro })}
-                        </strong>
-                    </li>
-                    <li>
-                        <strong>
-                            {t("import-euro", { value: values.import_euro })}
-                        </strong>
-                    </li>
-                    <li>
-                        <strong>
-                            {t("balance-euro", { value: values.balance_euro })}
-                        </strong>
-                    </li>
-                    <li>
-                        <strong>
-                            {t("export-ton", { value: values.export_tonnes })}
-                        </strong>
-                    </li>
-                    <li>
-                        <strong>
-                            {t("import-ton", { value: values.import_tonnes })}
-                        </strong>
-                    </li>
-                </ul>
+                <Fragment>
+                    <div className="rows">
+                        {hasFlag(countryValue?.code || "") &&
+                        countryValue?.code ? (
+                            <Image
+                                className="tooltip-country"
+                                alt={t("flag", {
+                                    country:
+                                        locale === "en"
+                                            ? countryValue?.en
+                                            : countryValue?.fr || "unknown",
+                                })}
+                                aria-label={t("flag", {
+                                    country:
+                                        locale === "en"
+                                            ? countryValue?.en
+                                            : countryValue?.fr || "unknown",
+                                })}
+                                width={32}
+                                height={24}
+                                src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryValue?.code}.svg`}
+                            />
+                        ) : null}
+                        <h3>
+                            {locale === "en"
+                                ? countryValue?.en + " - "
+                                : countryValue?.fr + " - "}
+                            {month !== 0 &&
+                                month_names[
+                                    month?.toString() as keyof typeof month_names
+                                ] + " / "}
+                            {year}
+                        </h3>
+                    </div>
+                    {JSON.stringify(values) === JSON.stringify(AllNoData) ? (
+                        <p>{t("no-data")}</p>
+                    ) : (
+                        <ul>
+                            <li>
+                                <strong>
+                                    {t("export-euro", {
+                                        value: values.export_euro,
+                                    })}
+                                </strong>
+                            </li>
+                            <li>
+                                <strong>
+                                    {t("import-euro", {
+                                        value: values.import_euro,
+                                    })}
+                                </strong>
+                            </li>
+                            <li>
+                                <strong>
+                                    {t("balance-euro", {
+                                        value: values.balance_euro,
+                                    })}
+                                </strong>
+                            </li>
+                            <li>
+                                <strong>
+                                    {t("export-ton", {
+                                        value: values.export_tonnes,
+                                    })}
+                                </strong>
+                            </li>
+                            <li>
+                                <strong>
+                                    {t("import-ton", {
+                                        value: values.import_tonnes,
+                                    })}
+                                </strong>
+                            </li>
+                        </ul>
+                    )}
+                </Fragment>
             )}
         </div>
     );

@@ -88,7 +88,8 @@
         "import-ton": "Import : {value, plural, =-1 {Aucune donnée} =1 {{value, number} tonne} other {{value, number} tonnes}}",
         "balance-euro": "Balance commerciale : {value, plural, =-1 {Aucune donnée} other {{value, number} k€}}",
         "flag": "Drapeau de {country}",
-        "no-data": "Aucune donnée disponible"
+        "no-data": "Aucune donnée disponible",
+        "france-tooltip": "C'est le pays de référence pour cette visualisation. Les échanges commerciaux sont représentés par rapport à ce pays."
     },
     "WorldMap": {
         "error-data": "Erreur lors du chargement des données",

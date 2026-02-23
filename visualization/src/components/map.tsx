@@ -356,6 +356,7 @@ export function WorldMap({
     // Effect 3: Memoized event handlers (stable references to prevent re-attaching)
     const handleCountryMouseover = useCallback(
         (event: any) => {
+            console.log("Mouseover on country:", event.target.__data__);
             // Visual feedback
 
             if (event.target.__data__.continentCode) {
@@ -679,7 +680,10 @@ export function WorldMap({
                     .enter()
                     .append("path")
                     .attr("class", (d: any) => {
-                        return isKnownCountry(d.properties.name, isCountryMode)
+                        return isKnownCountry(
+                            d.properties.name,
+                            isCountryMode,
+                        ) || d.properties.name === "France"
                             ? "country known-country"
                             : "country";
                     })

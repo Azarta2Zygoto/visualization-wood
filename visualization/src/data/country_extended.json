@@ -521,5 +521,10 @@
         "code": "BL",
         "en": "Saint Barthelemy",
         "fr": "Saint-Barthélemy"
+    },
+    "103": {
+        "code": "FR",
+        "en": "France",
+        "fr": "France"
     }
 }

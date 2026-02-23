@@ -649,3 +649,8 @@ label {
     max-width: 400px !important;
     width: 400px !important;
 }
+.france-tooltip {
+    max-width: clamp(200px, 20vw, 300px);
+    word-wrap: break-word;
+    white-space: normal;
+}
