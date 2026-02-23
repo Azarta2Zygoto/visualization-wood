@@ -1,4 +1,4 @@
-import pays from "@/data/country.json";
+import pays from "@/data/countries.json";
 
 interface MakeBalanceProps {
     lectureData: {

@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect } from "react";
 
-import { type ColorName, colors } from "@/data/colorElement";
+import { type ColorName, colors } from "@/metadata/colorElement";
 import {
     GEO_PROJECTION_STORAGE_KEY,
     IS_DALTONIAN_STORAGE_KEY,
@@ -12,8 +12,8 @@ import {
     MAP_DEFINITION_STORAGE_KEY,
     PALETTE_COLOR_STORAGE_KEY,
     definitions,
-} from "@/data/constants";
-import { type ProjectionName, projections } from "@/data/geoprojection";
+} from "@/metadata/constants";
+import { type ProjectionName, projections } from "@/metadata/geoprojection";
 
 import { useGlobal } from "./globalProvider";
 import Checkbox from "./personal/checkbox";

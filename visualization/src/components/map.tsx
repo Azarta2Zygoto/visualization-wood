@@ -14,18 +14,18 @@ import {
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
-import type_data from "@/data/N027_LIB.json";
-import { ColorName } from "@/data/colorElement";
-import { colors } from "@/data/colorElement";
+import continent from "@/data/continents.json";
+import pays from "@/data/countries.json";
+import type_data from "@/data/exports.json";
+import { ColorName } from "@/metadata/colorElement";
+import { colors } from "@/metadata/colorElement";
 import {
     MAP_DEFINITIONS,
     type Themes,
     type definitions,
-} from "@/data/constants";
-import continent from "@/data/continent.json";
-import pays from "@/data/country.json";
-import { projections } from "@/data/geoprojection";
-import type { CountryData, CountryType } from "@/data/types";
+} from "@/metadata/constants";
+import { projections } from "@/metadata/geoprojection";
+import type { CountryData, CountryType } from "@/metadata/types";
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";

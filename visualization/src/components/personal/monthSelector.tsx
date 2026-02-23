@@ -2,7 +2,7 @@
 
 import { type JSX, useState } from "react";
 
-import month_list from "@/data/N053_LIB.json";
+import month_list from "@/data/months.json";
 
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 

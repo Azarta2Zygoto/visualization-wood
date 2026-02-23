@@ -11,9 +11,9 @@ import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/graphique";
 import Loading from "@/components/loading";
 import { WorldMap } from "@/components/map";
-import { ColorName } from "@/data/colorElement";
-import { type definitions } from "@/data/constants";
 import metadata_app from "@/data/metadata.json";
+import { ColorName } from "@/metadata/colorElement";
+import { type definitions } from "@/metadata/constants";
 import { getAllChildren } from "@/utils/MODLecture";
 import { readNpz } from "@/utils/read";
 

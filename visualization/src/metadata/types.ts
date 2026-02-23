@@ -1,6 +1,6 @@
 import type { MultiPolygon } from "geojson";
 
-import country from "@/data/country.json";
+import country from "@/data/countries.json";
 import products from "@/data/products.json";
 
 export interface CountryData {

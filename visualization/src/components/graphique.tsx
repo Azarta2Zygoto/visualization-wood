@@ -13,8 +13,8 @@ import * as d3 from "d3";
 
 import updateMultiLines_with_icons from "@/components/line_chart_with_icons";
 import updateMirrorStackedAreaChart from "@/components/mirror_stacked_area_chart";
-import type_data from "@/data/N027_LIB.json";
-import pays from "@/data/country.json";
+import pays from "@/data/countries.json";
+import type_data from "@/data/exports.json";
 import list_products from "@/data/products.json";
 import all_icons from "@/data/symboles.json";
 

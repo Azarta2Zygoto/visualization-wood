@@ -10,7 +10,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { FranceFlag, UKFlag } from "@/data/svg";
+import { FranceFlag, UKFlag } from "@/metadata/svg";
 
 import { useGlobal } from "../globalProvider";
 

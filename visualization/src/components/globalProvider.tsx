@@ -13,7 +13,7 @@ import {
     THEME_STORAGE_KEY,
     THEME_VALUES,
     type Themes,
-} from "@/data/constants";
+} from "@/metadata/constants";
 
 const GlobalContext = createContext<{
     locale: Locales;
