@@ -221,11 +221,19 @@ export default function Graphique({
     }, [flatten_data_plot, map_icons, events_filtered]);
 
     //On retourne le container
+    const titre = "Mon texte ici"
     return (
-        <div
-            className="Graphique"
-            ref={containerRef}
-        />
+        <div className="graph-wrapper">
+
+            <h1 className="graph-middle-text">
+                {titre}
+            </h1>
+
+            <div
+                className="Graphique"
+                ref={containerRef}
+            />
+        </div>
     );
 }
 function addYearToNestedMap(

@@ -10,6 +10,7 @@
     from {
         height: 0;
     }
+
     to {
         height: var(--radix-accordion-content-height);
     }
@@ -19,10 +20,12 @@
     from {
         height: var(--radix-accordion-content-height);
     }
+
     to {
         height: 0;
     }
 }
+
 :root {
     --bg: #ffffff;
     --fg: #171717;
@@ -201,11 +204,13 @@ main {
         box-shadow 0.3s,
         outline 0.3s;
 }
+
 .btn:disabled {
     opacity: 0.5;
     background-color: var(--disabled);
     cursor: not-allowed;
 }
+
 .btn:hover:not(:disabled) {
     z-index: 2;
     border-color: var(--color-special);
@@ -404,6 +409,7 @@ main {
 .data-point {
     pointer-events: none;
 }
+
 .data-arrow {
     cursor: pointer;
 }
@@ -430,16 +436,19 @@ main {
     border-top-right-radius: 0;
     cursor: pointer;
 }
+
 p,
 span,
 label {
     font-size: var(--text-p);
 }
+
 .map-layer {
     max-width: 100%;
     height: auto;
     cursor: grab;
 }
+
 .loading-container {
     position: fixed;
     top: 2rem;
@@ -457,6 +466,7 @@ label {
     text-align: center;
     text-decoration: none;
 }
+
 .loading-container.load::after {
     content: "";
     width: 16px;
@@ -466,15 +476,18 @@ label {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
 }
+
 .loading-container.underline {
     border: none;
     border-radius: 0;
 }
+
 .loading-container.underline::after {
     content: "";
     position: absolute;
@@ -485,14 +498,17 @@ label {
     background-color: var(--color-special);
     animation: underlineAnim 3s linear;
 }
+
 @keyframes underlineAnim {
     from {
         width: 0;
     }
+
     to {
         width: 100%;
     }
 }
+
 .btn-icon {
     background: none;
     border: none;
@@ -501,10 +517,12 @@ label {
     color: var(--fg);
     cursor: pointer;
 }
+
 .btn-icon:hover {
     cursor: pointer;
     color: var(--color-special);
 }
+
 .Graphique {
     z-index: 2;
     position: absolute;
@@ -518,12 +536,14 @@ label {
     width: 100%;
     height: 100vh;
 }
+
 .btn-param {
     z-index: 2;
     position: fixed;
     top: 2rem;
     right: 2rem;
 }
+
 .param-bar {
     z-index: 10;
     position: absolute;
@@ -538,6 +558,7 @@ label {
     border-radius: 8px;
     transition: transform 0.3s ease-in-out;
 }
+
 .overlay {
     position: fixed;
     top: 0;
@@ -555,10 +576,12 @@ label {
     background-color: var(--color-special-shadow);
     cursor: pointer;
 }
+
 .theme-switch:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px var(--color-special);
 }
+
 .MOD-container {
     z-index: 10;
     position: fixed;
@@ -577,6 +600,7 @@ label {
     padding: clamp(1rem, 2vw, 2rem);
     transition: transform 0.3s ease-in-out;
 }
+
 .inner-mod {
     width: 100%;
     height: 100%;
@@ -590,20 +614,24 @@ label {
     cursor: pointer;
     max-width: fit-content;
 }
+
 .open-accordeon:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px var(--color-special-shadow);
 }
+
 .open-accordeon-text {
     margin: 0.2rem;
     color: var(--color-text-special);
     font-style: italic;
 }
+
 .in-accordeon {
     margin-top: 0.5rem;
     padding: 0.5rem;
     border-left: 3px solid var(--color-special);
 }
+
 .attention-inner {
     position: fixed;
     bottom: 2rem;
@@ -621,6 +649,7 @@ label {
     border: 1px solid #eb0505;
     border-radius: 8px;
 }
+
 .attention-header {
     display: flex;
     align-items: center;
@@ -628,11 +657,13 @@ label {
     gap: 0.5rem;
     width: 100%;
 }
+
 .attention-text {
     color: #eb0505;
     font-weight: 600;
     padding-left: 0.5rem;
 }
+
 .infinite-element {
     display: flex;
     flex-direction: row;
@@ -645,7 +676,37 @@ label {
     overflow-y: auto;
     overflow-x: hidden;
 }
+
 .checkbox-product {
     max-width: 400px !important;
     width: 400px !important;
+}
+
+.graph-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+
+/* Texte placé juste après la carte (qui fait 100vh) */
+.graph-middle-text {
+    position: absolute;
+    top: 100vh;
+    /* juste sous la carte */
+    width: 100%;
+    text-align: center;
+    z-index: 1;
+    font-size: 2rem;
+    margin-top: 2rem;
+}
+
+/* Graphique placé sous le texte */
+.Graphique {
+    position: absolute;
+    top: calc(100vh + 4rem);
+    /* espace après le texte */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    z-index: 2;
 }
