@@ -328,7 +328,6 @@ main {
     position: fixed;
     right: 1rem;
     top: 10%;
-    max-width: 80%;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
@@ -640,7 +639,8 @@ label {
     justify-content: flex-start;
     gap: 0.5rem;
     flex-wrap: wrap;
-    max-width: clamp(90px, 15vw, 180px);
+    max-width: clamp(180px, 30vw, 360px);
     max-height: 125px;
     overflow-y: auto;
+    overflow-x: hidden;
 }
