@@ -123,345 +123,354 @@ export default function ConfigBar({
                 {isOpen ? "×" : "⚙️"}
             </button>
 
-            <h2 className="h2-primary">{t("config")}</h2>
-            <p>{t("study-scale")}</p>
-            <div
-                className="rows"
-                style={{ gap: 0 }}
-            >
-                <button
-                    className={`btn ${isCountryMode ? "active" : ""}`}
-                    type="button"
-                    onClick={() => handleCountryModeChange(true)}
-                    style={{
-                        width: "clamp(90px, 15vw, 180px)",
-                        borderTopRightRadius: 0,
-                        borderBottomRightRadius: 0,
-                    }}
-                >
-                    {t("country")}
-                </button>
-                <button
-                    className={`btn ${!isCountryMode ? "active" : ""}`}
-                    type="button"
-                    onClick={() => handleCountryModeChange(false)}
-                    style={{
-                        width: "clamp(90px, 15vw, 180px)",
-                        borderLeftColor: "transparent",
-                        borderTopLeftRadius: 0,
-                        borderBottomLeftRadius: 0,
-                    }}
-                >
-                    {t("continent")}
-                </button>
-            </div>
-            <p>{t("data-type")}</p>
-            <div>
+            <div className="config-bar-content">
+                <h2 className="h2-primary">{t("config")}</h2>
+                <p>{t("study-scale")}</p>
                 <div
                     className="rows"
                     style={{ gap: 0 }}
                 >
                     <button
-                        className={`btn ${typeData === 0 || typeData === 2 ? "active" : ""}`}
+                        className={`btn ${isCountryMode ? "active" : ""}`}
                         type="button"
-                        onClick={() => handleTypeDataChange(0, isVolume)}
-                        aria-label={t("export-desc")}
-                        title={t("export-desc")}
+                        onClick={() => handleCountryModeChange(true)}
                         style={{
-                            width: "clamp(60px, 10vw, 120px)",
+                            width: "clamp(90px, 15vw, 180px)",
                             borderTopRightRadius: 0,
-                            borderBottomLeftRadius: 0,
                             borderBottomRightRadius: 0,
                         }}
                     >
-                        {t("export")}
+                        {t("country")}
                     </button>
                     <button
-                        className={`btn ${typeData === 1 || typeData === 3 ? "active" : ""}`}
+                        className={`btn ${!isCountryMode ? "active" : ""}`}
                         type="button"
-                        onClick={() => handleTypeDataChange(1, isVolume)}
-                        aria-label={t("import-desc")}
-                        title={t("import-desc")}
+                        onClick={() => handleCountryModeChange(false)}
                         style={{
-                            borderRadius: 0,
-                            width: "clamp(60px, 10vw, 120px)",
-                            borderLeft: "transparent",
-                        }}
-                    >
-                        {t("import")}
-                    </button>
-                    <button
-                        className={`btn ${typeData === 4 ? "active" : ""}`}
-                        type="button"
-                        onClick={() => handleTypeDataChange(4, isVolume)}
-                        aria-label={t("balance-desc")}
-                        title={t("balance-desc")}
-                        style={{
-                            width: "clamp(60px, 10vw, 120px)",
+                            width: "clamp(90px, 15vw, 180px)",
                             borderLeftColor: "transparent",
                             borderTopLeftRadius: 0,
                             borderBottomLeftRadius: 0,
-                            borderBottomRightRadius: 0,
                         }}
                     >
-                        {t("balance")}
+                        {t("continent")}
                     </button>
                 </div>
-                {typeData !== 4 ? (
+                <p>{t("data-type")}</p>
+                <div>
                     <div
                         className="rows"
                         style={{ gap: 0 }}
                     >
                         <button
-                            className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
+                            className={`btn ${typeData === 0 || typeData === 2 ? "active" : ""}`}
                             type="button"
-                            disabled={typeData === 4}
-                            onClick={() => handleTypeDataChange(typeData, true)}
-                            aria-label={t("volume-desc")}
-                            title={t("volume-desc")}
+                            onClick={() => handleTypeDataChange(0, isVolume)}
+                            aria-label={t("export-desc")}
+                            title={t("export-desc")}
                             style={{
-                                width: "clamp(90px, 15vw, 180px)",
-                                borderTopColor: "transparent",
+                                width: "clamp(60px, 10vw, 120px)",
                                 borderTopRightRadius: 0,
-                                borderTopLeftRadius: 0,
+                                borderBottomLeftRadius: 0,
                                 borderBottomRightRadius: 0,
                             }}
                         >
-                            {t("volume")}
+                            {t("export")}
                         </button>
                         <button
-                            className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
+                            className={`btn ${typeData === 1 || typeData === 3 ? "active" : ""}`}
                             type="button"
-                            onClick={() =>
-                                handleTypeDataChange(typeData, false)
+                            onClick={() => handleTypeDataChange(1, isVolume)}
+                            aria-label={t("import-desc")}
+                            title={t("import-desc")}
+                            style={{
+                                borderRadius: 0,
+                                width: "clamp(60px, 10vw, 120px)",
+                                borderLeft: "transparent",
+                            }}
+                        >
+                            {t("import")}
+                        </button>
+                        <button
+                            className={`btn ${typeData === 4 ? "active" : ""}`}
+                            type="button"
+                            onClick={() => handleTypeDataChange(4, isVolume)}
+                            aria-label={t("balance-desc")}
+                            title={t("balance-desc")}
+                            style={{
+                                width: "clamp(60px, 10vw, 120px)",
+                                borderLeftColor: "transparent",
+                                borderTopLeftRadius: 0,
+                                borderBottomLeftRadius: 0,
+                                borderBottomRightRadius: 0,
+                            }}
+                        >
+                            {t("balance")}
+                        </button>
+                    </div>
+                    {typeData !== 4 ? (
+                        <div
+                            className="rows"
+                            style={{ gap: 0 }}
+                        >
+                            <button
+                                className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
+                                type="button"
+                                disabled={typeData === 4}
+                                onClick={() =>
+                                    handleTypeDataChange(typeData, true)
+                                }
+                                aria-label={t("volume-desc")}
+                                title={t("volume-desc")}
+                                style={{
+                                    width: "clamp(90px, 15vw, 180px)",
+                                    borderTopColor: "transparent",
+                                    borderTopRightRadius: 0,
+                                    borderTopLeftRadius: 0,
+                                    borderBottomRightRadius: 0,
+                                }}
+                            >
+                                {t("volume")}
+                            </button>
+                            <button
+                                className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
+                                type="button"
+                                onClick={() =>
+                                    handleTypeDataChange(typeData, false)
+                                }
+                                aria-label={t("value-desc")}
+                                title={t("value-desc")}
+                                style={{
+                                    width: "clamp(90px, 15vw, 180px)",
+                                    borderLeftColor: "transparent",
+                                    borderTopColor: "transparent",
+                                    borderTopLeftRadius: 0,
+                                    borderTopRightRadius: 0,
+                                    borderBottomLeftRadius: 0,
+                                }}
+                            >
+                                {t("value")}
+                            </button>
+                        </div>
+                    ) : (
+                        <div
+                            className="rows"
+                            style={{ gap: 0 }}
+                        >
+                            <button
+                                className={`btn ${isAbsolute ? "active" : ""}`}
+                                type="button"
+                                onClick={() => setIsAbsolute(true)}
+                                aria-label={t("value-absolute-desc")}
+                                title={t("value-absolute-desc")}
+                                style={{
+                                    width: "clamp(90px, 15vw, 180px)",
+                                    borderTopColor: "transparent",
+                                    borderTopRightRadius: 0,
+                                    borderTopLeftRadius: 0,
+                                    borderBottomRightRadius: 0,
+                                }}
+                            >
+                                {t("value-absolute")}
+                            </button>
+                            <button
+                                className={`btn ${!isAbsolute ? "active" : ""}`}
+                                type="button"
+                                onClick={() => setIsAbsolute(false)}
+                                aria-label={t("value-relative-desc")}
+                                title={t("value-relative-desc")}
+                                style={{
+                                    width: "clamp(90px, 15vw, 180px)",
+                                    borderLeftColor: "transparent",
+                                    borderTopColor: "transparent",
+                                    borderTopLeftRadius: 0,
+                                    borderTopRightRadius: 0,
+                                    borderBottomLeftRadius: 0,
+                                }}
+                            >
+                                {t("value-relative")}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <p>{t("date-choose")}</p>
+                <div>
+                    <div
+                        className="rows"
+                        style={{ gap: 0 }}
+                    >
+                        <button
+                            className="btn"
+                            type="button"
+                            aria-label={t("decrease-year")}
+                            title={t("decrease-year")}
+                            style={{
+                                height: "40px",
+                                width: "40px",
+                                borderRightColor: "transparent",
+                                borderBottomColor: "transparent",
+                                borderTopRightRadius: 0,
+                                borderBottomRightRadius: 0,
+                                borderBottomLeftRadius: 0,
+                            }}
+                            disabled={currentYear <= metadata.bois.start_year}
+                            onClick={() => handleYearChange(currentYear - 1)}
+                        >
+                            {"<"}
+                        </button>
+
+                        <SelectMenu
+                            id="year-select"
+                            style={{
+                                borderRadius: 0,
+                                width: "100px",
+                                borderBottomColor: "transparent",
+                            }}
+                            options={Array.from(
+                                {
+                                    length:
+                                        metadata.bois.end_year -
+                                        metadata.bois.start_year +
+                                        1,
+                                },
+                                (_, i) =>
+                                    (metadata.bois.start_year + i).toString(),
+                            )}
+                            selectedOption={currentYear.toString()}
+                            onOptionSelect={(option: string) =>
+                                handleYearChange(parseInt(option, 10))
                             }
-                            aria-label={t("value-desc")}
-                            title={t("value-desc")}
-                            style={{
-                                width: "clamp(90px, 15vw, 180px)",
-                                borderLeftColor: "transparent",
-                                borderTopColor: "transparent",
-                                borderTopLeftRadius: 0,
-                                borderTopRightRadius: 0,
-                                borderBottomLeftRadius: 0,
-                            }}
-                        >
-                            {t("value")}
-                        </button>
-                    </div>
-                ) : (
-                    <div
-                        className="rows"
-                        style={{ gap: 0 }}
-                    >
+                        />
                         <button
-                            className={`btn ${isAbsolute ? "active" : ""}`}
+                            className="btn"
                             type="button"
-                            onClick={() => setIsAbsolute(true)}
-                            aria-label={t("value-absolute-desc")}
-                            title={t("value-absolute-desc")}
+                            aria-label={t("increase-year")}
+                            title={t("increase-year")}
+                            onClick={() => handleYearChange(currentYear + 1)}
+                            disabled={currentYear >= metadata.bois.end_year}
                             style={{
-                                width: "clamp(90px, 15vw, 180px)",
-                                borderTopColor: "transparent",
-                                borderTopRightRadius: 0,
+                                height: "40px",
+                                width: "40px",
+                                borderLeftColor: "transparent",
+                                borderBottomColor: "transparent",
                                 borderTopLeftRadius: 0,
+                                borderBottomLeftRadius: 0,
                                 borderBottomRightRadius: 0,
                             }}
                         >
-                            {t("value-absolute")}
-                        </button>
-                        <button
-                            className={`btn ${!isAbsolute ? "active" : ""}`}
-                            type="button"
-                            onClick={() => setIsAbsolute(false)}
-                            aria-label={t("value-relative-desc")}
-                            title={t("value-relative-desc")}
-                            style={{
-                                width: "clamp(90px, 15vw, 180px)",
-                                borderLeftColor: "transparent",
-                                borderTopColor: "transparent",
-                                borderTopLeftRadius: 0,
-                                borderTopRightRadius: 0,
-                                borderBottomLeftRadius: 0,
-                            }}
-                        >
-                            {t("value-relative")}
+                            {">"}
                         </button>
                     </div>
-                )}
-            </div>
+                    <MonthSelector
+                        currentMonth={currentMonth}
+                        setCurrentMonth={setCurrentMonth}
+                    />
+                </div>
 
-            <p>{t("date-choose")}</p>
-            <div>
                 <div
                     className="rows"
-                    style={{ gap: 0 }}
+                    style={{ justifyContent: "space-between" }}
                 >
-                    <button
-                        className="btn"
-                        type="button"
-                        aria-label={t("decrease-year")}
-                        title={t("decrease-year")}
-                        style={{
-                            height: "40px",
-                            width: "40px",
-                            borderRightColor: "transparent",
-                            borderBottomColor: "transparent",
-                            borderTopRightRadius: 0,
-                            borderBottomRightRadius: 0,
-                            borderBottomLeftRadius: 0,
-                        }}
-                        disabled={currentYear <= metadata.bois.start_year}
-                        onClick={() => handleYearChange(currentYear - 1)}
-                    >
-                        {"<"}
-                    </button>
+                    <p>{t("product-choose")}</p>
 
-                    <SelectMenu
-                        id="year-select"
-                        style={{
-                            borderRadius: 0,
-                            width: "100px",
-                            borderBottomColor: "transparent",
-                        }}
-                        options={Array.from(
-                            {
-                                length:
-                                    metadata.bois.end_year -
-                                    metadata.bois.start_year +
-                                    1,
-                            },
-                            (_, i) => (metadata.bois.start_year + i).toString(),
-                        )}
-                        selectedOption={currentYear.toString()}
-                        onOptionSelect={(option: string) =>
-                            handleYearChange(parseInt(option, 10))
-                        }
-                    />
-                    <button
-                        className="btn"
-                        type="button"
-                        aria-label={t("increase-year")}
-                        title={t("increase-year")}
-                        onClick={() => handleYearChange(currentYear + 1)}
-                        disabled={currentYear >= metadata.bois.end_year}
-                        style={{
-                            height: "40px",
-                            width: "40px",
-                            borderLeftColor: "transparent",
-                            borderBottomColor: "transparent",
-                            borderTopLeftRadius: 0,
-                            borderBottomLeftRadius: 0,
-                            borderBottomRightRadius: 0,
-                        }}
-                    >
-                        {">"}
-                    </button>
+                    <p title={t("nb-product")}>
+                        {calculateNBSingleElementSelected(productsSelected)} /{" "}
+                        {NBMaxElement}
+                    </p>
                 </div>
-                <MonthSelector
-                    currentMonth={currentMonth}
-                    setCurrentMonth={setCurrentMonth}
+                <button
+                    className="btn"
+                    type="button"
+                    onClick={() => setIsOpenProducts(true)}
+                    style={{ maxWidth: "clamp(120px, 20vw, 240px)" }}
+                >
+                    {t("select-products")}
+                </button>
+                <div
+                    className="rows"
+                    style={{ justifyContent: "space-between" }}
+                >
+                    <p>
+                        {isCountryMode
+                            ? t("country-choose")
+                            : t("continent-choose")}
+                    </p>
+                    <div className="infinite-element">
+                        {countriesSelected.map((countryNumberCode) => {
+                            const country =
+                                pays[
+                                    String(
+                                        countryNumberCode,
+                                    ) as keyof typeof pays
+                                ];
+                            if (!country) return null;
+                            if (hasFlag(country.code))
+                                return (
+                                    <Image
+                                        key={countryNumberCode}
+                                        className="tooltip-country"
+                                        alt={t("flag", {
+                                            country:
+                                                locale === "en"
+                                                    ? country.en
+                                                    : country.fr || "unknown",
+                                        })}
+                                        title={t("flag", {
+                                            country:
+                                                locale === "en"
+                                                    ? country.en
+                                                    : country.fr || "unknown",
+                                        })}
+                                        aria-label={t("flag", {
+                                            country:
+                                                locale === "en"
+                                                    ? country.en
+                                                    : country.fr || "unknown",
+                                        })}
+                                        width={24}
+                                        height={18}
+                                        src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`}
+                                    />
+                                );
+                            else
+                                return (
+                                    <p key={countryNumberCode}>
+                                        {locale === "en"
+                                            ? country.en
+                                            : country.fr}
+                                    </p>
+                                );
+                        })}
+                    </div>
+                    <p title={t("nb-country")}>
+                        {countriesSelected.length} / {NBCountryWithData}
+                    </p>
+                </div>
+                <Checkbox
+                    id="multiple-mode-checkbox"
+                    label={t("multiple-selection")}
+                    checked={isMultipleMode}
+                    onChange={(e) => setIsMultipleMode(e.target.checked)}
+                />
+
+                <p>{t("historic")}</p>
+                <MultiSelect
+                    id="icon"
+                    options={Object.keys(icon_symbol).map((key) => ({
+                        label: key,
+                        value: key,
+                    }))}
+                    onValueChange={handleNewIconSelected}
+                    style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
+                />
+                <MODOpener
+                    isOpen={isOpenProducts}
+                    onOpen={handleCloseProducts}
+                    setProductsSelected={setProductsSelected}
+                    productsSelected={productsSelected}
                 />
             </div>
-
-            <div
-                className="rows"
-                style={{ justifyContent: "space-between" }}
-            >
-                <p>{t("product-choose")}</p>
-
-                <p title={t("nb-product")}>
-                    {calculateNBSingleElementSelected(productsSelected)} /{" "}
-                    {NBMaxElement}
-                </p>
-            </div>
-            <button
-                className="btn"
-                type="button"
-                onClick={() => setIsOpenProducts(true)}
-                style={{ maxWidth: "clamp(120px, 20vw, 240px)" }}
-            >
-                {t("select-products")}
-            </button>
-            <div
-                className="rows"
-                style={{ justifyContent: "space-between" }}
-            >
-                <p>
-                    {isCountryMode
-                        ? t("country-choose")
-                        : t("continent-choose")}
-                </p>
-                <div className="infinite-element">
-                    {countriesSelected.map((countryNumberCode) => {
-                        const country =
-                            pays[
-                                String(countryNumberCode) as keyof typeof pays
-                            ];
-                        if (!country) return null;
-                        if (hasFlag(country.code))
-                            return (
-                                <Image
-                                    key={countryNumberCode}
-                                    className="tooltip-country"
-                                    alt={t("flag", {
-                                        country:
-                                            locale === "en"
-                                                ? country.en
-                                                : country.fr || "unknown",
-                                    })}
-                                    title={t("flag", {
-                                        country:
-                                            locale === "en"
-                                                ? country.en
-                                                : country.fr || "unknown",
-                                    })}
-                                    aria-label={t("flag", {
-                                        country:
-                                            locale === "en"
-                                                ? country.en
-                                                : country.fr || "unknown",
-                                    })}
-                                    width={24}
-                                    height={18}
-                                    src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`}
-                                />
-                            );
-                        else
-                            return (
-                                <p key={countryNumberCode}>
-                                    {locale === "en" ? country.en : country.fr}
-                                </p>
-                            );
-                    })}
-                </div>
-                <p title={t("nb-country")}>
-                    {countriesSelected.length} / {NBCountryWithData}
-                </p>
-            </div>
-            <Checkbox
-                id="multiple-mode-checkbox"
-                label={t("multiple-selection")}
-                checked={isMultipleMode}
-                onChange={(e) => setIsMultipleMode(e.target.checked)}
-            />
-
-            <p>{t("historic")}</p>
-            <MultiSelect
-                id="icon"
-                options={Object.keys(icon_symbol).map((key) => ({
-                    label: key,
-                    value: key,
-                }))}
-                onValueChange={handleNewIconSelected}
-                style={{ maxWidth: "clamp(180px, 30vw, 360px)" }}
-            />
-            <MODOpener
-                isOpen={isOpenProducts}
-                onOpen={handleCloseProducts}
-                setProductsSelected={setProductsSelected}
-                productsSelected={productsSelected}
-            />
         </div>
     );
 }

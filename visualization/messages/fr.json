@@ -1,7 +1,8 @@
 {
     "HomePage": {
         "title": "Echanges internationaux de bois",
-        "parameters": "Paramètres de visualisation"
+        "parameters": "Paramètres",
+        "parameters-desc": "Paramètres de visualisation"
     },
     "NotFound": {
         "title": "404 - Page non trouvée",

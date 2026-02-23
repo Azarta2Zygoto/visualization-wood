@@ -90,6 +90,9 @@ export function getAllChildren(productNumberCode: number): number[] {
             result.push(Number(NumberCode));
         }
     });
+    console.log(
+        `getAllChildren(${productNumberCode}) = [${result.join(", ")}]`,
+    );
     return result;
 }
 

@@ -13,6 +13,7 @@ import Loading from "@/components/loading";
 import { WorldMap } from "@/components/map";
 import { type definitions } from "@/data/constants";
 import metadata_app from "@/data/metadata.json";
+import { getAllChildren } from "@/utils/MODLecture";
 import { readNpz } from "@/utils/read";
 
 const adding_automatic_all_years = false; // Permet de charger les années les unes après les autres ou à chaque demande
@@ -124,11 +125,11 @@ export default function HomePage(): JSX.Element {
             <button
                 className="btn btn-param"
                 type="button"
-                aria-label={t("parameters")}
-                title={t("parameters")}
+                aria-label={t("parameters-desc")}
+                title={t("parameters-desc")}
                 onClick={() => setIsOpenParamBar((prev) => !prev)}
             >
-                {isOpenParamBar ? "×" : "⚙️"}
+                {t("parameters")}
             </button>
 
             <ParamBar
@@ -184,8 +185,15 @@ export default function HomePage(): JSX.Element {
             <Graphique
                 allData={allData}
                 type={[typeData]}
-                productsSelected={productsSelected}
-                countriesSelected={countriesSelected}
+                productsSelected={
+                    productsSelected.length === 0
+                        ? [0]
+                        : productsSelected.length === 1
+                          ? (getAllChildren(productsSelected[0]) ??
+                            productsSelected)
+                          : productsSelected
+                }
+                countriesSelected={countriesSelected ?? [34]}
                 iconSelected={iconSelected}
                 allEvents={allEvents}
             />

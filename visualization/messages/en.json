@@ -1,7 +1,8 @@
 {
     "HomePage": {
         "title": "Wood international trade with France",
-        "parameters": "Visualization parameters"
+        "parameters": "Parameters",
+        "parameters-desc": "Visualization parameters"
     },
     "NotFound": {
         "title": "404 - Page not found",
