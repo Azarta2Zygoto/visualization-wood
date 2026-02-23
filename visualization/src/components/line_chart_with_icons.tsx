@@ -200,7 +200,8 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             .style("font-size", "12px")
             .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)")
             .style("pointer-events", "none")
-            .style("opacity", 0)
+            .style("opacity", 0.6)
+            .style("z-index", 5)
             .style("max-width", "250px")          // largeur max
             .style("white-space", "normal")      // permet le retour à la ligne
             .style("overflow-wrap", "break-word"); // coupe les mots trop longs
@@ -422,14 +423,30 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
 
             // transformation vers coordonnées écran
             const screenPoint = point.matrixTransform(svgNode.getScreenCTM() as any);
+            //gestion du tooltip
 
+            const symbol = closestStock.symbol.toLowerCase();
+            const allCountries = new Set(stocks.map(s => s.symbol.split(" - ")[0]));
+            const multipleCountries = allCountries.size > 1;
+            const parts = closestStock.symbol.split(" - ").map((p: any) => p.trim());
+            const unit =
+                symbol.includes("valeur") ? "k€" :
+                    symbol.includes("volume") ? "Tonne" :
+                        "";
+            const country = parts[0];
+            const product = parts[1];
+
+            const title = multipleCountries
+                ? `${country} – ${product}`
+                : `${product}`;
 
             Tooltip
-                .style("opacity", 1)
+                .style("opacity", 0.8)
                 .html(`
-        <strong>${closestStock.symbol}</strong><br>
-        Date : ${d3.timeFormat("%Y-%m-%d")(x(closestValue!) as Date)}<br>
-        Valeur : ${y(closestValue!)}`)
+        <strong>${title}</strong><br>
+         Valeur : ${d3.format(",.0f")(y(closestValue!)).replace(/,/g, " ")} ${unit}<br>
+        Date : ${d3.timeFormat("%Y-%m-%d")(x(closestValue!) as Date)}
+       `)
                 .style("left", `${screenPoint.x + 10}px`)
                 .style("top", `${screenPoint.y + 600}px`);
             // Afficher le focus
