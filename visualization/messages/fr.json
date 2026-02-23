@@ -99,6 +99,7 @@
         "ton-unit": "en ton"
     },
     "ParamBar": {
+        "settings": "Paramètres de visualisation",
         "map-definition": "Définition de la carte :",
         "low": "Faible",
         "medium": "Moyenne",
@@ -123,6 +124,7 @@
         "red": "Palette rouge"
     },
     "MODOpener": {
+        "products": "Produits",
         "title": "Sélection des produits",
         "select-all": "Tout sélectionner",
         "deselect-all": "Tout désélectionner",

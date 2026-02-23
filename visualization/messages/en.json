@@ -99,6 +99,7 @@
         "ton-unit": "in ton"
     },
     "ParamBar": {
+        "settings": "Visualization settings",
         "map-definition": "Map definition:",
         "low": "Low",
         "medium": "Medium",
@@ -123,6 +124,7 @@
         "red": "Palette red"
     },
     "MODOpener": {
+        "products": "Products",
         "title": "Product selection",
         "select-all": "Select all",
         "deselect-all": "Deselect all",

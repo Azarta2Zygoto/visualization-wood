@@ -54,6 +54,62 @@ export default function ParamBar({
 
     const { locale } = useGlobal();
 
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if ((e.key === "Escape" || e.key === "Backspace") && open)
+                setOpen(false);
+        };
+        document.addEventListener("keydown", handleEscape);
+        return () => document.removeEventListener("keydown", handleEscape);
+    }, [open, setOpen]);
+
+    useEffect(() => {
+        const storedDefinition = localStorage.getItem(
+            MAP_DEFINITION_STORAGE_KEY,
+        );
+        const storedProjection = localStorage.getItem(
+            GEO_PROJECTION_STORAGE_KEY,
+        );
+        const storedIsStatic = localStorage.getItem(IS_STATIC_STORAGE_KEY);
+        const storedIsDaltonian = localStorage.getItem(
+            IS_DALTONIAN_STORAGE_KEY,
+        );
+        const storedPaletteColor = localStorage.getItem(
+            PALETTE_COLOR_STORAGE_KEY,
+        );
+
+        if (
+            storedDefinition &&
+            Object.keys(MAP_DEFINITIONS).includes(storedDefinition)
+        ) {
+            setMapDefinition(storedDefinition as definitions);
+        }
+        if (
+            storedProjection &&
+            projections.some((p) => p.name === storedProjection)
+        ) {
+            setGeoProjection(storedProjection as ProjectionName);
+        }
+        if (storedIsStatic !== null) {
+            setIsStatic(storedIsStatic === "true");
+        }
+        if (storedIsDaltonian !== null) {
+            setIsDaltonian(storedIsDaltonian === "true");
+        }
+        if (
+            storedPaletteColor &&
+            Object.keys(colors).includes(storedPaletteColor)
+        ) {
+            setPaletteColor(storedPaletteColor as ColorName);
+        }
+    }, [
+        setMapDefinition,
+        setGeoProjection,
+        setIsStatic,
+        setIsDaltonian,
+        setPaletteColor,
+    ]);
+
     function handleDefinitionChange(definition: string) {
         setMapDefinition(definition as definitions);
         localStorage.setItem(MAP_DEFINITION_STORAGE_KEY, definition);
@@ -79,57 +135,6 @@ export default function ParamBar({
         localStorage.setItem(PALETTE_COLOR_STORAGE_KEY, color);
     }
 
-    useEffect(() => {
-        const storedDefinition = localStorage.getItem(
-            MAP_DEFINITION_STORAGE_KEY,
-        ) as definitions | null;
-        const definitionsValues = Object.keys(MAP_DEFINITIONS);
-        if (storedDefinition && definitionsValues.includes(storedDefinition)) {
-            setMapDefinition(storedDefinition);
-        }
-    }, [setMapDefinition]);
-
-    useEffect(() => {
-        const storedProjection = localStorage.getItem(
-            GEO_PROJECTION_STORAGE_KEY,
-        ) as string | null;
-        const projectionValues = projections.map((p) => p.name);
-        if (
-            storedProjection &&
-            projectionValues.includes(storedProjection as ProjectionName)
-        ) {
-            setGeoProjection(storedProjection as ProjectionName);
-        }
-    }, [setGeoProjection]);
-
-    useEffect(() => {
-        const storedIsStatic = localStorage.getItem(IS_STATIC_STORAGE_KEY) as
-            | string
-            | null;
-        if (storedIsStatic !== null) {
-            setIsStatic(storedIsStatic === "true");
-        }
-    }, [setIsStatic]);
-
-    useEffect(() => {
-        const storedIsDaltonian = localStorage.getItem(
-            IS_DALTONIAN_STORAGE_KEY,
-        ) as string | null;
-        if (storedIsDaltonian !== null) {
-            setIsDaltonian(storedIsDaltonian === "true");
-        }
-    }, [setIsDaltonian]);
-
-    useEffect(() => {
-        const storedPaletteColor = localStorage.getItem(
-            PALETTE_COLOR_STORAGE_KEY,
-        ) as ColorName | null;
-        const colorValues = Object.keys(colors);
-        if (storedPaletteColor && colorValues.includes(storedPaletteColor)) {
-            setPaletteColor(storedPaletteColor);
-        }
-    }, [setPaletteColor]);
-
     return (
         <Fragment>
             <div
@@ -137,10 +142,14 @@ export default function ParamBar({
                 onClick={() => setOpen(false)}
                 style={{ display: open ? "block" : "none" }}
                 aria-hidden
+                role="presentation"
             />
             <div
                 className="param-bar"
+                role="dialog"
+                aria-modal="true"
                 aria-hidden={!open}
+                aria-label={t("settings")}
                 style={{
                     transform: open
                         ? "translateX(-50%)"

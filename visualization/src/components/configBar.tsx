@@ -115,7 +115,12 @@ export default function ConfigBar({
     }
 
     return (
-        <div className={`config-bar ${isOpen ? "" : "closed"}`}>
+        <div
+            className={`config-bar ${isOpen ? "" : "closed"}`}
+            role="dialog"
+            aria-modal="true"
+            aria-hidden={!isOpen}
+        >
             <button
                 className="btn btn-close-config"
                 type="button"
