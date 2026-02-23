@@ -116,6 +116,8 @@
         "title": "Product selection",
         "select-all": "Select all",
         "deselect-all": "Deselect all",
+        "open-all": "Open all",
+        "close-all": "Close all",
         "close": "Close product selection"
     }
 }

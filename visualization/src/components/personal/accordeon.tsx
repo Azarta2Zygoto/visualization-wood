@@ -1,4 +1,5 @@
-import { JSX } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { JSX, useEffect, useState } from "react";
 
 import {
     Accordion,
@@ -13,25 +14,42 @@ interface SubAccordeonItem {
 }
 
 interface AccordeonProps {
+    name: string;
     items: SubAccordeonItem | Array<SubAccordeonItem>;
     color?: string;
+    isOpen?: boolean;
 }
 
 export default function Accordeon({
+    name,
     items,
     color,
+    isOpen = false,
 }: AccordeonProps): JSX.Element {
+    const allValues = Array.isArray(items)
+        ? items.map((_, i) => `item-${name}-${i}`)
+        : [`item-${name}-0`];
+
+    const [openItems, setOpenItems] = useState<string[]>(
+        isOpen ? allValues : [],
+    );
+
+    useEffect(() => {
+        setOpenItems(isOpen ? allValues : []);
+    }, [isOpen]);
+
     return (
         <Accordion
-            type="single"
-            collapsible
+            type="multiple"
+            value={openItems}
+            onValueChange={setOpenItems}
             className="w-full"
         >
             {Array.isArray(items) ? (
                 items.map((item, index) => (
                     <AccordionItem
                         key={index}
-                        value={`item-${index}`}
+                        value={`item-${name}-${index}`}
                         className="accordeon"
                     >
                         <AccordionTrigger
@@ -50,7 +68,7 @@ export default function Accordeon({
                 ))
             ) : (
                 <AccordionItem
-                    value="item-0"
+                    value={`item-${name}-0`}
                     className="accordeon"
                 >
                     <AccordionTrigger className="open-accordeon">

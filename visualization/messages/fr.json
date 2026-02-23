@@ -116,6 +116,8 @@
         "title": "Sélection des produits",
         "select-all": "Tout sélectionner",
         "deselect-all": "Tout désélectionner",
+        "open-all": "Tout ouvrir",
+        "close-all": "Tout fermer",
         "close": "Fermer la sélection de produits",
         "attention-text": "Par défaut, si aucun produit n'est sélectionné, tous les produits sont affichés. Sélectionnez au moins un produit pour voir les données correspondantes."
     }

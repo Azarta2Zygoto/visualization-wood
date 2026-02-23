@@ -65,7 +65,7 @@ export default function Checkbox({
 
     return (
         <label
-            className={`checkbox-container${disabled ? " disabled" : ""}${side === "left" ? " reverse" : ""}`}
+            className={`checkbox-container${disabled ? " disabled" : ""}${side === "left" ? " reverse" : ""}${className ? ` ${className}` : ""}`}
             id={id + "-label"}
             style={boxStyle}
             htmlFor={id}
@@ -102,8 +102,7 @@ export default function Checkbox({
                 className={
                     !renderedCheckmark
                         ? "checkbox-checkmark "
-                        : "checkbox-placement" +
-                          (className ? ` ${className}` : "")
+                        : "checkbox-placement"
                 }
                 aria-hidden="true"
                 style={{

@@ -45,7 +45,7 @@ function AccordionTrigger({
                     className,
                 )}
                 style={{
-                    minWidth: "500px",
+                    minWidth: "450px",
                 }}
                 {...props}
             >

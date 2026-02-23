@@ -615,7 +615,7 @@ label {
     justify-content: flex-start;
     background-color: var(--on-map);
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 1rem;
     margin: 1rem 0;
     border: 1px solid #eb0505;
     border-radius: 8px;
@@ -643,4 +643,8 @@ label {
     max-height: 125px;
     overflow-y: auto;
     overflow-x: hidden;
+}
+.checkbox-product {
+    max-width: 400px !important;
+    width: 400px !important;
 }
