@@ -136,7 +136,7 @@ export function WorldMap({
             // transform applies as: screenX = projectedX * k + x
             // So: correctionSize[0] = projected[0] * scale + x => x = correctionSize[0] - projected[0] * scale
             const x = correctionSize[0] - projected[0] * scale;
-            const y = correctionSize[1] - projected[1] * scale;
+            const y = correctionSize[1] / 2 - projected[1] * scale;
             return d3.zoomIdentity.translate(x, y).scale(scale);
         },
         [correctionSize],
@@ -760,16 +760,21 @@ export function WorldMap({
             );
             if (!countryCode) return;
 
+            const correctNumberCode = Number(countryCode);
             if (isMultipleMode) {
                 const newSelection: number[] = countriesSelected.includes(
-                    Number(countryCode),
+                    correctNumberCode,
                 )
                     ? countriesSelected.filter(
-                          (code: number) => code !== Number(countryCode),
+                          (code: number) => code !== correctNumberCode,
                       )
-                    : [...countriesSelected, Number(countryCode)];
+                    : [...countriesSelected, correctNumberCode];
                 setCountriesSelected(newSelection);
-            } else setCountriesSelected([Number(countryCode)]);
+            } else {
+                if (countriesSelected[0] === correctNumberCode)
+                    setCountriesSelected([]);
+                else setCountriesSelected([correctNumberCode]);
+            }
         });
     }, [
         countriesSelected,
@@ -1216,7 +1221,6 @@ function makeCircleProjection(
     const circles = mapLayer
         .selectAll<SVGCircleElement, (typeof pointData)[number]>(".data-point")
         .data(pointData, (d) => d.countryName);
-    console.log("Updating circles with data:", circles);
     circles
         .exit()
         .transition()
@@ -1239,11 +1243,7 @@ function makeCircleProjection(
         .style("cursor", "pointer")
         .transition()
         .duration(animationDuration)
-        .attr("r", (d: any) => {
-            console.log(d);
-            console.log(effectiveRadius(d));
-            return effectiveRadius(d);
-        });
+        .attr("r", effectiveRadius);
 
     circles.transition().duration(animationDuration).attr("r", effectiveRadius);
 

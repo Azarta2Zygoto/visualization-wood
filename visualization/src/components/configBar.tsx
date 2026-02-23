@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { type JSX, useState } from "react";
+import { Fragment, type JSX, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
@@ -418,19 +418,37 @@ export default function ConfigBar({
                             ? t("country-choose")
                             : t("continent-choose")}
                     </p>
-                    <div className="infinite-element">
-                        {countriesSelected.map((countryNumberCode) => {
-                            const country =
-                                pays[
-                                    String(
-                                        countryNumberCode,
-                                    ) as keyof typeof pays
-                                ];
-                            if (!country) return null;
-                            if (hasFlag(country.code))
-                                return (
+                    <p title={t("nb-country")}>
+                        {countriesSelected.length} / {NBCountryWithData}
+                    </p>
+                </div>
+                <div
+                    className="infinite-element"
+                    style={{
+                        flexWrap: isCountryMode ? "wrap" : "nowrap",
+                        flexDirection: isCountryMode ? "row" : "column",
+                    }}
+                >
+                    {countriesSelected.map((countryNumberCode) => {
+                        const country =
+                            pays[
+                                String(countryNumberCode) as keyof typeof pays
+                            ];
+                        if (!country) return null;
+                        if (hasFlag(country.code))
+                            return (
+                                <span
+                                    key={countryNumberCode}
+                                    className="rows"
+                                >
+                                    {!isCountryMode && (
+                                        <p>
+                                            {locale === "en"
+                                                ? country.en
+                                                : country.fr || "unknown"}
+                                        </p>
+                                    )}
                                     <Image
-                                        key={countryNumberCode}
                                         className="tooltip-country"
                                         alt={t("flag", {
                                             country:
@@ -454,20 +472,15 @@ export default function ConfigBar({
                                         height={18}
                                         src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`}
                                     />
-                                );
-                            else
-                                return (
-                                    <p key={countryNumberCode}>
-                                        {locale === "en"
-                                            ? country.en
-                                            : country.fr}
-                                    </p>
-                                );
-                        })}
-                    </div>
-                    <p title={t("nb-country")}>
-                        {countriesSelected.length} / {NBCountryWithData}
-                    </p>
+                                </span>
+                            );
+                        else
+                            return (
+                                <p key={countryNumberCode}>
+                                    {locale === "en" ? country.en : country.fr}
+                                </p>
+                            );
+                    })}
                 </div>
                 <Checkbox
                     id="multiple-mode-checkbox"
