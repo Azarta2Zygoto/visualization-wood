@@ -31,6 +31,7 @@ interface ConfigBarProps {
     productsSelected: number[];
     countriesSelected: number[];
     NBCountryWithData: number;
+    isAllDataLoaded?: boolean;
     setTypeData: (type: number) => void;
     setCurrentYear: (year: number) => void;
     setCurrentMonth: (month: number) => void;
@@ -40,6 +41,7 @@ interface ConfigBarProps {
     setIsCountryMode: (isCountryMode: boolean) => void;
     setIconSelected: (icons: string[]) => void;
     setIsAbsolute: (isAbsolute: boolean) => void;
+    setGetAllData: () => void;
 }
 
 export default function ConfigBar({
@@ -52,6 +54,7 @@ export default function ConfigBar({
     productsSelected,
     countriesSelected,
     NBCountryWithData,
+    isAllDataLoaded,
     setTypeData,
     setCurrentYear,
     setCurrentMonth,
@@ -61,6 +64,7 @@ export default function ConfigBar({
     setIsCountryMode,
     setIconSelected,
     setIsAbsolute,
+    setGetAllData,
 }: ConfigBarProps): JSX.Element {
     const t = useTranslations("ConfigBar");
     const { locale } = useGlobal();
@@ -294,7 +298,25 @@ export default function ConfigBar({
                     )}
                 </div>
 
-                <p>{t("date-choose")}</p>
+                <div
+                    className="rows"
+                    style={{ justifyContent: "space-between" }}
+                >
+                    <p>{t("date-choose")}</p>
+                    {!isAllDataLoaded && (
+                        <button
+                            className="btn"
+                            type="button"
+                            onClick={setGetAllData}
+                            aria-label={t("load-all-data-desc")}
+                            title={t("load-all-data-desc")}
+                            disabled={isAllDataLoaded}
+                            style={{ maxWidth: "clamp(90px, 15vw, 180px)" }}
+                        >
+                            {t("load-all-data")}
+                        </button>
+                    )}
+                </div>
                 <div>
                     <div
                         className="rows"
