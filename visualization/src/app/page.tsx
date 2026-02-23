@@ -189,8 +189,9 @@ export default function HomePage(): JSX.Element {
                     productsSelected.length === 0
                         ? [0]
                         : productsSelected.length === 1
-                          ? (getAllChildren(productsSelected[0]) ??
-                            productsSelected)
+                          ? getAllChildren(productsSelected[0]).length > 0
+                              ? getAllChildren(productsSelected[0])
+                              : productsSelected
                           : productsSelected
                 }
                 countriesSelected={countriesSelected ?? [34]}
