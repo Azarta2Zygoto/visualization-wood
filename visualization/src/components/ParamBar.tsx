@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect } from "react";
 
-import { type ColorName, colors } from "@/metadata/colorElement";
+import colors from "@/data/colors.json";
 import {
     GEO_PROJECTION_STORAGE_KEY,
     IS_DALTONIAN_STORAGE_KEY,
@@ -13,7 +13,8 @@ import {
     PALETTE_COLOR_STORAGE_KEY,
     definitions,
 } from "@/metadata/constants";
-import { type ProjectionName, projections } from "@/metadata/geoprojection";
+import { projections } from "@/metadata/geoprojections";
+import type { ColorName, ProjectionName } from "@/metadata/types";
 
 import { useGlobal } from "./globalProvider";
 import Checkbox from "./personal/checkbox";
@@ -24,13 +25,13 @@ import ThemeSwitch from "./personal/themeSwitch";
 interface ParamBarProps {
     open: boolean;
     mapDefinition: definitions;
-    geoProjection: string;
+    geoProjection: ProjectionName;
     isStatic: boolean;
     isDaltonian: boolean;
     paletteColor: ColorName;
     setOpen: (open: boolean) => void;
     setMapDefinition: (definition: definitions) => void;
-    setGeoProjection: (projection: string) => void;
+    setGeoProjection: (projection: ProjectionName) => void;
     setIsStatic: (isStatic: boolean) => void;
     setIsDaltonian: (isDaltonian: boolean) => void;
     setPaletteColor: (color: ColorName) => void;
@@ -59,7 +60,7 @@ export default function ParamBar({
         localStorage.setItem(MAP_DEFINITION_STORAGE_KEY, definition);
     }
 
-    function handleProjectionChange(projection: string) {
+    function handleProjectionChange(projection: ProjectionName) {
         setGeoProjection(projection);
         localStorage.setItem(GEO_PROJECTION_STORAGE_KEY, projection);
     }
@@ -98,7 +99,7 @@ export default function ParamBar({
             storedProjection &&
             projectionValues.includes(storedProjection as ProjectionName)
         ) {
-            setGeoProjection(storedProjection);
+            setGeoProjection(storedProjection as ProjectionName);
         }
     }, [setGeoProjection]);
 
@@ -177,7 +178,9 @@ export default function ParamBar({
                         value: p.name,
                     }))}
                     selectedOption={t(geoProjection)}
-                    onOptionSelect={handleProjectionChange}
+                    onOptionSelect={(option) =>
+                        handleProjectionChange(option as ProjectionName)
+                    }
                 />
                 <Checkbox
                     id="static-map-checkbox"
