@@ -1,105 +1,530 @@
 {
-    "0": "Tunisia",
-    "1": "EU 16-27",
-    "2": "EU 15",
-    "3": "China",
-    "4": "Sub-Saharan Africa",
-    "5": "Denmark",
-    "6": "Romania",
-    "7": "Saudi Arabia",
-    "8": "Poland",
-    "9": "Italy",
-    "10": "Mayotte",
-    "11": "Malaysia",
-    "12": "Lithuania",
-    "13": "Luxembourg",
-    "14": "Near East",
-    "15": "Netherlands",
-    "16": "Commonwealth of Independent States",
-    "17": "Uzbekistan",
-    "18": "Australia",
-    "19": "Portugal",
-    "20": "Southwest Asia",
-    "21": "International",
-    "22": "Mercosur",
-    "23": "Belarus",
-    "24": "Oceania",
-    "25": "Southern Africa",
-    "26": "European Union",
-    "27": "Unspecified countries",
-    "28": "Lebanon",
-    "29": "Spain",
-    "30": "Japan",
-    "31": "South America",
-    "32": "Switzerland",
-    "33": "Finland",
-    "34": "Germany",
-    "35": "United Kingdom",
-    "36": "Non-EU Europe",
-    "37": "Northeast Asia",
-    "38": "Belgium",
-    "39": "Indonesia",
-    "40": "Hungary",
-    "41": "Azerbaijan",
-    "42": "United States of America",
-    "43": "Russia",
-    "44": "State association",
-    "45": "Slovakia",
-    "46": "Norway",
-    "47": "New Caledonia",
-    "48": "Austria",
-    "49": "Algeria",
-    "50": "EU 28-n",
-    "51": "North America",
-    "52": "Israel",
-    "53": "Pakistan",
-    "54": "Sweden",
-    "55": "New Zealand",
-    "56": "Morocco",
-    "57": "Ghana",
-    "58": "Outside EU",
-    "59": "Yugoslavia",
-    "60": "Cameroon",
-    "61": "India",
-    "62": "Kazakhstan",
-    "63": "South Africa",
-    "64": "Croatia",
-    "65": "Middle East",
-    "66": "Southeast Asia",
-    "67": "Chile",
-    "68": "Serbia",
-    "69": "Ivory Coast",
-    "70": "Congo",
-    "71": "Gabon",
-    "72": "North Africa",
-    "73": "Libya",
-    "74": "French Overseas Territories",
-    "75": "Georgia",
-    "76": "Thailand",
-    "77": "Turkey",
-    "78": "Democratic Republic of the Congo",
-    "79": "Ireland",
-    "80": "Canada",
-    "81": "ACP (Africa, Caribbean, Pacific)",
-    "82": "French Polynesia",
-    "83": "Bulgaria",
-    "84": "Brazil",
-    "85": "Cyprus",
-    "86": "Latvia",
-    "87": "NAFTA",
-    "88": "Central America (excl. Caribbean)",
-    "89": "Slovenia",
-    "90": "Caribbean",
-    "91": "Estonia",
-    "92": "Equatorial Guinea",
-    "93": "Vietnam",
-    "94": "Czech Republic",
-    "95": "Ukraine",
-    "96": "Saint Pierre and Miquelon",
-    "97": "Greece",
-    "98": "Armenia",
-    "99": "Malta",
-    "100": "Egypt",
-    "101": "Wallis and Futuna",
-    "102": "Saint Barthelemy"
+    "0": {
+        "code": "TN",
+        "en": "Tunisia",
+        "fr": "Tunisie"
+    },
+    "1": {
+        "code": "EU-16",
+        "en": "EU 16-27",
+        "fr": "UE 16-27",
+        "event_name": "EU27"
+    },
+    "2": {
+        "code": "EU-15",
+        "en": "EU 15",
+        "fr": "UE 15",
+        "event_name": "UE15"
+    },
+    "3": {
+        "code": "CN",
+        "en": "China",
+        "fr": "Chine"
+    },
+    "4": {
+        "code": "AFRSB",
+        "en": "Sub-Saharan Africa",
+        "fr": "Afrique subsaharienne"
+    },
+    "5": {
+        "code": "DK",
+        "en": "Denmark",
+        "fr": "Danemark"
+    },
+    "6": {
+        "code": "RO",
+        "en": "Romania",
+        "fr": "Roumanie"
+    },
+    "7": {
+        "code": "SA",
+        "en": "Saudi Arabia",
+        "fr": "Arabie saoudite",
+        "event_name": "Arabie Saoudite"
+    },
+    "8": {
+        "code": "PL",
+        "en": "Poland",
+        "fr": "Pologne"
+    },
+    "9": {
+        "code": "IT",
+        "en": "Italy",
+        "fr": "Italie"
+    },
+    "10": {
+        "code": "YT",
+        "en": "Mayotte",
+        "fr": "Mayotte"
+    },
+    "11": {
+        "code": "MY",
+        "en": "Malaysia",
+        "fr": "Malaisie"
+    },
+    "12": {
+        "code": "LT",
+        "en": "Lithuania",
+        "fr": "Lituanie"
+    },
+    "13": {
+        "code": "LU",
+        "en": "Luxembourg",
+        "fr": "Luxembourg"
+    },
+    "14": {
+        "code": "ME",
+        "en": "Near East",
+        "fr": "Proche-Orient"
+    },
+    "15": {
+        "code": "NL",
+        "en": "Netherlands",
+        "fr": "Pays-Bas"
+    },
+    "16": {
+        "code": "CIS",
+        "en": "Commonwealth of Independent States",
+        "fr": "Communauté des États indépendants"
+    },
+    "17": {
+        "code": "UZ",
+        "en": "Uzbekistan",
+        "fr": "Ouzbékistan"
+    },
+    "18": {
+        "code": "AU",
+        "en": "Australia",
+        "fr": "Australie"
+    },
+    "19": {
+        "code": "PT",
+        "en": "Portugal",
+        "fr": "Portugal"
+    },
+    "20": {
+        "code": "ASISO",
+        "en": "Southwest Asia",
+        "fr": "Asie du Sud-Ouest",
+        "event_name": "Asie"
+    },
+    "21": {
+        "code": "INTERNATION",
+        "en": "International",
+        "fr": "International"
+    },
+    "22": {
+        "code": "MERC",
+        "en": "Mercosur",
+        "fr": "Mercosur"
+    },
+    "23": {
+        "code": "BY",
+        "en": "Belarus",
+        "fr": "Biélorussie"
+    },
+    "24": {
+        "code": "OCEAN",
+        "en": "Oceania",
+        "fr": "Océanie"
+    },
+    "25": {
+        "code": "SAF",
+        "en": "Southern Africa",
+        "fr": "Afrique australe"
+    },
+    "26": {
+        "code": "EU",
+        "en": "European Union",
+        "fr": "Union européenne",
+        "event_name": "Europe"
+    },
+    "27": {
+        "code": "XX",
+        "en": "Unspecified countries",
+        "fr": "Pays non spécifiés"
+    },
+    "28": {
+        "code": "LB",
+        "en": "Lebanon",
+        "fr": "Liban"
+    },
+    "29": {
+        "code": "ES",
+        "en": "Spain",
+        "fr": "Espagne"
+    },
+    "30": {
+        "code": "JP",
+        "en": "Japan",
+        "fr": "Japon"
+    },
+    "31": {
+        "code": "AMESUD",
+        "en": "South America",
+        "fr": "Amérique du Sud"
+    },
+    "32": {
+        "code": "CH",
+        "en": "Switzerland",
+        "fr": "Suisse"
+    },
+    "33": {
+        "code": "FI",
+        "en": "Finland",
+        "fr": "Finlande"
+    },
+    "34": {
+        "code": "DE",
+        "en": "Germany",
+        "fr": "Allemagne"
+    },
+    "35": {
+        "code": "GB",
+        "en": "United Kingdom",
+        "fr": "Royaume-Uni"
+    },
+    "36": {
+        "code": "EURHU",
+        "en": "Non-EU Europe",
+        "fr": "Europe hors UE"
+    },
+    "37": {
+        "code": "ASINE",
+        "en": "Northeast Asia",
+        "fr": "Asie du Nord-Est",
+        "event_name": "Asie"
+    },
+    "38": {
+        "code": "BE",
+        "en": "Belgium",
+        "fr": "Belgique"
+    },
+    "39": {
+        "code": "ID",
+        "en": "Indonesia",
+        "fr": "Indonésie"
+    },
+    "40": {
+        "code": "HU",
+        "en": "Hungary",
+        "fr": "Hongrie"
+    },
+    "41": {
+        "code": "AZ",
+        "en": "Azerbaijan",
+        "fr": "Azerbaïdjan"
+    },
+    "42": {
+        "code": "US",
+        "en": "United States of America",
+        "fr": "États-Unis"
+    },
+    "43": {
+        "code": "RU",
+        "en": "Russia",
+        "fr": "Russie"
+    },
+    "44": {
+        "code": "ASSOETA",
+        "en": "State association",
+        "fr": "Association d'États"
+    },
+    "45": {
+        "code": "SK",
+        "en": "Slovakia",
+        "fr": "Slovaquie"
+    },
+    "46": {
+        "code": "NO",
+        "en": "Norway",
+        "fr": "Norvège"
+    },
+    "47": {
+        "code": "NC",
+        "en": "New Caledonia",
+        "fr": "Nouvelle-Calédonie"
+    },
+    "48": {
+        "code": "AT",
+        "en": "Austria",
+        "fr": "Autriche"
+    },
+    "49": {
+        "code": "DZ",
+        "en": "Algeria",
+        "fr": "Algérie"
+    },
+    "50": {
+        "code": "EU",
+        "en": "EU 28-n",
+        "fr": "UE 28-n"
+    },
+    "51": {
+        "code": "AMENO",
+        "en": "North America",
+        "fr": "Amérique du Nord"
+    },
+    "52": {
+        "code": "IL",
+        "en": "Israel",
+        "fr": "Israël"
+    },
+    "53": {
+        "code": "PK",
+        "en": "Pakistan",
+        "fr": "Pakistan"
+    },
+    "54": {
+        "code": "SE",
+        "en": "Sweden",
+        "fr": "Suède"
+    },
+    "55": {
+        "code": "NZ",
+        "en": "New Zealand",
+        "fr": "Nouvelle-Zélande"
+    },
+    "56": {
+        "code": "MA",
+        "en": "Morocco",
+        "fr": "Maroc"
+    },
+    "57": {
+        "code": "GH",
+        "en": "Ghana",
+        "fr": "Ghana"
+    },
+    "58": {
+        "code": "NEU",
+        "en": "Outside EU",
+        "fr": "Hors UE"
+    },
+    "59": {
+        "code": "YU",
+        "en": "Yugoslavia",
+        "fr": "Yougoslavie"
+    },
+    "60": {
+        "code": "CM",
+        "en": "Cameroon",
+        "fr": "Cameroun"
+    },
+    "61": {
+        "code": "IN",
+        "en": "India",
+        "fr": "Inde"
+    },
+    "62": {
+        "code": "KZ",
+        "en": "Kazakhstan",
+        "fr": "Kazakhstan"
+    },
+    "63": {
+        "code": "ZA",
+        "en": "South Africa",
+        "fr": "Afrique du Sud"
+    },
+    "64": {
+        "code": "HR",
+        "en": "Croatia",
+        "fr": "Croatie"
+    },
+    "65": {
+        "code": "MOYOR",
+        "en": "Middle East",
+        "fr": "Moyen-Orient"
+    },
+    "66": {
+        "code": "ASISE",
+        "en": "Southeast Asia",
+        "fr": "Asie du Sud-Est",
+        "event_name": "Asie"
+    },
+    "67": {
+        "code": "CL",
+        "en": "Chile",
+        "fr": "Chili"
+    },
+    "68": {
+        "code": "RS",
+        "en": "Serbia",
+        "fr": "Serbie"
+    },
+    "69": {
+        "code": "CI",
+        "en": "Ivory Coast",
+        "fr": "Côte d'Ivoire"
+    },
+    "70": {
+        "code": "CG",
+        "en": "Congo",
+        "fr": "Congo"
+    },
+    "71": {
+        "code": "GA",
+        "en": "Gabon",
+        "fr": "Gabon"
+    },
+    "72": {
+        "code": "AFRNO",
+        "en": "North Africa",
+        "fr": "Afrique du Nord"
+    },
+    "73": {
+        "code": "LY",
+        "en": "Libya",
+        "fr": "Libye"
+    },
+    "74": {
+        "code": "FRTOM",
+        "en": "French Overseas Territories",
+        "fr": "Territoires d'outre-mer français"
+    },
+    "75": {
+        "code": "GE",
+        "en": "Georgia",
+        "fr": "Géorgie"
+    },
+    "76": {
+        "code": "TH",
+        "en": "Thailand",
+        "fr": "Thaïlande"
+    },
+    "77": {
+        "code": "TR",
+        "en": "Turkey",
+        "fr": "Turquie"
+    },
+    "78": {
+        "code": "CD",
+        "en": "Democratic Republic of the Congo",
+        "fr": "République démocratique du Congo"
+    },
+    "79": {
+        "code": "IE",
+        "en": "Ireland",
+        "fr": "Irlande"
+    },
+    "80": {
+        "code": "CA",
+        "en": "Canada",
+        "fr": "Canada"
+    },
+    "81": {
+        "code": "ACP",
+        "en": "ACP (Africa, Caribbean, Pacific)",
+        "fr": "ACP (Afrique, Caraïbes, Pacifique)"
+    },
+    "82": {
+        "code": "PF",
+        "en": "French Polynesia",
+        "fr": "Polynésie française"
+    },
+    "83": {
+        "code": "BG",
+        "en": "Bulgaria",
+        "fr": "Bulgarie"
+    },
+    "84": {
+        "code": "BR",
+        "en": "Brazil",
+        "fr": "Brésil"
+    },
+    "85": {
+        "code": "CY",
+        "en": "Cyprus",
+        "fr": "Chypre"
+    },
+    "86": {
+        "code": "LV",
+        "en": "Latvia",
+        "fr": "Lettonie"
+    },
+    "87": {
+        "code": "ALE",
+        "en": "NAFTA",
+        "fr": "ALENA"
+    },
+    "88": {
+        "code": "AMECE",
+        "en": "Central America (excl. Caribbean)",
+        "fr": "Amérique centrale (hors Caraïbes)"
+    },
+    "89": {
+        "code": "SI",
+        "en": "Slovenia",
+        "fr": "Slovénie"
+    },
+    "90": {
+        "code": "CARAIB",
+        "en": "Caribbean",
+        "fr": "Caraïbes"
+    },
+    "91": {
+        "code": "EE",
+        "en": "Estonia",
+        "fr": "Estonie"
+    },
+    "92": {
+        "code": "GQ",
+        "en": "Equatorial Guinea",
+        "fr": "Guinée équatoriale"
+    },
+    "93": {
+        "code": "VN",
+        "en": "Vietnam",
+        "fr": "Viêt Nam"
+    },
+    "94": {
+        "code": "CZ",
+        "en": "Czech Republic",
+        "fr": "République tchèque"
+    },
+    "95": {
+        "code": "UA",
+        "en": "Ukraine",
+        "fr": "Ukraine"
+    },
+    "96": {
+        "code": "PM",
+        "en": "Saint Pierre and Miquelon",
+        "fr": "Saint-Pierre-et-Miquelon"
+    },
+    "97": {
+        "code": "GR",
+        "en": "Greece",
+        "fr": "Grèce"
+    },
+    "98": {
+        "code": "AM",
+        "en": "Armenia",
+        "fr": "Arménie",
+        "event_name": "ARM"
+    },
+    "99": {
+        "code": "MT",
+        "en": "Malta",
+        "fr": "Malte"
+    },
+    "100": {
+        "code": "EG",
+        "en": "Egypt",
+        "fr": "Égypte"
+    },
+    "101": {
+        "code": "WF",
+        "en": "Wallis and Futuna",
+        "fr": "Wallis-et-Futuna"
+    },
+    "102": {
+        "code": "BL",
+        "en": "Saint Barthelemy",
+        "fr": "Saint-Barthélemy"
+    },
+    "103": {
+        "code": "FR",
+        "en": "France",
+        "fr": "France"
+    }
 }

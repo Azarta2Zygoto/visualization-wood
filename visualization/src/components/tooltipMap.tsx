@@ -2,20 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import {
-    Fragment,
-    type JSX,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
 import type_data from "@/data/N027_LIB.json";
 import month_names from "@/data/N053_LIB.json";
-import countryConversion from "@/data/country_extended.json";
+import pays from "@/data/country.json";
+import type { CountryType } from "@/data/types";
 
 import { useGlobal } from "./globalProvider";
 
@@ -33,9 +27,9 @@ interface TooltipMapProps {
     usefullData: {
         [key: string]: Record<keyof typeof type_data, number>;
     };
-    year?: number;
-    month?: number;
-    country?: string;
+    year: number;
+    month: number;
+    country: CountryType;
     position: { x: number; y: number };
 }
 
@@ -56,12 +50,8 @@ export default function TooltipMap({
         y: number;
     }>({ x, y });
 
-    const countryValue = Object.values(countryConversion).find(
-        (c) => c.en === country || c.fr === country,
-    );
-
     const values = useMemo(
-        () => calculateData(usefullData, country),
+        () => calculateData(usefullData, pays[country].en),
         [usefullData, country],
     );
 
@@ -94,122 +84,69 @@ export default function TooltipMap({
         <div
             ref={tooltipRef}
             className="tooltip-map"
+            role="tooltip"
+            aria-hidden={!appear}
             style={{
                 left: `${currentPosition.x}px`,
                 top: `${currentPosition.y}px`,
                 opacity: appear ? 1 : 0,
             }}
         >
-            {countryValue?.fr === "France" ? (
-                <Fragment>
-                    <div className="rows">
-                        {hasFlag(countryValue?.code || "") &&
-                        countryValue?.code ? (
-                            <Image
-                                className="tooltip-country"
-                                alt={t("flag", {
-                                    country:
-                                        locale === "en"
-                                            ? countryValue?.en
-                                            : countryValue?.fr || "unknown",
-                                })}
-                                aria-label={t("flag", {
-                                    country:
-                                        locale === "en"
-                                            ? countryValue?.en
-                                            : countryValue?.fr || "unknown",
-                                })}
-                                width={32}
-                                height={24}
-                                src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryValue?.code}.svg`}
-                            />
-                        ) : null}
-
-                        <h3>
-                            {locale === "en"
-                                ? countryValue?.en
-                                : countryValue?.fr}
-                        </h3>
-                    </div>
-                    <p className="france-tooltip">{t("france-tooltip")}</p>
-                </Fragment>
+            <div className="rows">
+                {hasFlag(pays[country].code) && (
+                    <Image
+                        className="tooltip-country"
+                        alt={t("flag", {
+                            country: pays[country][locale],
+                        })}
+                        aria-label={t("flag", {
+                            country: pays[country][locale],
+                        })}
+                        width={32}
+                        height={24}
+                        src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${pays[country].code}.svg`}
+                        onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                        }}
+                    />
+                )}
+                {pays[country].fr === "France" ? (
+                    <h3>{pays[country][locale]}</h3>
+                ) : (
+                    <h3>
+                        {pays[country][locale] + " - "}
+                        {month !== 0 &&
+                            month_names[
+                                month.toString() as keyof typeof month_names
+                            ] + " / "}
+                        {year}
+                    </h3>
+                )}
+            </div>
+            {pays[country].fr === "France" ? (
+                <p className="france-tooltip">{t("france-tooltip")}</p>
+            ) : values.export_euro +
+                  values.export_tonnes +
+                  values.import_euro +
+                  values.import_tonnes ===
+              4 * defaultNoData ? (
+                <p>{t("no-data")}</p>
             ) : (
-                <Fragment>
-                    <div className="rows">
-                        {hasFlag(countryValue?.code || "") &&
-                        countryValue?.code ? (
-                            <Image
-                                className="tooltip-country"
-                                alt={t("flag", {
-                                    country:
-                                        locale === "en"
-                                            ? countryValue?.en
-                                            : countryValue?.fr || "unknown",
-                                })}
-                                aria-label={t("flag", {
-                                    country:
-                                        locale === "en"
-                                            ? countryValue?.en
-                                            : countryValue?.fr || "unknown",
-                                })}
-                                width={32}
-                                height={24}
-                                src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryValue?.code}.svg`}
-                            />
-                        ) : null}
-                        <h3>
-                            {locale === "en"
-                                ? countryValue?.en + " - "
-                                : countryValue?.fr + " - "}
-                            {month !== 0 &&
-                                month_names[
-                                    month?.toString() as keyof typeof month_names
-                                ] + " / "}
-                            {year}
-                        </h3>
-                    </div>
-                    {JSON.stringify(values) === JSON.stringify(AllNoData) ? (
-                        <p>{t("no-data")}</p>
-                    ) : (
-                        <ul>
-                            <li>
+                <ul>
+                    {Object.keys(values).map((key) => {
+                        return (
+                            <li key={key}>
                                 <strong>
-                                    {t("export-euro", {
-                                        value: values.export_euro,
+                                    {t(key, {
+                                        value: values[
+                                            key as keyof typeof values
+                                        ],
                                     })}
                                 </strong>
                             </li>
-                            <li>
-                                <strong>
-                                    {t("import-euro", {
-                                        value: values.import_euro,
-                                    })}
-                                </strong>
-                            </li>
-                            <li>
-                                <strong>
-                                    {t("balance-euro", {
-                                        value: values.balance_euro,
-                                    })}
-                                </strong>
-                            </li>
-                            <li>
-                                <strong>
-                                    {t("export-ton", {
-                                        value: values.export_tonnes,
-                                    })}
-                                </strong>
-                            </li>
-                            <li>
-                                <strong>
-                                    {t("import-ton", {
-                                        value: values.import_tonnes,
-                                    })}
-                                </strong>
-                            </li>
-                        </ul>
-                    )}
-                </Fragment>
+                        );
+                    })}
+                </ul>
             )}
         </div>
     );
@@ -219,17 +156,15 @@ function calculateData(
     usefullData: {
         [key: string]: Record<keyof typeof type_data, number>;
     },
-    country?: string,
+    countryname: string,
 ): {
-    export_euro: number | string;
-    import_euro: number | string;
-    export_tonnes: number | string;
-    import_tonnes: number | string;
-    balance_euro: number | string;
+    export_euro: number;
+    import_euro: number;
+    export_tonnes: number;
+    import_tonnes: number;
+    balance_euro: number;
 } {
-    if (!country) return AllNoData;
-
-    const countryData = usefullData[country];
+    const countryData = usefullData[countryname];
     if (!countryData) return AllNoData;
 
     const exportDataEuro = countryData["2"];

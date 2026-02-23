@@ -6,7 +6,7 @@ import { type JSX, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
-import pays from "@/data/country_extended.json";
+import pays from "@/data/country.json";
 import metadata from "@/data/metadata.json";
 import icon_symbol from "@/data/symboles.json";
 import {

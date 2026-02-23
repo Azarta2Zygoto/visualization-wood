@@ -1,4 +1,4 @@
-import pays from "@/data/country_extended.json";
+import pays from "@/data/country.json";
 
 const pays_english = new Set(Object.values(pays).map((country) => country.en));
 

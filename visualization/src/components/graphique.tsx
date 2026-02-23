@@ -14,7 +14,7 @@ import * as d3 from "d3";
 import updateMultiLines_with_icons from "@/components/line_chart_with_icons";
 import updateMirrorStackedAreaChart from "@/components/mirror_stacked_area_chart";
 import type_data from "@/data/N027_LIB.json";
-import pays from "@/data/country_extended.json";
+import pays from "@/data/country.json";
 import list_products from "@/data/products.json";
 import all_icons from "@/data/symboles.json";
 
@@ -195,8 +195,7 @@ export default function Graphique({
                     events_filtered,
                     map_icons,
                 );
-            }
-            else {
+            } else {
                 update_current_graphique(current_graph, 0, svgRef.current);
                 updateMultiLines_with_icons(
                     flatten_data_plot,
@@ -448,8 +447,8 @@ function filterevents(
             const dateParsed = parseDate1(event.date_debut)
                 ? parseDate1(event.date_debut)
                 : parseDate2(event.date_debut)
-                    ? parseDate2(event.date_debut)
-                    : null;
+                  ? parseDate2(event.date_debut)
+                  : null;
             if (!dateParsed) return null;
 
             // catégorie / icône

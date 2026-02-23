@@ -1,5 +1,8 @@
 import type { MultiPolygon } from "geojson";
 
+import country from "@/data/country.json";
+import products from "@/data/products.json";
+
 export interface CountryData {
     type: string;
     properties: {
@@ -8,4 +11,5 @@ export interface CountryData {
     geometry: MultiPolygon;
 }
 
-export type Themes = "light" | "dark";
+export type CountryType = keyof typeof country;
+export type ProductType = keyof typeof products;

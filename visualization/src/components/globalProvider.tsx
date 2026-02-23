@@ -8,15 +8,16 @@ import {
     DEFAULT_THEME,
     LOCALES,
     LOCALE_STORAGE_KEY,
+    type Locales,
     THEME_ATTRIBUTE,
     THEME_STORAGE_KEY,
     THEME_VALUES,
+    type Themes,
 } from "@/data/constants";
-import type { Themes } from "@/data/types";
 
 const GlobalContext = createContext<{
-    locale: string;
-    setLocale: (v: string) => void;
+    locale: Locales;
+    setLocale: (v: Locales) => void;
     windowSize: { width: number; height: number };
     setWindowSize: (size: { width: number; height: number }) => void;
     allowArrowScroll: boolean;
@@ -37,7 +38,7 @@ const GlobalContext = createContext<{
 export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
-    const [locale, setLocale] = useState(() => {
+    const [locale, setLocale] = useState<Locales>(() => {
         if (typeof window === "undefined") return DEFAULT_LOCALE;
 
         const localeFromStorage = localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -45,14 +46,14 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({
         const isStorageSupported =
             localeFromStorage &&
             Object.keys(locales).some((lang) => lang === localeFromStorage);
-        if (isStorageSupported) return localeFromStorage;
+        if (isStorageSupported) return localeFromStorage as Locales;
 
         const navigatorLang = navigator.language.split("-")[0];
         const isSupported = Object.keys(locales).some(
             (lang) => lang === navigatorLang,
         );
         const lang = isSupported ? navigatorLang : DEFAULT_LOCALE;
-        return lang;
+        return lang as Locales;
     });
 
     const [windowSize, setWindowSize] = useState<{

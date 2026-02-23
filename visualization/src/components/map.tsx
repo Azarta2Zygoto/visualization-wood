@@ -17,11 +17,15 @@ import * as topojson from "topojson-client";
 import type_data from "@/data/N027_LIB.json";
 import { ColorName } from "@/data/colorElement";
 import { colors } from "@/data/colorElement";
-import { MAP_DEFINITIONS, type definitions } from "@/data/constants";
+import {
+    MAP_DEFINITIONS,
+    type Themes,
+    type definitions,
+} from "@/data/constants";
 import continent from "@/data/continent.json";
-import pays from "@/data/country_extended.json";
+import pays from "@/data/country.json";
 import { projections } from "@/data/geoprojection";
-import type { CountryData, Themes } from "@/data/types";
+import type { CountryData, CountryType } from "@/data/types";
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";
@@ -152,8 +156,8 @@ export function WorldMap({
         appear: boolean;
         year: number;
         month: number;
-        country: string;
-    }>({ appear: false, year: 0, month: 0, country: "" });
+        country: CountryType;
+    }>({ appear: false, year: 0, month: 0, country: "103" });
     const [tooltipPosition, setTooltipPosition] = useState<{
         x: number;
         y: number;
@@ -384,25 +388,30 @@ export function WorldMap({
                     });
 
             // Tooltip data (read from ref to get current data)
-            let currentCountryName = "";
+            let currentCountryNumberCode: string | undefined = undefined;
             if (event.target.__data__.properties) {
-                currentCountryName = event.target.__data__.properties.name;
+                const currentCountryName =
+                    event.target.__data__.properties.name;
+                currentCountryNumberCode = Object.keys(pays).find(
+                    (key) =>
+                        pays[key as keyof typeof pays].en ===
+                        currentCountryName,
+                );
             } else if (event.target.__data__.continentCode) {
                 const continentCode = event.target.__data__.continentCode;
-                const continentInt = Object.keys(pays).find(
+                currentCountryNumberCode = Object.keys(pays).find(
                     (key) =>
                         pays[key as keyof typeof pays].code === continentCode,
-                ) as string;
-                currentCountryName =
-                    pays[continentInt as keyof typeof pays]?.en ||
-                    continentCode;
+                );
             }
+            console.log("Identified country code:", currentCountryNumberCode);
+            if (!currentCountryNumberCode) return;
 
             setTooltipData({
                 appear: true,
                 year,
                 month,
-                country: currentCountryName,
+                country: currentCountryNumberCode as CountryType,
             });
             setTooltipPosition({
                 x: event.pageX,
