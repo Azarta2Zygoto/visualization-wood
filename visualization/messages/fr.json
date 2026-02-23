@@ -78,7 +78,9 @@
         "select-products": "Sélectionner les produits",
         "nb-country": "Nombre de pays sélectionnés",
         "nb-product": "Nombre de produits sélectionnés",
-        "flag": "Drapeau de {country}"
+        "flag": "Drapeau de {country}",
+        "load-all-data": "Charger tout",
+        "load-all-data-desc": "Charger toutes les données de chaque année."
     },
     "Tooltip": {
         "export-euro": "Export : {value, plural, =-1 {Aucune donnée} other {{value, number} k€}}",

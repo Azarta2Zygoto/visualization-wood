@@ -16,8 +16,6 @@ import metadata_app from "@/data/metadata.json";
 import { getAllChildren } from "@/utils/MODLecture";
 import { readNpz } from "@/utils/read";
 
-const adding_automatic_all_years = false; // Permet de charger les années les unes après les autres ou à chaque demande
-
 export default function HomePage(): JSX.Element {
     const t = useTranslations("HomePage");
 
@@ -43,6 +41,8 @@ export default function HomePage(): JSX.Element {
         useState<string>("geoNaturalEarth");
     const [IsStatic, setIsStatic] = useState<boolean>(false);
     const [NBCountryWithData, setNBCountryWithData] = useState<number>(0);
+    const [YearLoaded, setYearLoaded] = useState<number[]>([]);
+    const [AddAllYears, setAddAllYears] = useState<boolean>(false);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -86,7 +86,19 @@ export default function HomePage(): JSX.Element {
 
     useEffect(() => {
         async function fetchData(year: number) {
-            if (allData[year]) return;
+            if (allData[year]) {
+                if (
+                    AddAllYears &&
+                    year < metadata_app.bois.end_year &&
+                    Object.keys(allData).length !==
+                        metadata_app.bois.end_year -
+                            metadata_app.bois.start_year +
+                            1
+                ) {
+                    fetchData(year + 1);
+                }
+                return;
+            }
 
             setLoadingYears((prev) => new Set(prev).add(year));
             try {
@@ -98,12 +110,10 @@ export default function HomePage(): JSX.Element {
                     [year]: data,
                 }));
                 console.log(`Data loaded for year ${year}`);
+                setYearLoaded((prev) => [...prev, year]);
 
                 // Ajout automatique de toutes les données de toute sles années
-                if (
-                    adding_automatic_all_years &&
-                    year < metadata_app.bois.end_year
-                )
+                if (AddAllYears && year < metadata_app.bois.end_year)
                     fetchData(year + 1);
             } catch (error) {
                 console.error(`Error loading data for year ${year}:`, error);
@@ -116,8 +126,12 @@ export default function HomePage(): JSX.Element {
             }
         }
 
-        fetchData(currentYear);
-    }, [currentYear]);
+        fetchData(AddAllYears ? metadata_app.bois.start_year : currentYear);
+    }, [currentYear, AddAllYears]);
+
+    useEffect(() => {
+        console.log("Changement des années", AddAllYears);
+    }, [AddAllYears]);
 
     return (
         <Fragment>
@@ -170,6 +184,12 @@ export default function HomePage(): JSX.Element {
                 productsSelected={productsSelected}
                 NBCountryWithData={NBCountryWithData}
                 countriesSelected={countriesSelected}
+                isAllDataLoaded={
+                    Object.keys(allData).length ===
+                    metadata_app.bois.end_year -
+                        metadata_app.bois.start_year +
+                        1
+                }
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
                 setCurrentMonth={setCurrentMonth}
@@ -179,6 +199,7 @@ export default function HomePage(): JSX.Element {
                 setIsCountryMode={setIsCountryMode}
                 setIconSelected={setIconSelected}
                 setIsAbsolute={setIsAbsolute}
+                setGetAllData={() => setAddAllYears(true)}
             />
             <ArrowUpDown />
             <Loading yearLoading={loadingYears} />
