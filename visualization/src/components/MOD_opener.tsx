@@ -29,6 +29,7 @@ export default function MODOpener({
 
     const [firstAttentionShown, setFirstAttentionShown] =
         useState<boolean>(false);
+    const [openDefault, setOpenDefault] = useState<boolean>(false);
 
     return (
         <Fragment>
@@ -63,6 +64,24 @@ export default function MODOpener({
                     >
                         {t("deselect-all")}
                     </button>
+                    <div className="rows">
+                        <button
+                            className="btn"
+                            onClick={() => setOpenDefault(true)}
+                            type="button"
+                            style={{ marginBottom: "20px" }}
+                        >
+                            {t("open-all")}
+                        </button>
+                        <button
+                            className="btn"
+                            onClick={() => setOpenDefault(false)}
+                            type="button"
+                            style={{ marginBottom: "20px" }}
+                        >
+                            {t("close-all")}
+                        </button>
+                    </div>
                 </div>
                 <div className="inner-mod">
                     <MODRecursif
@@ -70,6 +89,8 @@ export default function MODOpener({
                         setProductsSelected={setProductsSelected}
                         selectedProducts={productsSelected}
                         isChecked={productsSelected.includes(0)}
+                        depth={0}
+                        openDefault={openDefault}
                     />
                 </div>
                 {productsSelected.length === 0 && !firstAttentionShown && (
@@ -97,6 +118,7 @@ interface MODRecursifProps {
     selectedProducts: number[];
     isChecked?: boolean;
     depth?: number;
+    openDefault?: boolean;
 }
 
 function MODRecursif({
@@ -105,6 +127,7 @@ function MODRecursif({
     selectedProducts,
     isChecked = false,
     depth = 0,
+    openDefault = false,
 }: MODRecursifProps): JSX.Element {
     const name = data.name;
     const code = data.code;
@@ -219,6 +242,7 @@ function MODRecursif({
             <Checkbox
                 id={`checkbox-${code}`}
                 label={name}
+                className="checkbox-product"
                 checked={isChecked || IsParentSelected(code, selectedProducts)}
                 onChange={handleCheckboxChange}
             />
@@ -226,12 +250,15 @@ function MODRecursif({
     } else {
         return (
             <Accordeon
+                name={`${code}-${name}`}
+                isOpen={openDefault}
                 items={{
                     title: (
                         <Checkbox
                             id={`checkbox-${code}`}
                             label={name}
                             title={`Select all in ${name}`}
+                            className="checkbox-product"
                             checked={
                                 isChecked ||
                                 IsParentSelected(code, selectedProducts)
@@ -263,6 +290,7 @@ function MODRecursif({
                                             )
                                         }
                                         depth={depth + 1}
+                                        openDefault={openDefault}
                                     />
                                 ))}
                         </div>

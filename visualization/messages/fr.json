@@ -48,7 +48,6 @@
     "ConfigBar": {
         "close-config": "Fermer la barre de configuration",
         "open-config": "Ouvrir la barre de configuration",
-        "config": "Configuration",
         "study-scale": "Echelle d'étude :",
         "country": "Pays",
         "continent": "Continent",
@@ -93,8 +92,10 @@
     },
     "WorldMap": {
         "error-data": "Erreur lors du chargement des données",
-        "legend": "Légende :",
-        "balance": "Balance commerciale"
+        "legend": "Légende : {unite}",
+        "balance": "Balance commerciale",
+        "euro-unit": "en k€",
+        "ton-unit": "en ton"
     },
     "ParamBar": {
         "map-definition": "Définition de la carte :",
@@ -110,12 +111,22 @@
         "geoMercator": "Mercator",
         "geoOrthographic": "Orthographique",
         "static-map": "Légende statique au zoom",
-        "static-map-desc": "Rendre la taille des points et la légende insensible au zoom pour une carte plus lisible à différentes échelles."
+        "static-map-desc": "Rendre la taille des points et la légende insensible au zoom pour une carte plus lisible à différentes échelles.",
+        "colorymetry-options": "Options de colorimétrie :",
+        "daltonian": "Mode daltonien",
+        "daltonian-desc": "Utilisation d'une palette de couleurs adaptée aux personnes daltoniennes.",
+        "orange": "Palette orange",
+        "blue": "Palette bleue",
+        "green": "Palette verte",
+        "purple": "Palette violette",
+        "red": "Palette rouge"
     },
     "MODOpener": {
         "title": "Sélection des produits",
         "select-all": "Tout sélectionner",
         "deselect-all": "Tout désélectionner",
+        "open-all": "Tout ouvrir",
+        "close-all": "Tout fermer",
         "close": "Fermer la sélection de produits",
         "attention-text": "Par défaut, si aucun produit n'est sélectionné, tous les produits sont affichés. Sélectionnez au moins un produit pour voir les données correspondantes."
     }

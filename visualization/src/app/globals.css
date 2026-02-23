@@ -302,7 +302,7 @@ main {
 }
 
 .title {
-    z-index: 5;
+    z-index: 2;
     position: absolute;
     top: 1rem;
     left: 50%;
@@ -314,6 +314,7 @@ main {
     padding: 0.5rem 1rem;
     border-radius: 8px;
     text-align: center;
+    white-space: nowrap;
 }
 
 .h2-primary {
@@ -327,8 +328,8 @@ main {
     z-index: 5;
     position: fixed;
     right: 1rem;
-    top: 10%;
-    max-height: 80vh;
+    top: 10vh;
+    max-height: 70vh;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -615,7 +616,7 @@ label {
     justify-content: flex-start;
     background-color: var(--on-map);
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 1rem;
     margin: 1rem 0;
     border: 1px solid #eb0505;
     border-radius: 8px;
@@ -643,4 +644,8 @@ label {
     max-height: 125px;
     overflow-y: auto;
     overflow-x: hidden;
+}
+.checkbox-product {
+    max-width: 400px !important;
+    width: 400px !important;
 }

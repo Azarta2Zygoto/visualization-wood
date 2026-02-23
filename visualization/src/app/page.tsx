@@ -11,6 +11,7 @@ import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/graphique";
 import Loading from "@/components/loading";
 import { WorldMap } from "@/components/map";
+import { ColorName } from "@/data/colorElement";
 import { type definitions } from "@/data/constants";
 import metadata_app from "@/data/metadata.json";
 import { getAllChildren } from "@/utils/MODLecture";
@@ -41,8 +42,9 @@ export default function HomePage(): JSX.Element {
         useState<string>("geoNaturalEarth");
     const [IsStatic, setIsStatic] = useState<boolean>(false);
     const [NBCountryWithData, setNBCountryWithData] = useState<number>(0);
-    const [YearLoaded, setYearLoaded] = useState<number[]>([]);
     const [AddAllYears, setAddAllYears] = useState<boolean>(false);
+    const [paletteColor, setPaletteColor] = useState<ColorName>("orange");
+    const [isDaltonian, setIsDaltonian] = useState<boolean>(false);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -110,7 +112,6 @@ export default function HomePage(): JSX.Element {
                     [year]: data,
                 }));
                 console.log(`Data loaded for year ${year}`);
-                setYearLoaded((prev) => [...prev, year]);
 
                 // Ajout automatique de toutes les données de toute sles années
                 if (AddAllYears && year < metadata_app.bois.end_year)
@@ -151,10 +152,14 @@ export default function HomePage(): JSX.Element {
                 mapDefinition={mapDefinition}
                 geoProjection={geoProjection}
                 isStatic={IsStatic}
+                isDaltonian={isDaltonian}
+                paletteColor={paletteColor}
                 setOpen={setIsOpenParamBar}
                 setMapDefinition={setMapDefinition}
                 setGeoProjection={setGeoProjection}
                 setIsStatic={setIsStatic}
+                setIsDaltonian={setIsDaltonian}
+                setPaletteColor={setPaletteColor}
             />
 
             <WorldMap
@@ -170,6 +175,8 @@ export default function HomePage(): JSX.Element {
                 isAbsolute={isAbsolute}
                 geoProjection={geoProjection}
                 isStatic={IsStatic}
+                isDaltonian={isDaltonian}
+                paletteColor={paletteColor}
                 setCountriesSelected={setCountriesSelected}
                 setNBCountryWithData={setNBCountryWithData}
             />

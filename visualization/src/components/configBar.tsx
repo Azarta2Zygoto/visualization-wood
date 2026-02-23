@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Fragment, type JSX, useState } from "react";
+import { type JSX, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
@@ -128,7 +128,6 @@ export default function ConfigBar({
             </button>
 
             <div className="config-bar-content">
-                <h2 className="h2-primary">{t("config")}</h2>
                 <p>{t("study-scale")}</p>
                 <div
                     className="rows"

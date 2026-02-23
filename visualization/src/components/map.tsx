@@ -15,6 +15,8 @@ import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
 import type_data from "@/data/N027_LIB.json";
+import { ColorName } from "@/data/colorElement";
+import { colors } from "@/data/colorElement";
 import { MAP_DEFINITIONS, type definitions } from "@/data/constants";
 import continent from "@/data/continent.json";
 import pays from "@/data/country_extended.json";
@@ -35,7 +37,7 @@ const ParisCoord: [number, number] = [2.3522, 48.8566];
 
 const config = {
     legendHeight: 130,
-    legendWidth: 140,
+    legendWidth: 150,
     legendMaxHeight: 250,
     legendMaxWidth: 300,
     light: {
@@ -65,6 +67,8 @@ interface WorldMapProps {
     isAbsolute: boolean;
     geoProjection: string;
     isStatic: boolean;
+    isDaltonian: boolean;
+    paletteColor: ColorName;
     setCountriesSelected: (countries: number[]) => void;
     setNBCountryWithData: (nb: number) => void;
 }
@@ -82,6 +86,8 @@ export function WorldMap({
     isAbsolute,
     geoProjection,
     isStatic,
+    isDaltonian,
+    paletteColor,
     setCountriesSelected,
     setNBCountryWithData,
 }: WorldMapProps): JSX.Element {
@@ -545,7 +551,10 @@ export function WorldMap({
                     )
                     .attr("pointer-events", "none");
 
-                const correctLegend = createLegend(legendLayer, t("legend"));
+                const correctLegend = createLegend(
+                    legendLayer,
+                    t("legend", { unite: t("ton-unit") }),
+                );
 
                 setLayer(mapLayer);
                 setLegendLayer(correctLegend);
@@ -823,11 +832,16 @@ export function WorldMap({
         const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
         legend.transition().duration(animationDuration).attr("opacity", "1");
 
+        const legendTitle = legend.selectAll<SVGTextElement, unknown>(
+            ".legend-text",
+        );
+
         if (type === 4) {
             legend
                 .transition()
                 .duration(animationDuration)
                 .attr("opacity", "0");
+            legendTitle.text(t("legend", { unite: t("euro-unit") }));
 
             const pointData = MakeBalance({
                 lectureData,
@@ -891,6 +905,7 @@ export function WorldMap({
                 maxValue,
                 minValue,
                 theme,
+                isDaltonian,
             );
             const colorLegend = Legend(colorScale, {
                 width: 50,
@@ -903,7 +918,15 @@ export function WorldMap({
             d3.select(svg).append(() => colorLegend);
             return;
         }
-
+        console.log(
+            legendTitle,
+            "new value:",
+            t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
+            type,
+        );
+        legendTitle.text(
+            t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
+        );
         const countries = mapLayer.selectAll<
             SVGPathElement,
             {
@@ -975,6 +998,7 @@ export function WorldMap({
                 applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
+                paletteColor,
                 correctProjection?.drag || false,
                 isStatic,
             );
@@ -1055,6 +1079,7 @@ export function WorldMap({
                 applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
+                paletteColor,
                 correctProjection?.drag || false,
                 isStatic,
             );
@@ -1073,6 +1098,8 @@ export function WorldMap({
         isAbsolute,
         isStatic,
         geoProjection,
+        paletteColor,
+        isDaltonian,
     ]);
 
     return (
@@ -1154,9 +1181,11 @@ function makeCircleProjection(
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
+    palette: ColorName,
     isGlobe: boolean = false,
     isStatic: boolean = false,
 ): d3.ScaleLinear<number, number, never> {
+    console.log("Nouvelle couleur de palette pour les cercles :", palette);
     const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, 30]);
     // When isStatic, divide radius by zoom to keep constant visual size
     const effectiveRadius = (d: { value: number }) =>
@@ -1184,9 +1213,9 @@ function makeCircleProjection(
             .attr("cx", 100)
             .attr("cy", (d) => 110 - radiusScale(d))
             .attr("r", (d) => radiusScale(d))
-            .attr("fill", "#ff9800")
+            .attr("fill", colors[palette].fill)
             .attr("opacity", 0.7)
-            .attr("stroke", "#e65100")
+            .attr("stroke", colors[palette].stroke)
             .attr("stroke-width", 1);
 
         legendLayer
@@ -1197,7 +1226,7 @@ function makeCircleProjection(
             .attr("class", "legend-tick")
             .attr("x1", 100)
             .attr("y1", (d) => 110 - radiusScale(d) * 2)
-            .attr("x2", 60)
+            .attr("x2", 65)
             .attr("y2", (d) => 110 - radiusScale(d) * 2)
             .attr("stroke", "var(--fg)")
             .attr("stroke-width", 1);
@@ -1212,7 +1241,13 @@ function makeCircleProjection(
             .attr("y", (d) => 115 - radiusScale(d) * 2)
             .attr("fill", "var(--fg)")
             .attr("font-size", 12)
-            .text((d) => (d / 1000).toFixed(0) + "000");
+            .text(
+                (d) =>
+                    Number((d / 1000).toFixed(0)).toLocaleString("en-FR", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                    }) + " 000",
+            );
 
         applyZoom(legendLayer, zoom, radiusScale);
     }
@@ -1229,6 +1264,7 @@ function makeCircleProjection(
         .remove();
 
     // Enter + Update
+    console.log(colors[palette].fill);
     circles
         .enter()
         .append("circle")
@@ -1236,16 +1272,21 @@ function makeCircleProjection(
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y)
         .attr("r", 0)
-        .attr("fill", "#ff9800")
+        .attr("fill", colors[palette].fill)
         .attr("opacity", 0.7)
-        .attr("stroke", "#e65100")
+        .attr("stroke", colors[palette].stroke)
         .attr("stroke-width", 1)
         .style("cursor", "pointer")
         .transition()
         .duration(animationDuration)
         .attr("r", effectiveRadius);
 
-    circles.transition().duration(animationDuration).attr("r", effectiveRadius);
+    circles
+        .transition()
+        .duration(animationDuration)
+        .attr("r", effectiveRadius)
+        .attr("fill", colors[palette].fill)
+        .attr("stroke", colors[palette].stroke);
 
     // Attach hover handlers to circles
     mapLayer
@@ -1275,6 +1316,7 @@ function makeArrowProjection(
     ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
+    palette: ColorName,
     isGlobe: boolean = false,
     isStatic: boolean = false,
 ): d3.ScaleLinear<number, number, never> {
@@ -1351,7 +1393,7 @@ function makeArrowProjection(
         .append("path")
         .attr("class", "data-arrow")
         .attr("fill", "none")
-        .attr("stroke", "#ff9800")
+        .attr("stroke", colors[palette].fill)
         .attr("d", (d) => line(d.arcPoints) || "")
         .attr("stroke-dasharray", function () {
             const length = (this as SVGPathElement).getTotalLength();
@@ -1365,6 +1407,7 @@ function makeArrowProjection(
     arrowEnter
         .merge(arrowPath)
         .attr("stroke-width", (d) => effectiveRadius(d.value))
+        .attr("stroke", colors[palette].fill)
         .transition("update")
         .duration(animationDuration)
         .attr("stroke-dashoffset", "0");
@@ -1393,11 +1436,12 @@ function makeArrowProjection(
         .enter()
         .append("path")
         .attr("class", "arrow-head data-arrow")
-        .attr("fill", "#ff9800")
+        .attr("fill", colors[palette].fill)
         .attr("stroke", "none");
 
     arrowheadEnter
         .merge(arrowheads)
+        .attr("fill", colors[palette].fill)
         .attr("d", (d) => {
             if (d.arcPoints.length < 2) return "";
 
@@ -1444,7 +1488,7 @@ function makeArrowProjection(
                 "y2",
                 (d, i) => 45 + 25 * i + (effectiveRadius(d) * (i - 2)) / 2,
             )
-            .attr("stroke", "#ff9800")
+            .attr("stroke", colors[palette].fill)
             .attr("stroke-width", (d) => effectiveRadius(d));
 
         legendLayer
@@ -1460,7 +1504,13 @@ function makeArrowProjection(
             )
             .attr("fill", "var(--fg)")
             .attr("font-size", 12)
-            .text((d) => (d / 1000).toFixed(0) + "000");
+            .text(
+                (d) =>
+                    Number((d / 1000).toFixed(0)).toLocaleString("en-FR", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                    }) + " 000",
+            );
 
         applyZoom(legendLayer, zoom, strokeScale);
     }
@@ -1514,11 +1564,19 @@ function MakeHuexBalanceProjection(
     maxValue: number,
     minValue: number,
     theme: Themes = "light",
+    isDaltonian: boolean = false,
 ): d3.ScaleLinear<string, string, never> {
+    // Use colorblind-friendly palette (orange-white-purple) when isDaltonian is true
+    const colorRange: [string, string, string] = isDaltonian
+        ? ["#d95f02", "#f7f7f7", "#7570b3"] // Orange - White - Purple (colorblind-safe)
+        : ["#ff0000", "#ffffff", "#0011ff"]; // Red - White - Blue (default)
+
     const colorScale = d3
         .scaleLinear<string>()
         .domain([minValue, 0, maxValue])
-        .range(["#ff0000", "#ffffff", "#0011ff"]);
+        .range(colorRange);
+
+    // Put veridis for colorblind users
 
     const countries = mapLayer.selectAll<
         SVGPathElement,

@@ -1,6 +1,6 @@
 {
     "HomePage": {
-        "title": "Wood international trade with France",
+        "title": "International trade of wood with France",
         "parameters": "Parameters",
         "parameters-desc": "Visualization parameters"
     },
@@ -48,7 +48,6 @@
     "ConfigBar": {
         "close-config": "Close configuration bar",
         "open-config": "Open configuration bar",
-        "config": "Configuration",
         "study-scale": "Study scale:",
         "country": "Country",
         "continent": "Continent",
@@ -93,8 +92,10 @@
     },
     "WorldMap": {
         "error-data": "Error loading data",
-        "legend": "Legend:",
-        "balance": "Trade balance"
+        "legend": "Legend: {unite}",
+        "balance": "Trade balance",
+        "euro-unit": "in k€",
+        "ton-unit": "in ton"
     },
     "ParamBar": {
         "map-definition": "Map definition:",
@@ -110,12 +111,22 @@
         "geoMercator": "Mercator",
         "geoOrthographic": "Orthographic",
         "static-map": "Static legend to  zoom",
-        "static-map-desc": "Make point sizes and legend insensitive to zoom for a more readable map at different scales."
+        "static-map-desc": "Make point sizes and legend insensitive to zoom for a more readable map at different scales.",
+        "colorymetry-options": "Colorimetry options:",
+        "daltonian": "Daltonian mode",
+        "daltonian-desc": "Use a color palette suitable for colorblind people.",
+        "orange": "Palette orange",
+        "blue": "Palette blue",
+        "green": "Palette green",
+        "purple": "Palette purple",
+        "red": "Palette red"
     },
     "MODOpener": {
         "title": "Product selection",
         "select-all": "Select all",
         "deselect-all": "Deselect all",
+        "open-all": "Open all",
+        "close-all": "Close all",
         "close": "Close product selection"
     }
 }
