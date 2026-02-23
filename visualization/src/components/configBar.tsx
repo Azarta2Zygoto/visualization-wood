@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Fragment, type JSX, useState } from "react";
+import { type JSX, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 

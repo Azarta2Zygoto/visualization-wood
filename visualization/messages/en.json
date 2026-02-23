@@ -93,8 +93,10 @@
     },
     "WorldMap": {
         "error-data": "Error loading data",
-        "legend": "Legend:",
-        "balance": "Trade balance"
+        "legend": "Legend: {unite}",
+        "balance": "Trade balance",
+        "euro-unit": "in k€",
+        "ton-unit": "in ton"
     },
     "ParamBar": {
         "map-definition": "Map definition:",

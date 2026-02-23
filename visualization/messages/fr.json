@@ -93,8 +93,10 @@
     },
     "WorldMap": {
         "error-data": "Erreur lors du chargement des données",
-        "legend": "Légende :",
-        "balance": "Balance commerciale"
+        "legend": "Légende : {unite}",
+        "balance": "Balance commerciale",
+        "euro-unit": "en k€",
+        "ton-unit": "en ton"
     },
     "ParamBar": {
         "map-definition": "Définition de la carte :",

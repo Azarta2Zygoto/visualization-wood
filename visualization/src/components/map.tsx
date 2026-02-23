@@ -35,7 +35,7 @@ const ParisCoord: [number, number] = [2.3522, 48.8566];
 
 const config = {
     legendHeight: 130,
-    legendWidth: 140,
+    legendWidth: 150,
     legendMaxHeight: 250,
     legendMaxWidth: 300,
     light: {
@@ -545,7 +545,10 @@ export function WorldMap({
                     )
                     .attr("pointer-events", "none");
 
-                const correctLegend = createLegend(legendLayer, t("legend"));
+                const correctLegend = createLegend(
+                    legendLayer,
+                    t("legend", { unite: t("ton-unit") }),
+                );
 
                 setLayer(mapLayer);
                 setLegendLayer(correctLegend);
@@ -823,11 +826,16 @@ export function WorldMap({
         const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
         legend.transition().duration(animationDuration).attr("opacity", "1");
 
+        const legendTitle = legend.selectAll<SVGTextElement, unknown>(
+            ".legend-text",
+        );
+
         if (type === 4) {
             legend
                 .transition()
                 .duration(animationDuration)
                 .attr("opacity", "0");
+            legendTitle.text(t("legend", { unite: t("euro-unit") }));
 
             const pointData = MakeBalance({
                 lectureData,
@@ -903,7 +911,15 @@ export function WorldMap({
             d3.select(svg).append(() => colorLegend);
             return;
         }
-
+        console.log(
+            legendTitle,
+            "new value:",
+            t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
+            type,
+        );
+        legendTitle.text(
+            t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
+        );
         const countries = mapLayer.selectAll<
             SVGPathElement,
             {
@@ -1197,7 +1213,7 @@ function makeCircleProjection(
             .attr("class", "legend-tick")
             .attr("x1", 100)
             .attr("y1", (d) => 110 - radiusScale(d) * 2)
-            .attr("x2", 60)
+            .attr("x2", 65)
             .attr("y2", (d) => 110 - radiusScale(d) * 2)
             .attr("stroke", "var(--fg)")
             .attr("stroke-width", 1);
@@ -1212,7 +1228,13 @@ function makeCircleProjection(
             .attr("y", (d) => 115 - radiusScale(d) * 2)
             .attr("fill", "var(--fg)")
             .attr("font-size", 12)
-            .text((d) => (d / 1000).toFixed(0) + "000");
+            .text(
+                (d) =>
+                    Number((d / 1000).toFixed(0)).toLocaleString("en-FR", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                    }) + " 000",
+            );
 
         applyZoom(legendLayer, zoom, radiusScale);
     }
@@ -1460,7 +1482,13 @@ function makeArrowProjection(
             )
             .attr("fill", "var(--fg)")
             .attr("font-size", 12)
-            .text((d) => (d / 1000).toFixed(0) + "000");
+            .text(
+                (d) =>
+                    Number((d / 1000).toFixed(0)).toLocaleString("en-FR", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                    }) + " 000",
+            );
 
         applyZoom(legendLayer, zoom, strokeScale);
     }
