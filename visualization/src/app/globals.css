@@ -324,9 +324,11 @@ main {
 }
 
 .config-bar {
+    z-index: 5;
     position: fixed;
     right: 1rem;
-    top: 10rem;
+    top: 10%;
+    max-width: 80%;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -335,8 +337,8 @@ main {
     border-radius: 8px;
     padding: 0.5rem 1rem;
     box-shadow: 0 4px 8px var(--color-mat);
-    z-index: 5;
     transition: right 0.3s ease-in-out;
+    overflow-y: auto;
 }
 
 .scroll-arrows {

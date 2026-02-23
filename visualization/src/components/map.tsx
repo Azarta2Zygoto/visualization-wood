@@ -760,11 +760,6 @@ export function WorldMap({
             );
             if (!countryCode) return;
 
-            const hasCountryData =
-                lectureData[d.properties.name]?.[type.toString()] !== undefined;
-
-            if (!hasCountryData) return;
-
             if (isMultipleMode) {
                 const newSelection: number[] = countriesSelected.includes(
                     Number(countryCode),

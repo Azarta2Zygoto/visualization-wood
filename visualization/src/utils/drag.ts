@@ -147,7 +147,7 @@ export function simpleDrag({
                 .attr("cy", p ? p[1] : null)
                 .attr("opacity", isVisible(center, [d.lon, d.lat]) ? "1" : "0");
 
-            if (!isStatic) {
+            if (!isStatic && legendScale) {
                 // Adjust circle size based on zoom level to maintain visibility
                 d3.select(this).attr("r", legendScale(d.value) * zoomScale); // Base radius of 5, adjust by zoom
             }
@@ -193,7 +193,7 @@ export function simpleDrag({
                 // Update stored arcPoints for arrowhead use
                 d.arcPoints = arcPoints;
 
-                if (!isStatic) {
+                if (!isStatic && legendScale) {
                     d3.select(this).attr(
                         "stroke-width",
                         legendScale(d.value) * zoomScale,
@@ -297,11 +297,7 @@ export function simpleDrag({
                 .attr("cy", p ? p[1] : null)
                 .attr("opacity", isVisible(center, [d.lon, d.lat]) ? "1" : "0");
 
-            if (!isStatic) {
-                console.log(
-                    "Setting initial radius for data point with value",
-                    d.value,
-                );
+            if (!isStatic && legendScale) {
                 sel.attr("r", legendScale(d.value) * zoomScale);
             }
         });
