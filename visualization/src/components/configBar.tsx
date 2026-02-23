@@ -128,7 +128,6 @@ export default function ConfigBar({
             </button>
 
             <div className="config-bar-content">
-                <h2 className="h2-primary">{t("config")}</h2>
                 <p>{t("study-scale")}</p>
                 <div
                     className="rows"

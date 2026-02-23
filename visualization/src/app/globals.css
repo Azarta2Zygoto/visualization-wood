@@ -302,7 +302,7 @@ main {
 }
 
 .title {
-    z-index: 5;
+    z-index: 2;
     position: absolute;
     top: 1rem;
     left: 50%;
@@ -314,6 +314,7 @@ main {
     padding: 0.5rem 1rem;
     border-radius: 8px;
     text-align: center;
+    white-space: nowrap;
 }
 
 .h2-primary {
@@ -327,8 +328,8 @@ main {
     z-index: 5;
     position: fixed;
     right: 1rem;
-    top: 10%;
-    max-height: 80vh;
+    top: 10vh;
+    max-height: 70vh;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;

@@ -3,11 +3,14 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect } from "react";
 
+import { type ColorName, colors } from "@/data/colorElement";
 import {
     GEO_PROJECTION_STORAGE_KEY,
+    IS_DALTONIAN_STORAGE_KEY,
     IS_STATIC_STORAGE_KEY,
     MAP_DEFINITIONS,
     MAP_DEFINITION_STORAGE_KEY,
+    PALETTE_COLOR_STORAGE_KEY,
     definitions,
 } from "@/data/constants";
 import { type ProjectionName, projections } from "@/data/geoprojection";
@@ -23,10 +26,14 @@ interface ParamBarProps {
     mapDefinition: definitions;
     geoProjection: string;
     isStatic: boolean;
+    isDaltonian: boolean;
+    paletteColor: ColorName;
     setOpen: (open: boolean) => void;
     setMapDefinition: (definition: definitions) => void;
     setGeoProjection: (projection: string) => void;
     setIsStatic: (isStatic: boolean) => void;
+    setIsDaltonian: (isDaltonian: boolean) => void;
+    setPaletteColor: (color: ColorName) => void;
 }
 
 export default function ParamBar({
@@ -34,10 +41,14 @@ export default function ParamBar({
     mapDefinition,
     geoProjection,
     isStatic,
+    isDaltonian,
+    paletteColor,
     setOpen,
     setMapDefinition,
     setGeoProjection,
     setIsStatic,
+    setIsDaltonian,
+    setPaletteColor,
 }: ParamBarProps): JSX.Element {
     const t = useTranslations("ParamBar");
 
@@ -56,6 +67,16 @@ export default function ParamBar({
     function handleIsStaticChange(isStatic: boolean) {
         setIsStatic(isStatic);
         localStorage.setItem(IS_STATIC_STORAGE_KEY, isStatic.toString());
+    }
+
+    function handleIsDaltonianChange(isDaltonian: boolean) {
+        setIsDaltonian(isDaltonian);
+        localStorage.setItem(IS_DALTONIAN_STORAGE_KEY, isDaltonian.toString());
+    }
+
+    function handlePaletteColorChange(color: ColorName) {
+        setPaletteColor(color);
+        localStorage.setItem(PALETTE_COLOR_STORAGE_KEY, color);
     }
 
     useEffect(() => {
@@ -89,6 +110,25 @@ export default function ParamBar({
             setIsStatic(storedIsStatic === "true");
         }
     }, [setIsStatic]);
+
+    useEffect(() => {
+        const storedIsDaltonian = localStorage.getItem(
+            IS_DALTONIAN_STORAGE_KEY,
+        ) as string | null;
+        if (storedIsDaltonian !== null) {
+            setIsDaltonian(storedIsDaltonian === "true");
+        }
+    }, [setIsDaltonian]);
+
+    useEffect(() => {
+        const storedPaletteColor = localStorage.getItem(
+            PALETTE_COLOR_STORAGE_KEY,
+        ) as ColorName | null;
+        const colorValues = Object.keys(colors);
+        if (storedPaletteColor && colorValues.includes(storedPaletteColor)) {
+            setPaletteColor(storedPaletteColor);
+        }
+    }, [setPaletteColor]);
 
     return (
         <Fragment>
@@ -145,6 +185,26 @@ export default function ParamBar({
                     title={t("static-map-desc")}
                     checked={isStatic}
                     onChange={(e) => handleIsStaticChange(e.target.checked)}
+                />
+
+                <h2>{t("colorymetry-options")}</h2>
+                <SelectMenu
+                    id="color-select"
+                    options={Object.keys(colors).map((p) => ({
+                        label: t(p),
+                        value: p,
+                    }))}
+                    selectedOption={t(paletteColor)}
+                    onOptionSelect={(value) =>
+                        handlePaletteColorChange(value as ColorName)
+                    }
+                />
+                <Checkbox
+                    id="daltonian-mode-checkbox"
+                    label={t("daltonian")}
+                    title={t("daltonian-desc")}
+                    checked={isDaltonian}
+                    onChange={(e) => handleIsDaltonianChange(e.target.checked)}
                 />
                 <button
                     className="btn"

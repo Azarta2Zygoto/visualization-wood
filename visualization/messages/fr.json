@@ -48,7 +48,6 @@
     "ConfigBar": {
         "close-config": "Fermer la barre de configuration",
         "open-config": "Ouvrir la barre de configuration",
-        "config": "Configuration",
         "study-scale": "Echelle d'étude :",
         "country": "Pays",
         "continent": "Continent",
@@ -112,7 +111,15 @@
         "geoMercator": "Mercator",
         "geoOrthographic": "Orthographique",
         "static-map": "Légende statique au zoom",
-        "static-map-desc": "Rendre la taille des points et la légende insensible au zoom pour une carte plus lisible à différentes échelles."
+        "static-map-desc": "Rendre la taille des points et la légende insensible au zoom pour une carte plus lisible à différentes échelles.",
+        "colorymetry-options": "Options de colorimétrie :",
+        "daltonian": "Mode daltonien",
+        "daltonian-desc": "Utilisation d'une palette de couleurs adaptée aux personnes daltoniennes.",
+        "orange": "Palette orange",
+        "blue": "Palette bleue",
+        "green": "Palette verte",
+        "purple": "Palette violette",
+        "red": "Palette rouge"
     },
     "MODOpener": {
         "title": "Sélection des produits",
