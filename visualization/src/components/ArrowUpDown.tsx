@@ -5,7 +5,7 @@ import { type JSX, useCallback, useEffect, useState } from "react";
 
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { useGlobal } from "./globalProvider";
+import { useGlobal } from "@/components/globalProvider";
 
 function getScrollState() {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;

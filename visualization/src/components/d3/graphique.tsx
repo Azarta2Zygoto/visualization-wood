@@ -11,14 +11,14 @@ import {
 
 import * as d3 from "d3";
 
-import updateMultiLines_with_icons from "@/components/line_chart_with_icons";
-import updateMirrorStackedAreaChart from "@/components/mirror_stacked_area_chart";
+import { useGlobal } from "@/components/globalProvider";
 import pays from "@/data/countries.json";
 import type_data from "@/data/exports.json";
 import list_products from "@/data/products.json";
 import all_icons from "@/data/symboles.json";
 
-import { useGlobal } from "./globalProvider";
+import updateMultiLines_with_icons from "./line_chart_with_icons";
+import updateMirrorStackedAreaChart from "./mirror_stacked_area_chart";
 
 interface GraphiqueProps {
     allData: { [key: string]: number[][] };

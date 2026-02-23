@@ -3,12 +3,11 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useState } from "react";
 
+import AttentionInner from "@/components/attentionInner";
+import Accordeon from "@/components/personal/accordeon";
+import Checkbox from "@/components/personal/checkbox";
 import products from "@/data/products.json";
 import { processMODData } from "@/utils/MODLecture";
-
-import AttentionInner from "./attentionInner";
-import Accordeon from "./personal/accordeon";
-import Checkbox from "./personal/checkbox";
 
 interface MODOpenerProps {
     isOpen: boolean;

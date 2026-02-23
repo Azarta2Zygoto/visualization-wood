@@ -6,12 +6,11 @@ import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
+import { useGlobal } from "@/components/globalProvider";
 import pays from "@/data/countries.json";
 import type_data from "@/data/exports.json";
 import month_names from "@/data/months.json";
 import type { CountryType } from "@/metadata/types";
-
-import { useGlobal } from "./globalProvider";
 
 const defaultNoData = -1;
 const AllNoData = {

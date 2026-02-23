@@ -6,6 +6,12 @@ import { type JSX, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
+import MODOpener from "@/components/MOD_opener";
+import { useGlobal } from "@/components/globalProvider";
+import Checkbox from "@/components/personal/checkbox";
+import MonthSelector from "@/components/personal/monthSelector";
+import SelectMenu from "@/components/personal/selectMenu";
+import { MultiSelect } from "@/components/ui/multi-select";
 import pays from "@/data/countries.json";
 import metadata from "@/data/metadata.json";
 import icon_symbol from "@/data/symboles.json";
@@ -13,13 +19,6 @@ import {
     NBMaxElement,
     calculateNBSingleElementSelected,
 } from "@/utils/MODLecture";
-
-import MODOpener from "./MOD_opener";
-import { useGlobal } from "./globalProvider";
-import Checkbox from "./personal/checkbox";
-import MonthSelector from "./personal/monthSelector";
-import SelectMenu from "./personal/selectMenu";
-import { MultiSelect } from "./ui/multi-select";
 
 interface ConfigBarProps {
     typeData: number;

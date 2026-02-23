@@ -3,6 +3,11 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect } from "react";
 
+import { useGlobal } from "@/components/globalProvider";
+import Checkbox from "@/components/personal/checkbox";
+import FlagSelectMenu from "@/components/personal/flagSelectMenu";
+import SelectMenu from "@/components/personal/selectMenu";
+import ThemeSwitch from "@/components/personal/themeSwitch";
 import colors from "@/data/colors.json";
 import {
     GEO_PROJECTION_STORAGE_KEY,
@@ -15,12 +20,6 @@ import {
 } from "@/metadata/constants";
 import { projections } from "@/metadata/geoprojections";
 import type { ColorName, ProjectionName } from "@/metadata/types";
-
-import { useGlobal } from "./globalProvider";
-import Checkbox from "./personal/checkbox";
-import FlagSelectMenu from "./personal/flagSelectMenu";
-import SelectMenu from "./personal/selectMenu";
-import ThemeSwitch from "./personal/themeSwitch";
 
 interface ParamBarProps {
     open: boolean;
@@ -137,9 +136,11 @@ export default function ParamBar({
                 className="overlay"
                 onClick={() => setOpen(false)}
                 style={{ display: open ? "block" : "none" }}
+                aria-hidden
             />
             <div
                 className="param-bar"
+                aria-hidden={!open}
                 style={{
                     transform: open
                         ? "translateX(-50%)"

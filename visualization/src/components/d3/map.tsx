@@ -14,6 +14,8 @@ import {
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 
+import { useGlobal } from "@/components/globalProvider";
+import TooltipMap from "@/components/tooltipMap";
 import colors from "@/data/colors.json";
 import continent from "@/data/continents.json";
 import pays from "@/data/countries.json";
@@ -34,9 +36,6 @@ import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";
 import { isKnownCountry } from "@/utils/function";
-
-import { useGlobal } from "./globalProvider";
-import TooltipMap from "./tooltipMap";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const pays_english = new Set(Object.values(pays).map((country) => country.en));

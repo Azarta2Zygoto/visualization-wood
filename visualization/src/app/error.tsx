@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 export default function Error({
     error,
