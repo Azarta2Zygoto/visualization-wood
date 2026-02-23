@@ -82,13 +82,14 @@
         "load-all-data-desc": "Load all data for each year."
     },
     "Tooltip": {
-        "export-euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",
-        "import-euro": "Import: {value, plural, =-1 {No data} other {{value, number} k€}}",
-        "export-ton": "Export: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
-        "import-ton": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
-        "balance-euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "export_euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "import_euro": "Import: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "export_tonnes": "Export: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "import_tonne": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "balance_euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "flag": "{country} flag",
-        "no-data": "No data available"
+        "no-data": "No data available",
+        "france-tooltip": "This is the reference country for this visualization. Trade flows are represented in relation to this country."
     },
     "WorldMap": {
         "error-data": "Error loading data",
@@ -98,6 +99,7 @@
         "ton-unit": "in ton"
     },
     "ParamBar": {
+        "settings": "Visualization settings",
         "map-definition": "Map definition:",
         "low": "Low",
         "medium": "Medium",
@@ -122,11 +124,13 @@
         "red": "Palette red"
     },
     "MODOpener": {
+        "products": "Products",
         "title": "Product selection",
         "select-all": "Select all",
         "deselect-all": "Deselect all",
         "open-all": "Open all",
         "close-all": "Close all",
-        "close": "Close product selection"
+        "close": "Close product selection",
+        "attention-text": "If no products are selected, by default, they will be all selected."
     }
 }

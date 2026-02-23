@@ -8,12 +8,12 @@ import Papa from "papaparse";
 import ArrowUpDown from "@/components/ArrowUpDown";
 import ParamBar from "@/components/ParamBar";
 import ConfigBar from "@/components/configBar";
-import Graphique from "@/components/graphique";
+import Graphique from "@/components/d3/graphique";
+import { WorldMap } from "@/components/d3/map";
 import Loading from "@/components/loading";
-import { WorldMap } from "@/components/map";
-import { ColorName } from "@/data/colorElement";
-import { type definitions } from "@/data/constants";
 import metadata_app from "@/data/metadata.json";
+import { type definitions } from "@/metadata/constants";
+import type { ColorName, ProjectionName } from "@/metadata/types";
 import { getAllChildren } from "@/utils/MODLecture";
 import { readNpz } from "@/utils/read";
 
@@ -39,7 +39,7 @@ export default function HomePage(): JSX.Element {
     const [mapDefinition, setMapDefinition] = useState<definitions>("low");
     const [isAbsolute, setIsAbsolute] = useState<boolean>(false);
     const [geoProjection, setGeoProjection] =
-        useState<string>("geoNaturalEarth");
+        useState<ProjectionName>("geoNaturalEarth");
     const [IsStatic, setIsStatic] = useState<boolean>(false);
     const [NBCountryWithData, setNBCountryWithData] = useState<number>(0);
     const [AddAllYears, setAddAllYears] = useState<boolean>(false);

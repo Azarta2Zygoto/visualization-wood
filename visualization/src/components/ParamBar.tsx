@@ -3,7 +3,12 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect } from "react";
 
-import { type ColorName, colors } from "@/data/colorElement";
+import { useGlobal } from "@/components/globalProvider";
+import Checkbox from "@/components/personal/checkbox";
+import FlagSelectMenu from "@/components/personal/flagSelectMenu";
+import SelectMenu from "@/components/personal/selectMenu";
+import ThemeSwitch from "@/components/personal/themeSwitch";
+import colors from "@/data/colors.json";
 import {
     GEO_PROJECTION_STORAGE_KEY,
     IS_DALTONIAN_STORAGE_KEY,
@@ -12,25 +17,20 @@ import {
     MAP_DEFINITION_STORAGE_KEY,
     PALETTE_COLOR_STORAGE_KEY,
     definitions,
-} from "@/data/constants";
-import { type ProjectionName, projections } from "@/data/geoprojection";
-
-import { useGlobal } from "./globalProvider";
-import Checkbox from "./personal/checkbox";
-import FlagSelectMenu from "./personal/flagSelectMenu";
-import SelectMenu from "./personal/selectMenu";
-import ThemeSwitch from "./personal/themeSwitch";
+} from "@/metadata/constants";
+import { projections } from "@/metadata/geoprojections";
+import type { ColorName, ProjectionName } from "@/metadata/types";
 
 interface ParamBarProps {
     open: boolean;
     mapDefinition: definitions;
-    geoProjection: string;
+    geoProjection: ProjectionName;
     isStatic: boolean;
     isDaltonian: boolean;
     paletteColor: ColorName;
     setOpen: (open: boolean) => void;
     setMapDefinition: (definition: definitions) => void;
-    setGeoProjection: (projection: string) => void;
+    setGeoProjection: (projection: ProjectionName) => void;
     setIsStatic: (isStatic: boolean) => void;
     setIsDaltonian: (isDaltonian: boolean) => void;
     setPaletteColor: (color: ColorName) => void;
@@ -54,12 +54,68 @@ export default function ParamBar({
 
     const { locale } = useGlobal();
 
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if ((e.key === "Escape" || e.key === "Backspace") && open)
+                setOpen(false);
+        };
+        document.addEventListener("keydown", handleEscape);
+        return () => document.removeEventListener("keydown", handleEscape);
+    }, [open, setOpen]);
+
+    useEffect(() => {
+        const storedDefinition = localStorage.getItem(
+            MAP_DEFINITION_STORAGE_KEY,
+        );
+        const storedProjection = localStorage.getItem(
+            GEO_PROJECTION_STORAGE_KEY,
+        );
+        const storedIsStatic = localStorage.getItem(IS_STATIC_STORAGE_KEY);
+        const storedIsDaltonian = localStorage.getItem(
+            IS_DALTONIAN_STORAGE_KEY,
+        );
+        const storedPaletteColor = localStorage.getItem(
+            PALETTE_COLOR_STORAGE_KEY,
+        );
+
+        if (
+            storedDefinition &&
+            Object.keys(MAP_DEFINITIONS).includes(storedDefinition)
+        ) {
+            setMapDefinition(storedDefinition as definitions);
+        }
+        if (
+            storedProjection &&
+            projections.some((p) => p.name === storedProjection)
+        ) {
+            setGeoProjection(storedProjection as ProjectionName);
+        }
+        if (storedIsStatic !== null) {
+            setIsStatic(storedIsStatic === "true");
+        }
+        if (storedIsDaltonian !== null) {
+            setIsDaltonian(storedIsDaltonian === "true");
+        }
+        if (
+            storedPaletteColor &&
+            Object.keys(colors).includes(storedPaletteColor)
+        ) {
+            setPaletteColor(storedPaletteColor as ColorName);
+        }
+    }, [
+        setMapDefinition,
+        setGeoProjection,
+        setIsStatic,
+        setIsDaltonian,
+        setPaletteColor,
+    ]);
+
     function handleDefinitionChange(definition: string) {
         setMapDefinition(definition as definitions);
         localStorage.setItem(MAP_DEFINITION_STORAGE_KEY, definition);
     }
 
-    function handleProjectionChange(projection: string) {
+    function handleProjectionChange(projection: ProjectionName) {
         setGeoProjection(projection);
         localStorage.setItem(GEO_PROJECTION_STORAGE_KEY, projection);
     }
@@ -79,66 +135,21 @@ export default function ParamBar({
         localStorage.setItem(PALETTE_COLOR_STORAGE_KEY, color);
     }
 
-    useEffect(() => {
-        const storedDefinition = localStorage.getItem(
-            MAP_DEFINITION_STORAGE_KEY,
-        ) as definitions | null;
-        const definitionsValues = Object.keys(MAP_DEFINITIONS);
-        if (storedDefinition && definitionsValues.includes(storedDefinition)) {
-            setMapDefinition(storedDefinition);
-        }
-    }, [setMapDefinition]);
-
-    useEffect(() => {
-        const storedProjection = localStorage.getItem(
-            GEO_PROJECTION_STORAGE_KEY,
-        ) as string | null;
-        const projectionValues = projections.map((p) => p.name);
-        if (
-            storedProjection &&
-            projectionValues.includes(storedProjection as ProjectionName)
-        ) {
-            setGeoProjection(storedProjection);
-        }
-    }, [setGeoProjection]);
-
-    useEffect(() => {
-        const storedIsStatic = localStorage.getItem(IS_STATIC_STORAGE_KEY) as
-            | string
-            | null;
-        if (storedIsStatic !== null) {
-            setIsStatic(storedIsStatic === "true");
-        }
-    }, [setIsStatic]);
-
-    useEffect(() => {
-        const storedIsDaltonian = localStorage.getItem(
-            IS_DALTONIAN_STORAGE_KEY,
-        ) as string | null;
-        if (storedIsDaltonian !== null) {
-            setIsDaltonian(storedIsDaltonian === "true");
-        }
-    }, [setIsDaltonian]);
-
-    useEffect(() => {
-        const storedPaletteColor = localStorage.getItem(
-            PALETTE_COLOR_STORAGE_KEY,
-        ) as ColorName | null;
-        const colorValues = Object.keys(colors);
-        if (storedPaletteColor && colorValues.includes(storedPaletteColor)) {
-            setPaletteColor(storedPaletteColor);
-        }
-    }, [setPaletteColor]);
-
     return (
         <Fragment>
             <div
                 className="overlay"
                 onClick={() => setOpen(false)}
                 style={{ display: open ? "block" : "none" }}
+                aria-hidden
+                role="presentation"
             />
             <div
                 className="param-bar"
+                role="dialog"
+                aria-modal="true"
+                aria-hidden={!open}
+                aria-label={t("settings")}
                 style={{
                     transform: open
                         ? "translateX(-50%)"
@@ -177,7 +188,9 @@ export default function ParamBar({
                         value: p.name,
                     }))}
                     selectedOption={t(geoProjection)}
-                    onOptionSelect={handleProjectionChange}
+                    onOptionSelect={(option) =>
+                        handleProjectionChange(option as ProjectionName)
+                    }
                 />
                 <Checkbox
                     id="static-map-checkbox"

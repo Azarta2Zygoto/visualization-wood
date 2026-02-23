@@ -2,9 +2,12 @@
 
 import { type JSX, useState } from "react";
 
-import month_list from "@/data/N053_LIB.json";
-
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import month_list from "@/data/months.json";
 
 interface MonthSelectorProps {
     currentMonth: number;

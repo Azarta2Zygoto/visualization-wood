@@ -2,8 +2,6 @@
 
 import * as d3 from "d3";
 
-
-
 interface DataPoint {
     date: Date;
     pays?: string;
@@ -56,7 +54,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     svg_animated.property("__colorRegistry", colorRegistry);
 
     // Symboles actuellement visibles
-    const currentSymbols = new Set(stocks.map(s => s.symbol));
+    const currentSymbols = new Set(stocks.map((s) => s.symbol));
 
     // Supprimer ceux qui ont disparu
     for (const key of Array.from(colorRegistry.keys())) {
@@ -67,7 +65,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
 
     // Compter l'utilisation des couleurs
     const counts = new Map<string, number>();
-    palette.forEach(c => counts.set(c, 0));
+    palette.forEach((c) => counts.set(c, 0));
 
     for (const color of colorRegistry.values()) {
         counts.set(color, (counts.get(color) ?? 0) + 1);
@@ -76,14 +74,13 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     // Assigner couleur aux nouveaux symboles
     for (const symbol of currentSymbols) {
         if (!colorRegistry.has(symbol)) {
-
             // Chercher couleur libre
-            let chosen = palette.find(c => (counts.get(c) ?? 0) === 0);
+            let chosen = palette.find((c) => (counts.get(c) ?? 0) === 0);
 
             // Sinon prendre la moins utilisée
             if (!chosen) {
                 chosen = palette.reduce((min, c) =>
-                    (counts.get(c)! < counts.get(min)!) ? c : min
+                    counts.get(c)! < counts.get(min)! ? c : min,
                 );
             }
 
@@ -185,11 +182,13 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
 
     // -------------------------------
     // Tooltip HTML global
-    let Tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> =
-        d3.select("body").select(".line-chart-tooltip");
+    let Tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> = d3
+        .select("body")
+        .select(".line-chart-tooltip");
 
     if (Tooltip.empty()) {
-        Tooltip = d3.select("body")
+        Tooltip = d3
+            .select("body")
             .append("div")
             .attr("class", "line-chart-tooltip")
             .style("position", "absolute")
@@ -202,8 +201,8 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             .style("pointer-events", "none")
             .style("opacity", 0.6)
             .style("z-index", 5)
-            .style("max-width", "250px")          // largeur max
-            .style("white-space", "normal")      // permet le retour à la ligne
+            .style("max-width", "250px") // largeur max
+            .style("white-space", "normal") // permet le retour à la ligne
             .style("overflow-wrap", "break-word"); // coupe les mots trop longs
     }
 
@@ -291,24 +290,21 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .remove(),
         )
         .on("mouseover", function (event, d: any) {
-            Tooltip
-                .style("opacity", 1)
-                .html(`
+            Tooltip.style("opacity", 1).html(`
             <strong>Titre :</strong> ${d.titre_court}<br>
             <strong>Description : </strong>${d.description_rapide}<br>
             <strong>Date :</strong> ${d3.timeFormat("%Y-%m-%d")(d.dateParsed)}
         `);
         })
         .on("mousemove", function (event) {
-            Tooltip
-                .style("left", `${event.pageX + 12}px`)
-                .style("top", `${event.pageY - 40}px`);
+            Tooltip.style("left", `${event.pageX + 12}px`).style(
+                "top",
+                `${event.pageY - 40}px`,
+            );
         })
         .on("mouseleave", function () {
             Tooltip.style("opacity", 0);
-
         });
-    ;
     // -------------------------------
     // Légende
     let legend = svg_animated.select<SVGGElement>("g.legend");
@@ -363,7 +359,8 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             .attr("class", "focus")
             .style("display", "none");
 
-        focus.append("circle")
+        focus
+            .append("circle")
             .attr("r", 5)
             .attr("stroke", "white")
             .attr("stroke-width", 1.5);
@@ -422,17 +419,24 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             point.y = margin.top + yScaleZoom(y(closestValue!));
 
             // transformation vers coordonnées écran
-            const screenPoint = point.matrixTransform(svgNode.getScreenCTM() as any);
+            const screenPoint = point.matrixTransform(
+                svgNode.getScreenCTM() as any,
+            );
             //gestion du tooltip
 
             const symbol = closestStock.symbol.toLowerCase();
-            const allCountries = new Set(stocks.map(s => s.symbol.split(" - ")[0]));
+            const allCountries = new Set(
+                stocks.map((s) => s.symbol.split(" - ")[0]),
+            );
             const multipleCountries = allCountries.size > 1;
-            const parts = closestStock.symbol.split(" - ").map((p: any) => p.trim());
-            const unit =
-                symbol.includes("valeur") ? "k€" :
-                    symbol.includes("volume") ? "Tonne" :
-                        "";
+            const parts = closestStock.symbol
+                .split(" - ")
+                .map((p: any) => p.trim());
+            const unit = symbol.includes("valeur")
+                ? "k€"
+                : symbol.includes("volume")
+                  ? "Tonne"
+                  : "";
             const country = parts[0];
             const product = parts[1];
 
@@ -440,30 +444,30 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                 ? `${country} – ${product}`
                 : `${product}`;
 
-            Tooltip
-                .style("opacity", 0.8)
-                .html(`
+            Tooltip.style("opacity", 0.8)
+                .html(
+                    `
         <strong>${title}</strong><br>
          Valeur : ${d3.format(",.0f")(y(closestValue!)).replace(/,/g, " ")} ${unit}<br>
         Date : ${d3.timeFormat("%Y-%m-%d")(x(closestValue!) as Date)}
-       `)
+       `,
+                )
                 .style("left", `${screenPoint.x + 10}px`)
                 .style("top", `${screenPoint.y + 600}px`);
             // Afficher le focus
             focus.style("display", null);
 
-            focus
-                .attr(
-                    "transform",
-                    `translate(${xScaleZoom(x(closestValue!))},${yScaleZoom(y(closestValue!))})`
-                );
+            focus.attr(
+                "transform",
+                `translate(${xScaleZoom(x(closestValue!))},${yScaleZoom(y(closestValue!))})`,
+            );
 
-            focus
-                .select("circle")
-                .attr("fill", color(closestStock.symbol));
-
+            focus.select("circle").attr("fill", color(closestStock.symbol));
         })
-        .on("mouseleave", () => { Tooltip.style("opacity", 0); focus.style("display", "none"); });
+        .on("mouseleave", () => {
+            Tooltip.style("opacity", 0);
+            focus.style("display", "none");
+        });
 
     const zoom = d3
         .zoom()
@@ -514,7 +518,6 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     return svg_animated.node();
 }
 
-
 function updateColorDomain(
     color_graphique: d3.ScaleOrdinal<string, string, never>,
     knownSymbols: Set<string>,
@@ -522,4 +525,4 @@ function updateColorDomain(
 ) {
     stocks.forEach((s) => knownSymbols.add(s.symbol));
     color_graphique.domain([...knownSymbols]);
-};
+}

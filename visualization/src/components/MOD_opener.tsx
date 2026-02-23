@@ -1,35 +1,67 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Fragment, type JSX, useState } from "react";
+import { Fragment, type JSX, useCallback, useEffect, useState } from "react";
 
+import AttentionInner from "@/components/attentionInner";
+import Accordeon from "@/components/personal/accordeon";
+import Checkbox from "@/components/personal/checkbox";
 import products from "@/data/products.json";
 import { processMODData } from "@/utils/MODLecture";
 
-import AttentionInner from "./attentionInner";
-import Accordeon from "./personal/accordeon";
-import Checkbox from "./personal/checkbox";
+const codeToNumber = new Map<string, number>();
+const numberToCode = new Map<number, string>();
+// Precomputed map: parentCode -> array of direct children number codes
+const directChildrenMap = new Map<string, number[]>();
 
-interface MODOpenerProps {
-    isOpen: boolean;
-    onOpen: (bool: boolean) => void;
-    productsSelected: number[];
-    setProductsSelected: (products: number[]) => void;
-}
+Object.entries(products).forEach(([key, val]) => {
+    const num = Number(key);
+    codeToNumber.set(val.code, num);
+    numberToCode.set(num, val.code);
+
+    // Build parent->children map
+    const parentCode = val.code.split(".").slice(0, -1).join(".");
+    if (parentCode || val.code === "0") {
+        const parentKey = parentCode || ""; // root level
+        if (!directChildrenMap.has(parentKey)) {
+            directChildrenMap.set(parentKey, []);
+        }
+        directChildrenMap.get(parentKey)!.push(num);
+    }
+});
 
 const MOD = processMODData(products);
 
+interface MODOpenerProps {
+    isOpen: boolean;
+    productsSelected: number[];
+    onOpen: (bool: boolean) => void;
+    setProductsSelected: (products: number[]) => void;
+}
+
 export default function MODOpener({
     isOpen,
-    onOpen,
     productsSelected,
+    onOpen,
     setProductsSelected,
 }: MODOpenerProps): JSX.Element {
     const t = useTranslations("MODOpener");
 
     const [firstAttentionShown, setFirstAttentionShown] =
         useState<boolean>(false);
-    const [openDefault, setOpenDefault] = useState<boolean>(false);
+    const [openDefault, setOpenDefault] = useState<{
+        open: boolean;
+        version: number;
+    }>({ open: false, version: 0 });
+
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if ((e.key === "Escape" || e.key === "Backspace") && isOpen)
+                onOpen(false);
+        };
+        document.addEventListener("keydown", handleEscape);
+        return () => document.removeEventListener("keydown", handleEscape);
+    }, [isOpen, onOpen]);
 
     return (
         <Fragment>
@@ -37,9 +69,15 @@ export default function MODOpener({
                 className="overlay"
                 onClick={() => onOpen(false)}
                 style={{ display: isOpen ? "block" : "none" }}
+                aria-hidden
+                role="presentation"
             />
             <div
                 className="MOD-container"
+                role="dialog"
+                aria-modal="true"
+                aria-hidden={!isOpen}
+                aria-label={t("products")}
                 style={{
                     transform: isOpen
                         ? "translate(-50%, -50%)"
@@ -47,12 +85,14 @@ export default function MODOpener({
                 }}
             >
                 <h2 className="h2-primary">{t("title")}</h2>
-                <div className="rows">
+                <div
+                    className="rows"
+                    style={{ marginBottom: "20px" }}
+                >
                     <button
                         className={`btn ${productsSelected.includes(0) ? "active" : ""}`}
                         onClick={() => setProductsSelected([0])}
                         type="button"
-                        style={{ marginBottom: "20px" }}
                     >
                         {t("select-all")}
                     </button>
@@ -60,24 +100,31 @@ export default function MODOpener({
                         className={`btn ${productsSelected.length === 0 ? "active" : ""}`}
                         onClick={() => setProductsSelected([])}
                         type="button"
-                        style={{ marginBottom: "20px" }}
                     >
                         {t("deselect-all")}
                     </button>
                     <div className="rows">
                         <button
                             className="btn"
-                            onClick={() => setOpenDefault(true)}
+                            onClick={() =>
+                                setOpenDefault((prev) => ({
+                                    open: true,
+                                    version: prev.version + 1,
+                                }))
+                            }
                             type="button"
-                            style={{ marginBottom: "20px" }}
                         >
                             {t("open-all")}
                         </button>
                         <button
                             className="btn"
-                            onClick={() => setOpenDefault(false)}
+                            onClick={() =>
+                                setOpenDefault((prev) => ({
+                                    open: false,
+                                    version: prev.version + 1,
+                                }))
+                            }
                             type="button"
-                            style={{ marginBottom: "20px" }}
                         >
                             {t("close-all")}
                         </button>
@@ -90,7 +137,8 @@ export default function MODOpener({
                         selectedProducts={productsSelected}
                         isChecked={productsSelected.includes(0)}
                         depth={0}
-                        openDefault={openDefault}
+                        openDefault={openDefault.open}
+                        openVersion={openDefault.version}
                     />
                 </div>
                 {productsSelected.length === 0 && !firstAttentionShown && (
@@ -119,6 +167,7 @@ interface MODRecursifProps {
     isChecked?: boolean;
     depth?: number;
     openDefault?: boolean;
+    openVersion?: number;
 }
 
 function MODRecursif({
@@ -128,6 +177,7 @@ function MODRecursif({
     isChecked = false,
     depth = 0,
     openDefault = false,
+    openVersion = 0,
 }: MODRecursifProps): JSX.Element {
     const name = data.name;
     const code = data.code;
@@ -135,31 +185,25 @@ function MODRecursif({
         (key) => key !== "name" && key !== "code",
     );
 
-    function handleCheckboxChange() {
-        const numberCode = Object.keys(products).find(
-            (key) => products[key as keyof typeof products].code === code,
-        );
+    const handleCheckboxChange = useCallback(() => {
+        const numberCode = codeToNumber.get(code);
 
-        if (!numberCode) return;
-        const correctNumberCode = Number(numberCode);
+        if (numberCode === undefined) return;
 
         if (selectedProducts.length === 0) {
-            setProductsSelected([correctNumberCode]);
+            setProductsSelected([numberCode]);
             return;
         }
 
-        const productsCode = selectedProducts.map((c) => {
-            const key = Object.keys(products).find(
-                (key) => Number(key) === c,
-            ) as keyof typeof products;
-            return products[key].code;
-        });
+        const productsCode = selectedProducts
+            .map((c) => {
+                return numberToCode.get(c);
+            })
+            .filter((c): c is string => c !== undefined);
+
         if (productsCode.includes(code)) {
             const newProductsSelected = selectedProducts.filter((c) => {
-                const key = Object.keys(products).find(
-                    (key) => Number(key) === c,
-                ) as keyof typeof products;
-                return products[key].code !== code;
+                return numberToCode.get(c) !== code;
             });
             setProductsSelected(newProductsSelected);
             return;
@@ -173,7 +217,7 @@ function MODRecursif({
                 const expandedCodes = expandChildrenUntilTarget(
                     c,
                     code,
-                    correctNumberCode,
+                    numberCode,
                 );
                 expandedCodes.forEach((childCode) => {
                     if (!newProductsSelected.includes(childCode)) {
@@ -184,58 +228,44 @@ function MODRecursif({
                 return;
             } else if (c.startsWith(code)) {
                 // c est le code d'un enfant de code, il faut ajouter tous les parents de c
-                if (!newProductsSelected.includes(correctNumberCode)) {
-                    newProductsSelected.push(correctNumberCode);
+                if (!newProductsSelected.includes(numberCode)) {
+                    newProductsSelected.push(numberCode);
                 }
                 isRelated = true;
                 return;
             } else {
-                const numberC = Number(
-                    Object.keys(products).find(
-                        (key) =>
-                            products[key as keyof typeof products].code === c,
-                    ),
-                );
-                if (numberC) {
+                const numberC = codeToNumber.get(c);
+                if (
+                    numberC !== undefined &&
+                    !newProductsSelected.includes(numberC)
+                ) {
                     newProductsSelected.push(numberC);
                 }
             }
         });
-        if (!isRelated) {
-            if (!newProductsSelected.includes(correctNumberCode)) {
-                newProductsSelected.push(correctNumberCode);
-            }
+        if (!isRelated && !newProductsSelected.includes(numberCode)) {
+            newProductsSelected.push(numberCode);
         }
-        let parentSiblings = parentsIfAllChildrenSelected([
-            ...newProductsSelected,
-        ]);
-        Object.keys(parentSiblings).forEach((parent) => {
-            const p = Number(parent);
-            if (!newProductsSelected.includes(p)) {
-                newProductsSelected.push(p);
-            }
-            parentSiblings[p].forEach((sibling) => {
-                const idx = newProductsSelected.indexOf(sibling);
-                if (idx !== -1) newProductsSelected.splice(idx, 1);
-            });
-        });
+
+        // Use Set for O(1) add/delete/has operations instead of O(n) array methods
+        const selectedSet = new Set(newProductsSelected);
+
+        let parentSiblings = parentsIfAllChildrenSelected(selectedSet);
         while (Object.keys(parentSiblings).length > 0) {
-            parentSiblings = parentsIfAllChildrenSelected([
-                ...newProductsSelected,
-            ]);
-            Object.keys(parentSiblings).forEach((newParent) => {
-                const p = Number(newParent);
-                if (!newProductsSelected.includes(p)) {
-                    newProductsSelected.push(p);
+            for (const [parentKey, siblings] of Object.entries(
+                parentSiblings,
+            )) {
+                const parent = Number(parentKey);
+                selectedSet.add(parent);
+                for (const sibling of siblings) {
+                    selectedSet.delete(sibling);
                 }
-                parentSiblings[p].forEach((sibling) => {
-                    const idx = newProductsSelected.indexOf(sibling);
-                    if (idx !== -1) newProductsSelected.splice(idx, 1);
-                });
-            });
+            }
+            parentSiblings = parentsIfAllChildrenSelected(selectedSet);
         }
-        setProductsSelected(newProductsSelected);
-    }
+
+        setProductsSelected([...selectedSet]);
+    }, [code, selectedProducts, setProductsSelected]);
 
     if (!children.length) {
         return (
@@ -252,6 +282,7 @@ function MODRecursif({
             <Accordeon
                 name={`${code}-${name}`}
                 isOpen={openDefault}
+                openVersion={openVersion}
                 items={{
                     title: (
                         <Checkbox
@@ -291,6 +322,7 @@ function MODRecursif({
                                         }
                                         depth={depth + 1}
                                         openDefault={openDefault}
+                                        openVersion={openVersion}
                                     />
                                 ))}
                         </div>
@@ -311,26 +343,6 @@ function IsParentSelected(code: string, selectedProducts: number[]): boolean {
     return selectedProducts.includes(correctNumberCode);
 }
 
-function getAllDirectChildren(code: string): number[] {
-    const children: number[] = [];
-    const length = code.split(".").length;
-
-    Object.keys(products).forEach((key) => {
-        const productCode = products[key as keyof typeof products].code;
-        if (productCode.startsWith(code) && productCode !== code) {
-            const childNumberCode = Number(key);
-            const childLength = productCode.split(".").length;
-            if (
-                !children.includes(childNumberCode) &&
-                childLength === length + 1
-            ) {
-                children.push(childNumberCode);
-            }
-        }
-    });
-    return children;
-}
-
 /**
  * Recursively expand children from parentCode until the targetCode is found.
  * At each level, add siblings of the branch leading to targetCode.
@@ -345,7 +357,7 @@ function expandChildrenUntilTarget(
     targetNumberCode: number,
 ): number[] {
     const result: number[] = [];
-    const directChildren = getAllDirectChildren(parentCode);
+    const directChildren = directChildrenMap.get(parentCode) ?? [];
 
     for (const childNumberCode of directChildren) {
         const childCode =
@@ -373,38 +385,31 @@ function expandChildrenUntilTarget(
     return result;
 }
 
-function parentsIfAllChildrenSelected(selectedProducts: number[]): {
+function parentsIfAllChildrenSelected(selectedSet: Set<number>): {
     [key: number]: number[];
 } {
-    const newSelectedProducts: { [key: number]: number[] } = {};
+    const result: { [key: number]: number[] } = {};
+    const processedParents = new Set<string>();
 
-    selectedProducts.forEach((product) => {
-        const productCode =
-            products[String(product) as keyof typeof products].code;
+    for (const product of selectedSet) {
+        const productCode = numberToCode.get(product);
+        if (productCode === undefined) continue;
 
         const parentCode = productCode.split(".").slice(0, -1).join(".");
 
-        if (parentCode === "0" || parentCode) {
-            const siblings = getAllDirectChildren(parentCode);
+        // Skip if already processed this parent or invalid parent
+        if (!parentCode || processedParents.has(parentCode)) continue;
+        processedParents.add(parentCode);
 
-            if (
-                siblings.every((sibling) => selectedProducts.includes(sibling))
-            ) {
-                const parentNumberCode = Object.keys(products).find(
-                    (key) =>
-                        products[key as keyof typeof products].code ===
-                        parentCode,
-                );
-                if (
-                    parentNumberCode &&
-                    !Object.keys(newSelectedProducts).includes(
-                        String(parentNumberCode),
-                    )
-                ) {
-                    newSelectedProducts[Number(parentNumberCode)] = siblings;
-                }
+        const siblings = directChildrenMap.get(parentCode) ?? [];
+
+        // Check if all siblings are selected using Set.has() - O(1) per check
+        if (siblings.every((sibling) => selectedSet.has(sibling))) {
+            const parentNumberCode = codeToNumber.get(parentCode);
+            if (parentNumberCode !== undefined) {
+                result[parentNumberCode] = siblings;
             }
         }
-    });
-    return newSelectedProducts;
+    }
+    return result;
 }

@@ -538,7 +538,7 @@ label {
 }
 
 .btn-param {
-    z-index: 2;
+    z-index: 8;
     position: fixed;
     top: 2rem;
     right: 2rem;
@@ -546,7 +546,7 @@ label {
 
 .param-bar {
     z-index: 10;
-    position: absolute;
+    position: fixed;
     top: 10%;
     left: 50%;
     display: flex;
@@ -680,6 +680,12 @@ label {
 .checkbox-product {
     max-width: 400px !important;
     width: 400px !important;
+}
+
+.france-tooltip {
+    max-width: clamp(200px, 20vw, 300px);
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 .graph-wrapper {

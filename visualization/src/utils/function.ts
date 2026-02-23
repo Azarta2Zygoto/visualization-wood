@@ -1,4 +1,4 @@
-import pays from "@/data/country_extended.json";
+import pays from "@/data/countries.json";
 
 const pays_english = new Set(Object.values(pays).map((country) => country.en));
 
@@ -15,5 +15,7 @@ export function isKnownCountry(
     isCountryMode: boolean,
 ): boolean {
     if (!country) return false;
-    return isCountryMode ? pays_english.has(country) : true;
+    return isCountryMode
+        ? pays_english.has(country) || country === "France"
+        : true;
 }

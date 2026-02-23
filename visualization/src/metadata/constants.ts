@@ -77,6 +77,8 @@ export const MAP_DEFINITIONS = {
  */
 
 export type definitions = keyof typeof MAP_DEFINITIONS;
+export type Locales = (typeof LOCALES)[keyof typeof LOCALES];
+export type Themes = (typeof THEME_VALUES)[keyof typeof THEME_VALUES];
 
 /**
  * Default value when no user preference is stored

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { JSX, useEffect, useState } from "react";
+import { JSX, useEffect, useMemo, useState } from "react";
 
 import {
     Accordion,
@@ -18,6 +18,7 @@ interface AccordeonProps {
     items: SubAccordeonItem | Array<SubAccordeonItem>;
     color?: string;
     isOpen?: boolean;
+    openVersion?: number;
 }
 
 export default function Accordeon({
@@ -25,10 +26,14 @@ export default function Accordeon({
     items,
     color,
     isOpen = false,
+    openVersion = 0,
 }: AccordeonProps): JSX.Element {
-    const allValues = Array.isArray(items)
-        ? items.map((_, i) => `item-${name}-${i}`)
-        : [`item-${name}-0`];
+    const itemCount = Array.isArray(items) ? items.length : 1;
+
+    const allValues = useMemo(
+        () => Array.from({ length: itemCount }, (_, i) => `item-${name}-${i}`),
+        [name, itemCount],
+    );
 
     const [openItems, setOpenItems] = useState<string[]>(
         isOpen ? allValues : [],
@@ -36,7 +41,7 @@ export default function Accordeon({
 
     useEffect(() => {
         setOpenItems(isOpen ? allValues : []);
-    }, [isOpen]);
+    }, [isOpen, allValues, openVersion]);
 
     return (
         <Accordion
