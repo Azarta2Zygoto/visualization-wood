@@ -47,8 +47,53 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     }
 
     // couleurs
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
-    updateColorDomain(color, knownSymbols, stocks);
+    const palette = d3.schemeTableau10;
+
+    // registry persistante (par exemple sur le svg)
+    let colorRegistry: Map<string, string> =
+        svg_animated.property("__colorRegistry") ?? new Map();
+
+    svg_animated.property("__colorRegistry", colorRegistry);
+
+    // Symboles actuellement visibles
+    const currentSymbols = new Set(stocks.map(s => s.symbol));
+
+    // Supprimer ceux qui ont disparu
+    for (const key of Array.from(colorRegistry.keys())) {
+        if (!currentSymbols.has(key)) {
+            colorRegistry.delete(key);
+        }
+    }
+
+    // Compter l'utilisation des couleurs
+    const counts = new Map<string, number>();
+    palette.forEach(c => counts.set(c, 0));
+
+    for (const color of colorRegistry.values()) {
+        counts.set(color, (counts.get(color) ?? 0) + 1);
+    }
+
+    // Assigner couleur aux nouveaux symboles
+    for (const symbol of currentSymbols) {
+        if (!colorRegistry.has(symbol)) {
+
+            // Chercher couleur libre
+            let chosen = palette.find(c => (counts.get(c) ?? 0) === 0);
+
+            // Sinon prendre la moins utilisée
+            if (!chosen) {
+                chosen = palette.reduce((min, c) =>
+                    (counts.get(c)! < counts.get(min)!) ? c : min
+                );
+            }
+
+            colorRegistry.set(symbol, chosen);
+            counts.set(chosen, counts.get(chosen)! + 1);
+        }
+    }
+
+    // Fonction équivalente à l’ancienne scale
+    const color = (symbol: string) => colorRegistry.get(symbol)!;
 
     // scales
     const xScale = d3
