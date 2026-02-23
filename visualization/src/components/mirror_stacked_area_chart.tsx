@@ -173,19 +173,20 @@ export default function updateMirrorStackedAreaChart(
     /* =========================
        GROUPS (create once)
     ========================= */
-
-    let gExport = root.select<SVGGElement>(".export-group");
-    if (gExport.empty()) {
-        gExport = root.append("g")
-            .attr("class", "export-group")
-            .attr("clip-path", "url(#mirror-clip)");
+    let plotGroup = root.select<SVGGElement>(".plot-group");
+    if (plotGroup.empty()) {
+        plotGroup = root.append("g").attr("class", "plot-group").attr("width", width)
+            .attr("height", height).attr("clip-path", "url(#mirror-clip)");
     }
 
-    let gImport = root.select<SVGGElement>(".import-group");
+    let gExport = plotGroup.select<SVGGElement>(".export-group");;
+    if (gExport.empty()) {
+        gExport = plotGroup.append("g").attr("class", "export-group");
+    }
+
+    let gImport = plotGroup.select<SVGGElement>(".import-group");
     if (gImport.empty()) {
-        gImport = root.append("g")
-            .attr("class", "import-group")
-            .attr("clip-path", "url(#mirror-clip)");
+        gImport = plotGroup.append("g").attr("class", "import-group");
     }
 
     /* =========================
@@ -199,7 +200,7 @@ export default function updateMirrorStackedAreaChart(
             .append("div")
             .attr("class", "mirror-tooltip")
             .style("position", "absolute")
-            .style("background", "#fff")
+            .style("background", "var(--bg)")
             .style("padding", "6px")
             .style("border", "1px solid #999")
             .style("border-radius", "4px")
@@ -392,9 +393,10 @@ export default function updateMirrorStackedAreaChart(
         }
     });
 
-    let iconsGroup = root.select<SVGGElement>(".icons");
-    if (iconsGroup.empty()) iconsGroup = root.append("g").attr("class", "icons").attr("clip-path", "url(#mirror-clip)");
-
+    let iconsGroup = plotGroup.select<SVGGElement>(".icons");
+    if (iconsGroup.empty()) {
+        iconsGroup = plotGroup.append("g").attr("class", "icons");
+    }
     iconsGroup.selectAll("use.event-icon")
         .data(events, (d: any) => d.titre_court)
         .join(
@@ -440,6 +442,16 @@ export default function updateMirrorStackedAreaChart(
 
 
     const zoom = d3.zoom<SVGSVGElement, unknown>()
+        .filter((event: any) => {
+            // Autoriser :
+            // - molette
+            // - drag souris gauche
+            return (
+                event.type === "wheel" ||
+                event.type === "mousedown" ||
+                event.type === "mousemove"
+            );
+        })
         .scaleExtent([1, 10])
         .extent([
             [marginLeft, marginTop],
@@ -471,15 +483,26 @@ export default function updateMirrorStackedAreaChart(
 
         });
 
-    svg.call(zoom);
 
-    // Vérifier si un zoom est déjà appliqué
-    const hasZoom = svg.property("__zoom") !== undefined;
-    if (!hasZoom) {
-        (svg as any).call(zoom);
-    } else {
-        svg.property("__zoom", null);
-        (svg as any).call(zoom);
+    let zoomRect = plotGroup.select<SVGRectElement>(".zoom-rect");
+    if (zoomRect.empty()) {
+        zoomRect = plotGroup.insert("rect", ":first-child") // derrière tous les éléments
+            .attr("class", "zoom-rect")
+            .attr("x", marginLeft)
+            .attr("y", marginTop)
+            .attr("width", width - marginLeft - marginRight)
+            .attr("height", height - marginTop) // ou plus si tu veux inclure la légende
+            .style("fill", "transparent")
+            .style("z-index", 9)
+            .style("pointer-events", "all"); // indispensable pour capter la souris
     }
+    // Réinitialiser le zoom existant si nécessaire
+    if (plotGroup.property("__zoom")) {
+        plotGroup.property("__zoom", null);
+    }
+    // Attacher le zoom à ce rectangle
+    plotGroup.call(zoom as any);
+
+
 
 }

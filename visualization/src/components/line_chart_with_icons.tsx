@@ -504,14 +504,13 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
         });
 
     // Vérifier si un zoom est déjà appliqué
-    const hasZoom = svg_animated.property("__zoom") !== undefined;
-    if (!hasZoom) {
-        (svg_animated as any).call(zoom);
-    } else {
-        svg_animated.property("__zoom", null);
-        (svg_animated as any).call(zoom);
+    // Attacher le zoom uniquement au plotArea
+    const gZoom = plotArea; // ou un g parent de plotArea si besoin
+    // Réinitialiser le zoom existant sur plotArea si nécessaire
+    if (gZoom.property("__zoom")) {
+        gZoom.property("__zoom", null);
     }
-
+    gZoom.call(zoom as any);
     return svg_animated.node();
 }
 
