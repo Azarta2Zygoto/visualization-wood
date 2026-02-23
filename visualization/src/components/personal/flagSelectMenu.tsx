@@ -5,18 +5,18 @@ import { JSX, useState } from "react";
 
 import { ChevronDownIcon } from "lucide-react";
 
+import { useGlobal } from "@/components/globalProvider";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import type { Locales } from "@/metadata/constants";
 import { FranceFlag, UKFlag } from "@/metadata/svg";
 
-import { useGlobal } from "../globalProvider";
-
 interface FlagSelectMenuProps {
-    options: string[];
-    selectedOption: string;
+    options: Locales[];
+    selectedOption: Locales;
 }
 
 export default function FlagSelectMenu({
