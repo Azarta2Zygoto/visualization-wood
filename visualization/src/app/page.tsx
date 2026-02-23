@@ -215,7 +215,9 @@ export default function HomePage(): JSX.Element {
                               : productsSelected
                           : productsSelected
                 }
-                countriesSelected={countriesSelected ?? [34]}
+                countriesSelected={
+                    countriesSelected.length === 0 ? [21] : countriesSelected
+                }
                 iconSelected={iconSelected}
                 allEvents={allEvents}
             />
