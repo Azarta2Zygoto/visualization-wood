@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import versor from "versor";
 
 import continent from "@/data/continents.json";
+import { config } from "@/metadata/mapConfig";
 
 const ParisCoord: [number, number] = [2.3522, 48.8566];
 
@@ -14,7 +15,6 @@ interface SimpleDragProps {
     scaleExtent?: [number, number];
     initialTransform?: d3.ZoomTransform;
     initialRotation?: [number, number, number];
-    legendScale: d3.ScaleLinear<number, number>;
     isStatic?: boolean; // If false, need to adapt circle sizes on zoom
     onZoomChange?: (
         zoomScale: number,
@@ -62,7 +62,6 @@ export function simpleDrag({
     initialTransform = d3.zoomIdentity,
     initialRotation = [0, 0, 0],
     scaleExtent = [0.5, 10],
-    legendScale,
     isStatic = false,
     onZoomChange,
 }: SimpleDragProps) {
@@ -145,12 +144,9 @@ export function simpleDrag({
             d3.select(this)
                 .attr("cx", p ? p[0] : null)
                 .attr("cy", p ? p[1] : null)
+                .transition()
+                .duration(config.animationDuration)
                 .attr("opacity", isVisible(center, [d.lon, d.lat]) ? "1" : "0");
-
-            if (!isStatic && legendScale) {
-                // Adjust circle size based on zoom level to maintain visibility
-                d3.select(this).attr("r", legendScale(d.value) * zoomScale); // Base radius of 5, adjust by zoom
-            }
         });
 
         // Update data-arrow paths (not arrowheads)
@@ -193,12 +189,6 @@ export function simpleDrag({
                 // Update stored arcPoints for arrowhead use
                 d.arcPoints = arcPoints;
 
-                if (!isStatic && legendScale) {
-                    d3.select(this).attr(
-                        "stroke-width",
-                        legendScale(d.value) * zoomScale,
-                    );
-                }
                 // Check visibility of start and end points
                 const startVisible = isVisible(center, ParisCoord);
                 const endVisible = isVisible(center, targetGeoCoords);
@@ -296,10 +286,6 @@ export function simpleDrag({
             sel.attr("cx", p ? p[0] : null)
                 .attr("cy", p ? p[1] : null)
                 .attr("opacity", isVisible(center, [d.lon, d.lat]) ? "1" : "0");
-
-            if (!isStatic && legendScale) {
-                sel.attr("r", legendScale(d.value) * zoomScale);
-            }
         });
 
         // Initialize arrow paths
