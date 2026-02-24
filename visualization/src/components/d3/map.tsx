@@ -276,7 +276,7 @@ export function WorldMap({
                 y: event.pageY,
             });
         },
-        [isCountryMode, year, month],
+        [isCountryMode, year, month, dataPointOnMap],
     );
 
     // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)
@@ -639,7 +639,13 @@ export function WorldMap({
                 else setCountriesSelected([countryNumberCode]);
             }
         });
-    }, [countriesSelected, isMultipleMode, mapLayer, setCountriesSelected]);
+    }, [
+        countriesSelected,
+        isMultipleMode,
+        mapLayer,
+        setCountriesSelected,
+        dataPointOnMap,
+    ]);
 
     // Effect 7: Attach event handlers when map layer changes
     useEffect(() => {
