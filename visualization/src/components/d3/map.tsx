@@ -34,10 +34,12 @@ import type {
     CountryType,
     ProjectionName,
 } from "@/metadata/types";
+import { calculateArrowHead } from "@/utils/arrow";
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";
-import { clampedScale, isKnownCountry } from "@/utils/function";
+import { isKnownCountry } from "@/utils/function";
+import { applyZoomOnElement } from "@/utils/zooming";
 
 const englishCountriesName = new Set(
     Object.values(pays).map((country) => country.en),
@@ -222,151 +224,6 @@ export function WorldMap({
         [correctionSize],
     );
 
-    // Effect 2: Apply the zoom on the legend (stable reference to prevent re-attaching)
-    const applyZoomOnElement = useCallback(
-        (
-            mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
-            legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
-            radiusScale: d3.ScaleLinear<number, number>,
-            zoomScale: number,
-            isStatic = false,
-        ) => {
-            // Keep data points at constant visual size when isStatic
-            if (isStatic) {
-                mapLayer
-                    .selectAll<SVGCircleElement, any>(".data-point")
-                    .attr(
-                        "r",
-                        (d) => legendScaleRef.current!(d.value) / zoomScale,
-                    );
-                mapLayer
-                    .selectAll<SVGLineElement, any>(".data-arrow")
-                    .attr(
-                        "stroke-width",
-                        (d) => legendScaleRef.current!(d.value) / zoomScale,
-                    );
-
-                const arrowHeadSelection = mapLayer.selectAll<
-                    SVGPathElement,
-                    any
-                >(".arrow-head");
-
-                const max =
-                    d3.max(arrowHeadSelection.data(), (d) => d.value) || 1;
-
-                arrowHeadSelection.attr("d", (d) =>
-                    calculateArrowHead(
-                        d,
-                        config.arrowHeadSize / zoomScale,
-                        max,
-                    ),
-                );
-            }
-
-            const effectiveZoom = isStatic ? 1 : zoomScale;
-
-            const legendCircleX = Math.max(
-                config.legendCircleBaseX +
-                    config.legendCircleXFactor * (effectiveZoom - 1),
-                config.legendCircleBaseX,
-            );
-            legendLayer
-                .selectAll<SVGCircleElement, number>(".legend-circle")
-                .attr("r", (d) => radiusScale(d) * effectiveZoom)
-                .attr(
-                    "cy",
-                    (d) =>
-                        config.legendYposition - radiusScale(d) * effectiveZoom,
-                )
-                .attr("cx", legendCircleX);
-
-            legendLayer
-                .selectAll<SVGLineElement, number>(".legend-tick")
-                .attr(
-                    "y1",
-                    (d) =>
-                        config.legendYposition -
-                        radiusScale(d) * effectiveZoom * 2,
-                )
-                .attr(
-                    "y2",
-                    (d) =>
-                        config.legendYposition -
-                        radiusScale(d) * effectiveZoom * 2,
-                )
-                .attr("x1", legendCircleX);
-
-            const labelY = isCountryMode
-                ? (d: number) =>
-                      config.legendYposition -
-                      radiusScale(d) * effectiveZoom * 2 +
-                      config.legendLabelOffset
-                : (d: number, i: number) =>
-                      config.legendLineBaseY +
-                      config.legendLineSpacing * i +
-                      (radiusScale(d) * effectiveZoom * (i - 2)) / 2;
-            legendLayer
-                .selectAll<SVGTextElement, number>(".legend-label")
-                .attr("y", labelY);
-            legendLayer
-                .selectAll<SVGLineElement, number>(".legend-line")
-                .attr(
-                    "y1",
-                    (d, i) =>
-                        config.legendLineBaseY +
-                        config.legendLineSpacing * i +
-                        (radiusScale(d) * effectiveZoom * (i - 2)) / 2,
-                )
-                .attr(
-                    "y2",
-                    (d, i) =>
-                        config.legendLineBaseY +
-                        config.legendLineSpacing * i +
-                        (radiusScale(d) * effectiveZoom * (i - 2)) / 2,
-                )
-                .attr("stroke-width", (d) => radiusScale(d) * effectiveZoom);
-
-            const exp = isCountryMode
-                ? config.countryModeExponent
-                : config.continentModeExponent;
-            const rectWidth = clampedScale(
-                config.legendWidth,
-                config.legendMaxWidth,
-                effectiveZoom,
-                exp,
-            );
-            const rectHeight = clampedScale(
-                config.legendHeight,
-                config.legendMaxHeight,
-                effectiveZoom,
-                exp,
-            );
-
-            const parentGroup = legendLayer.select<SVGGElement>(function () {
-                return (this as SVGGElement).parentNode as SVGGElement;
-            });
-            parentGroup
-                .selectAll<SVGRectElement, unknown>(
-                    ".legend-background, .legend-clip-rect",
-                )
-                .attr("width", rectWidth)
-                .attr("height", rectHeight)
-                .attr("x", 0)
-                .attr("y", config.legendHeight - rectHeight);
-
-            parentGroup
-                .selectAll<SVGTextElement, unknown>(".legend-text")
-                .attr("x", 10)
-                .attr(
-                    "y",
-                    -rectHeight +
-                        config.legendHeight +
-                        config.legendLineSpacing,
-                );
-        },
-        [isCountryMode],
-    );
-
     /**
      * Effects for D3 manipulations (runs on mount and when dependencies change, uses memoized values/functions to avoid unnecessary re-renders or re-attaching handlers)
      */
@@ -391,8 +248,9 @@ export function WorldMap({
                 d3.select(event.currentTarget)
                     .attr("stroke-width", (d: any) => {
                         return isKnownCountry(d.properties.name, isCountryMode)
-                            ? 1.5
-                            : 0.5;
+                            ? 1.5 / currentTransformRef.current.k ** 0.5
+                            : config.mapStrokeWidth /
+                                  currentTransformRef.current.k ** 0.25;
                     })
                     .attr("opacity", (d: any) => {
                         return isKnownCountry(d.properties.name, isCountryMode)
@@ -404,10 +262,10 @@ export function WorldMap({
             const currentCountryNumberCode =
                 countryNameToNumber.get(
                     event.target.__data__.properties?.name,
-                ) ||
+                ) ??
                 countryCodeToNumber.get(event.target.__data__.continentCode);
 
-            if (!currentCountryNumberCode) return;
+            if (currentCountryNumberCode === undefined) return;
 
             setTooltipData({
                 appear: true,
@@ -427,7 +285,11 @@ export function WorldMap({
             d3.selectAll(".data-arrow").attr("opacity", 1);
         } else
             d3.select(event.currentTarget)
-                .attr("stroke-width", 0.5)
+                .attr(
+                    "stroke-width",
+                    config.mapStrokeWidth /
+                        currentTransformRef.current.k ** 0.25,
+                )
                 .attr("opacity", 1);
         setTooltipData((prev) => ({ ...prev, appear: false }));
     }, []);
@@ -574,7 +436,6 @@ export function WorldMap({
                     .scaleExtent(config.scaleExtent)
                     .on("zoom", (event) => {
                         currentMapLayer.attr("transform", event.transform);
-                        currentTransformRef.current = event.transform;
 
                         // Update geographic center for cross-projection sync
                         const geoCenter = getGeoCenterFromTransform(
@@ -584,14 +445,17 @@ export function WorldMap({
                         if (geoCenter) {
                             mapCenterRef.current = geoCenter;
                         }
+                        if (event.transform.k !== currentTransformRef.current.k)
+                            applyZoomOnElement({
+                                mapLayer: currentMapLayer,
+                                legendLayer: correctLegend,
+                                radiusScale: legendScaleRef.current!,
+                                zoomScale: event.transform.k,
+                                isStatic,
+                                isCountryMode,
+                            });
 
-                        applyZoomOnElement(
-                            currentMapLayer,
-                            correctLegend,
-                            legendScaleRef.current!,
-                            event.transform.k,
-                            isStatic,
-                        );
+                        currentTransformRef.current = event.transform;
                     });
 
                 if (correctProjection.drag) {
@@ -609,7 +473,6 @@ export function WorldMap({
                             projectionScale: config.projectionScale,
                             scaleExtent: config.scaleExtent,
                             isStatic,
-                            legendScale: legendScaleRef.current!,
                             // Use unified zoom scale to sync with planar projection zoom
                             initialTransform: d3.zoomIdentity.scale(
                                 currentTransformRef.current.k,
@@ -625,20 +488,23 @@ export function WorldMap({
                                         currentTransform.y,
                                     )
                                     .scale(zoomScale);
-                                currentTransformRef.current = newTransform;
                                 // Convert rotation back to geographic center: center = [-rotation[0], -rotation[1]]
                                 mapCenterRef.current = [
                                     -rotation[0],
                                     -rotation[1],
                                 ];
                                 // Also update legend
-                                applyZoomOnElement(
-                                    currentMapLayer,
-                                    correctLegend,
-                                    legendScaleRef.current!,
-                                    zoomScale,
-                                    isStatic,
-                                );
+                                if (zoomScale !== currentTransformRef.current.k)
+                                    applyZoomOnElement({
+                                        mapLayer: currentMapLayer,
+                                        legendLayer: correctLegend,
+                                        radiusScale: legendScaleRef.current!,
+                                        zoomScale: zoomScale,
+                                        isStatic,
+                                        isCountryMode,
+                                        isGlobe: true,
+                                    });
+                                currentTransformRef.current = newTransform;
                             },
                         }),
                     );
@@ -673,7 +539,7 @@ export function WorldMap({
                               : config[theme].invalidCountry;
                     })
                     .attr("stroke", "var(--low-border-color)")
-                    .attr("stroke-width", 0.5)
+                    .attr("stroke-width", config.mapStrokeWidth)
                     .style("cursor", (d: any) => {
                         return isKnownCountry(d.properties.name, isCountryMode)
                             ? "pointer"
@@ -742,14 +608,14 @@ export function WorldMap({
         geoProjection,
         isStatic,
         isCountryMode,
-        applyZoomOnElement,
         getGeoCenterFromTransform,
         getTransformForGeoCenter,
+        t,
     ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
     useEffect(() => {
-        if (!mapLayer) return;
+        if (!mapLayer || mapLayer.empty()) return;
 
         mapLayer.selectAll(".known-country").on("click", (_: any, d: any) => {
             const countryNumberCode = countryNameToNumber.get(
@@ -777,9 +643,6 @@ export function WorldMap({
 
     // Effect 7: Attach event handlers when map layer changes
     useEffect(() => {
-        const svg = svgRef.current;
-        if (!svg) return;
-
         if (!mapLayer || mapLayer.empty()) return;
 
         // Attach handlers (handlers are stable and read from ref)
@@ -796,111 +659,136 @@ export function WorldMap({
         };
     }, [handleCountryMouseover, handleCountryMouseout, mapLayer]);
 
-    // Effect 8: Update data based on filtered data
     useEffect(() => {
-        if (!lectureData || Object.keys(lectureData).length === 0) return;
+        if (
+            type !== 4 ||
+            !lectureData ||
+            Object.keys(lectureData).length === 0 ||
+            !mapLayer ||
+            mapLayer.empty()
+        )
+            return;
 
         const svg = svgRef.current;
         if (!svg) return;
 
-        d3.select(svg).selectAll(".color-legend").remove();
-        if (!mapLayer || mapLayer.empty()) return;
-
         const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
+
         legend
             .transition()
             .duration(config.animationDuration)
-            .attr("opacity", "1");
+            .attr("opacity", "0");
+        legend
+            .selectAll<SVGTextElement, unknown>(".legend-text")
+            .text(t("legend", { unite: t("euro-unit") }));
 
-        const legendTitle = legend.selectAll<SVGTextElement, unknown>(
-            ".legend-text",
+        const pointData = MakeBalance({
+            lectureData,
+            countries: isCountryMode ? dataPointOnMap : undefined,
+            continent: !isCountryMode ? continent : undefined,
+            isAbsolute,
+        });
+        if (pointData.length === 0) return;
+
+        const maxValue = Math.max(
+            ...pointData.map((d) => Math.abs(d.value)),
+            1,
         );
+        const minValue = Math.min(...pointData.map((d) => d.value), 0);
 
-        if (type === 4) {
-            legend
-                .transition()
-                .duration(config.animationDuration)
-                .attr("opacity", "0");
-            legendTitle.text(t("legend", { unite: t("euro-unit") }));
-
-            const pointData = MakeBalance({
-                lectureData,
-                countries: isCountryMode ? dataPointOnMap : undefined,
-                continent: !isCountryMode ? continent : undefined,
-                isAbsolute,
+        const arrowLayer = mapLayer.select<SVGGElement>(".arrow-layer");
+        arrowLayer
+            .selectAll<SVGPathElement, [number, number][number]>(".data-arrow")
+            .transition()
+            .duration(config.animationDuration)
+            .attr("stroke-dashoffset", function () {
+                const length = (this as SVGPathElement).getTotalLength();
+                return `${length}`;
             });
 
-            const maxValue = Math.max(
-                ...pointData.map((d) => Math.abs(d.value)),
-                1,
-            );
-            const minValue = Math.min(...pointData.map((d) => d.value), 0);
-
-            const arrowLayer = mapLayer.select<SVGGElement>(".arrow-layer");
-            const arrows = arrowLayer.selectAll<
-                SVGPathElement,
-                [number, number][number]
-            >(".data-arrow");
-
-            arrows
-                .transition()
-                .duration(config.animationDuration)
-                .attr("stroke-dashoffset", function () {
-                    const length = (this as SVGPathElement).getTotalLength();
-                    return `${length}`;
-                });
-
-            const headArrows = arrowLayer.selectAll<
+        arrowLayer
+            .selectAll<
                 SVGPathElement,
                 {
                     continentCode: string;
                     arcPoints: [number, number][];
                     value: number;
                 }
-            >(".arrow-head");
+            >(".arrow-head")
+            .transition()
+            .duration(config.animationDuration * 0.3)
+            .attr("d", (d) => {
+                if (d.arcPoints.length < 2) return "";
 
-            headArrows
-                .transition()
-                .duration(config.animationDuration * 0.3)
-                .attr("d", (d) => {
-                    if (d.arcPoints.length < 2) return "";
+                const end = d.arcPoints[d.arcPoints.length - 1];
+                const tipX = end[0];
+                const tipY = end[1];
 
-                    const end = d.arcPoints[d.arcPoints.length - 1];
-                    const tipX = end[0];
-                    const tipY = end[1];
-
-                    return `M${tipX},${tipY}L${tipX},${tipY}L${tipX},${tipY}Z`;
-                });
-
-            const circles = mapLayer.selectAll<
-                SVGCircleElement,
-                (typeof pointData)[number]
-            >(".data-point");
-
-            circles
-                .transition()
-                .duration(config.animationDuration)
-                .attr("r", 0);
-
-            const colorScale = MakeHuexBalanceProjection(
-                mapLayer,
-                pointData,
-                maxValue,
-                minValue,
-                theme,
-                isDaltonian,
-            );
-            const colorLegend = Legend(colorScale, {
-                width: 50,
-                height: correctionSize.height * config.legendHeightRatio,
-                ticks: 10,
-                title: t("balance"),
-                marginTop: 60,
-                marginLeft: 25,
+                return `M${tipX},${tipY}L${tipX},${tipY}L${tipX},${tipY}Z`;
             });
-            d3.select(svg).append(() => colorLegend);
+
+        mapLayer
+            .selectAll(".data-point")
+            .transition()
+            .duration(config.animationDuration)
+            .attr("r", 0);
+
+        const colorScale = MakeHuexBalanceProjection(
+            mapLayer,
+            pointData,
+            maxValue,
+            minValue,
+            theme,
+            isDaltonian,
+        );
+        const colorLegend = Legend(colorScale, {
+            width: 50,
+            height: correctionSize.height * config.legendHeightRatio,
+            ticks: 10,
+            title: t("balance"),
+            marginTop: 60,
+            marginLeft: 25,
+        });
+        d3.select(svg).selectAll(".color-legend").remove();
+        d3.select(svg).append(() => colorLegend);
+    }, [
+        correctionSize.height,
+        dataPointOnMap,
+        isAbsolute,
+        isCountryMode,
+        isDaltonian,
+        lectureData,
+        mapLayer,
+        t,
+        theme,
+        type,
+    ]);
+
+    // Effect 8: Update data based on filtered data
+    useEffect(() => {
+        if (
+            type === 4 || // Skip if in balance mode, handled by separate effect (Effect 7)
+            !lectureData ||
+            Object.keys(lectureData).length === 0 ||
+            !mapLayer ||
+            mapLayer.empty() ||
+            !legendLayer
+        )
             return;
-        }
+
+        const svg = svgRef.current;
+        if (!svg) return;
+
+        const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
+        const legendTitle = legend.selectAll<SVGTextElement, unknown>(
+            ".legend-text",
+        );
+
+        legend
+            .transition()
+            .duration(config.animationDuration)
+            .attr("opacity", "1");
+        d3.select(svg).selectAll(".color-legend").remove();
 
         legendTitle.text(
             t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
@@ -1061,21 +949,20 @@ export function WorldMap({
             );
         }
     }, [
-        applyZoomOnElement,
         lectureData,
         type,
         dataPointOnMap,
         legendLayer,
         correctionSize,
         isCountryMode,
-        handleCountryMouseover,
-        handleCountryMouseout,
         theme,
         isAbsolute,
         isStatic,
         geoProjection,
         paletteColor,
         isDaltonian,
+        handleCountryMouseover,
+        handleCountryMouseout,
     ]);
 
     return (
@@ -1144,7 +1031,7 @@ function createLegend(
 
 function makeCircleProjection(
     mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
-    legendLayer: d3.Selection<SVGGElement, unknown, null, undefined> | null,
+    legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
     pointData: Array<{
         countryName: string;
         value: number;
@@ -1161,6 +1048,8 @@ function makeCircleProjection(
 ): d3.ScaleLinear<number, number, never> {
     const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, 30]);
     // When isStatic, divide radius by zoom to keep constant visual size
+    const legendZoom = isStatic ? 1 : zoom;
+
     const effectiveRadius = (d: { value: number }) =>
         isStatic
             ? isGlobe
@@ -1170,58 +1059,73 @@ function makeCircleProjection(
               ? radiusScale(d.value) * zoom
               : radiusScale(d.value);
 
-    if (legendLayer) {
-        legendLayer
-            .selectAll(".legend-circle, .legend-label, .legend-tick")
-            .remove();
+    legendLayer
+        .selectAll(".legend-circle, .legend-label, .legend-tick")
+        .remove();
 
-        const legendValues = [maxValue, maxValue / 2, maxValue / 4];
+    const legendValues = [maxValue, maxValue / 2, maxValue / 4];
 
-        legendLayer
-            .selectAll(".legend-circle")
-            .data(legendValues)
-            .enter()
-            .append("circle")
-            .attr("class", "legend-circle")
-            .attr("cx", config.legendCircleBaseX)
-            .attr("cy", (d) => config.legendYposition - radiusScale(d))
-            .attr("r", (d) => radiusScale(d))
-            .attr("fill", colors[palette].fill)
-            .attr("opacity", 0.7)
-            .attr("stroke", colors[palette].stroke)
-            .attr("stroke-width", 1);
+    const legendCircleX = Math.max(
+        config.legendCircleBaseX +
+            config.legendCircleXFactor * (legendZoom - 1),
+        config.legendCircleBaseX,
+    );
+    legendLayer
+        .selectAll(".legend-circle")
+        .data(legendValues)
+        .enter()
+        .append("circle")
+        .attr("class", "legend-circle")
+        .attr("cx", legendCircleX)
+        .attr("cy", (d) => config.legendYposition - radiusScale(d) * legendZoom)
+        .attr("r", (d) => radiusScale(d) * zoom)
+        .attr("opacity", 0.7)
+        .attr("stroke-width", 1)
+        .attr("fill", colors[palette].fill)
+        .attr("stroke", colors[palette].stroke);
 
-        legendLayer
-            .selectAll(".legend-tick")
-            .data(legendValues)
-            .enter()
-            .append("line")
-            .attr("class", "legend-tick")
-            .attr("x1", config.legendCircleBaseX)
-            .attr("y1", (d) => config.legendYposition - radiusScale(d) * 2)
-            .attr("x2", config.legendCircleBaseY)
-            .attr("y2", (d) => config.legendYposition - radiusScale(d) * 2)
-            .attr("stroke", "var(--fg)")
-            .attr("stroke-width", 1);
+    legendLayer
+        .selectAll(".legend-tick")
+        .data(legendValues)
+        .enter()
+        .append("line")
+        .attr("class", "legend-tick")
+        .attr("x1", legendCircleX)
+        .attr(
+            "y1",
+            (d) => config.legendYposition - radiusScale(d) * legendZoom * 2,
+        )
+        .attr("x2", config.legendCircleBaseY)
+        .attr(
+            "y2",
+            (d) => config.legendYposition - radiusScale(d) * legendZoom * 2,
+        )
+        .attr("stroke", "var(--fg)")
+        .attr("stroke-width", 1);
 
-        legendLayer
-            .selectAll(".legend-label")
-            .data(legendValues)
-            .enter()
-            .append("text")
-            .attr("class", "legend-label")
-            .attr("x", 10)
-            .attr("y", (d) => 115 - radiusScale(d) * 2)
-            .attr("fill", "var(--fg)")
-            .attr("font-size", 12)
-            .text(
-                (d) =>
-                    Number((d / 1000).toFixed(0)).toLocaleString("en-FR", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                    }) + " 000",
-            );
-    }
+    legendLayer
+        .selectAll(".legend-label")
+        .data(legendValues)
+        .enter()
+        .append("text")
+        .attr("class", "legend-label")
+        .attr("x", 10)
+        .attr(
+            "y",
+            (d) =>
+                config.legendYposition -
+                radiusScale(d) * legendZoom * 2 +
+                config.legendLabelOffset,
+        )
+        .attr("fill", "var(--fg)")
+        .attr("font-size", 12)
+        .text(
+            (d) =>
+                Number((d / 1000).toFixed(0)).toLocaleString("en-FR", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                }) + " 000",
+        );
 
     // Bind data to circles (only countries with data)
     const circles = mapLayer
@@ -1492,42 +1396,6 @@ function makeArrowProjection(
             );
     }
     return strokeScale;
-}
-
-function calculateArrowHead(
-    d: {
-        arcPoints: [number, number][];
-        value: number;
-    },
-    arrowheadSize: number,
-    maxValue: number,
-): string {
-    if (d.arcPoints.length < 2) return "";
-
-    const end = d.arcPoints[d.arcPoints.length - 1];
-    const prev = d.arcPoints[d.arcPoints.length - 2];
-
-    // Calculate angle for arrowhead rotation
-    const angle = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
-
-    // Create arrowhead triangle points
-    const size = 3 + arrowheadSize * (d.value / maxValue) ** 0.5; // Scale size by value (sqrt for better visual distribution)
-    const tipX = end[0];
-    const tipY = end[1];
-
-    // Point 1: tip of arrow
-    const p1X = tipX + size * Math.cos(angle);
-    const p1Y = tipY + size * Math.sin(angle);
-
-    // Point 2: left side of arrow base
-    const p2X = end[0] - size * Math.cos(angle - Math.PI / 6);
-    const p2Y = end[1] - size * Math.sin(angle - Math.PI / 6);
-
-    // Point 3: right side of arrow base
-    const p3X = end[0] - size * Math.cos(angle + Math.PI / 6);
-    const p3Y = end[1] - size * Math.sin(angle + Math.PI / 6);
-
-    return `M${p1X},${p1Y}L${p2X},${p2Y}L${p3X},${p3Y}Z`;
 }
 
 function MakeHuexBalanceProjection(
