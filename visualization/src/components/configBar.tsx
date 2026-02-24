@@ -68,7 +68,6 @@ export default function ConfigBar({
     const t = useTranslations("ConfigBar");
     const { locale } = useGlobal();
 
-    const [isVolume, setIsVolume] = useState<boolean>(true);
     const [isOpen, setIsOpen] = useState<boolean>(true);
     const [isOpenProducts, setIsOpenProducts] = useState<boolean>(false);
 
@@ -81,20 +80,28 @@ export default function ConfigBar({
         }
     }
 
-    function handleTypeDataChange(newType: number, newIsVolume: boolean) {
-        if (newType === 4) {
-            setTypeData(4);
-            setIsVolume(false);
+    function handleTypeDataChange(
+        exportMode: boolean | null,
+        volumeMode: boolean | null,
+    ) {
+        if (exportMode === null && volumeMode === null) {
+            setTypeData(4); // balance
             return;
         }
 
-        newType = newType % 2; // ensure newType is 0 or 1
-        setIsVolume(newIsVolume);
-        if (newIsVolume) {
-            setTypeData(newType);
-        } else {
-            // currently in value mode
-            setTypeData(newType + 2);
+        if (exportMode !== null) {
+            if (exportMode) {
+                setTypeData(typeData < 2 ? 0 : 2); // toggle between export volume and value
+            } else {
+                setTypeData(typeData < 2 ? 1 : 3); // toggle between import volume and value
+            }
+        }
+        if (volumeMode !== null) {
+            if (volumeMode) {
+                setTypeData(typeData % 2); // switch to volume
+            } else {
+                setTypeData((typeData % 2) + 2); // switch to value
+            }
         }
     }
 
@@ -117,8 +124,7 @@ export default function ConfigBar({
     return (
         <div
             className={`config-bar ${isOpen ? "" : "closed"}`}
-            role="dialog"
-            aria-modal="true"
+            role="region"
             aria-hidden={!isOpen}
         >
             <button
@@ -140,6 +146,7 @@ export default function ConfigBar({
                     <button
                         className={`btn ${isCountryMode ? "active" : ""}`}
                         type="button"
+                        aria-pressed={isCountryMode}
                         onClick={() => handleCountryModeChange(true)}
                         style={{
                             width: "clamp(90px, 15vw, 180px)",
@@ -152,6 +159,7 @@ export default function ConfigBar({
                     <button
                         className={`btn ${!isCountryMode ? "active" : ""}`}
                         type="button"
+                        aria-pressed={!isCountryMode}
                         onClick={() => handleCountryModeChange(false)}
                         style={{
                             width: "clamp(90px, 15vw, 180px)",
@@ -172,8 +180,9 @@ export default function ConfigBar({
                         <button
                             className={`btn ${typeData === 0 || typeData === 2 ? "active" : ""}`}
                             type="button"
-                            onClick={() => handleTypeDataChange(0, isVolume)}
+                            onClick={() => handleTypeDataChange(true, null)}
                             aria-label={t("export-desc")}
+                            aria-pressed={typeData === 0 || typeData === 2}
                             title={t("export-desc")}
                             style={{
                                 width: "clamp(60px, 10vw, 120px)",
@@ -187,7 +196,8 @@ export default function ConfigBar({
                         <button
                             className={`btn ${typeData === 1 || typeData === 3 ? "active" : ""}`}
                             type="button"
-                            onClick={() => handleTypeDataChange(1, isVolume)}
+                            aria-pressed={typeData === 1 || typeData === 3}
+                            onClick={() => handleTypeDataChange(false, null)}
                             aria-label={t("import-desc")}
                             title={t("import-desc")}
                             style={{
@@ -201,7 +211,8 @@ export default function ConfigBar({
                         <button
                             className={`btn ${typeData === 4 ? "active" : ""}`}
                             type="button"
-                            onClick={() => handleTypeDataChange(4, isVolume)}
+                            aria-pressed={typeData === 4}
+                            onClick={() => handleTypeDataChange(null, null)}
                             aria-label={t("balance-desc")}
                             title={t("balance-desc")}
                             style={{
@@ -224,9 +235,9 @@ export default function ConfigBar({
                                 className={`btn ${typeData === 0 || typeData === 1 ? "active" : ""}`}
                                 type="button"
                                 disabled={typeData === 4}
-                                onClick={() =>
-                                    handleTypeDataChange(typeData, true)
-                                }
+                                aria-pressed={typeData === 0 || typeData === 2}
+                                aria-hidden={typeData === 4}
+                                onClick={() => handleTypeDataChange(null, true)}
                                 aria-label={t("volume-desc")}
                                 title={t("volume-desc")}
                                 style={{
@@ -243,9 +254,11 @@ export default function ConfigBar({
                                 className={`btn ${typeData === 2 || typeData === 3 ? "active" : ""}`}
                                 type="button"
                                 onClick={() =>
-                                    handleTypeDataChange(typeData, false)
+                                    handleTypeDataChange(null, false)
                                 }
+                                aria-pressed={typeData === 2 || typeData === 3}
                                 aria-label={t("value-desc")}
+                                aria-hidden={typeData === 4}
                                 title={t("value-desc")}
                                 style={{
                                     width: "clamp(90px, 15vw, 180px)",
@@ -267,9 +280,11 @@ export default function ConfigBar({
                             <button
                                 className={`btn ${isAbsolute ? "active" : ""}`}
                                 type="button"
-                                onClick={() => setIsAbsolute(true)}
+                                aria-pressed={isAbsolute}
                                 aria-label={t("value-absolute-desc")}
+                                aria-hidden={typeData !== 4}
                                 title={t("value-absolute-desc")}
+                                onClick={() => setIsAbsolute(true)}
                                 style={{
                                     width: "clamp(90px, 15vw, 180px)",
                                     borderTopColor: "transparent",
@@ -283,9 +298,11 @@ export default function ConfigBar({
                             <button
                                 className={`btn ${!isAbsolute ? "active" : ""}`}
                                 type="button"
-                                onClick={() => setIsAbsolute(false)}
+                                aria-pressed={!isAbsolute}
                                 aria-label={t("value-relative-desc")}
+                                aria-hidden={typeData !== 4}
                                 title={t("value-relative-desc")}
+                                onClick={() => setIsAbsolute(false)}
                                 style={{
                                     width: "clamp(90px, 15vw, 180px)",
                                     borderLeftColor: "transparent",
