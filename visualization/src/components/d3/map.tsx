@@ -26,8 +26,10 @@ import {
     type definitions,
 } from "@/metadata/constants";
 import { projections } from "@/metadata/geoprojections";
+import { config } from "@/metadata/mapConfig";
 import type {
     ColorName,
+    ContinentType,
     CountryData,
     CountryType,
     ProjectionName,
@@ -35,88 +37,153 @@ import type {
 import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";
-import { isKnownCountry } from "@/utils/function";
+import { clampedScale, isKnownCountry } from "@/utils/function";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const pays_english = new Set(Object.values(pays).map((country) => country.en));
-const animationDuration = 800;
-const ParisCoord: [number, number] = [2.3522, 48.8566];
+const englishCountriesName = new Set(
+    Object.values(pays).map((country) => country.en),
+);
 
-const config = {
-    legendHeight: 130,
-    legendWidth: 150,
-    legendMaxHeight: 250,
-    legendMaxWidth: 300,
-    light: {
-        validCountry: "#87ceeb",
-        invalidCountry: "#d3d3d3",
-        nullCountry: "#d8dee6",
-    },
-    dark: {
-        validCountry: "#116383",
-        invalidCountry: "#666",
-        nullCountry: "#40404a",
-    },
-    projectionScale: 310,
-    scaleExtent: [0.5, 10] as [number, number],
-};
+const countryCodeToNumber = new Map<string, number>();
+const countryNumberToCode = new Map<number, string>();
+const countryNumberToName = new Map<number, string>();
+const countryNameToNumber = new Map<string, number>();
+Object.entries(pays).forEach(([key, val]) => {
+    countryCodeToNumber.set(val.code, Number(key));
+    countryNumberToCode.set(Number(key), val.code);
+    countryNumberToName.set(Number(key), val.en);
+    countryNameToNumber.set(val.en, Number(key));
+});
 
 interface WorldMapProps {
-    allData: { [key: string]: number[][] };
+    rawData: { [key: string]: number[][] };
     type: number;
     year: number;
     month: number;
     productsSelected: number[];
     countriesSelected: number[];
+    mapDefinition: definitions;
+    geoProjection: ProjectionName;
+    paletteColor: ColorName;
+    isAbsolute: boolean;
     isMultipleMode: boolean;
     isCountryMode: boolean;
-    mapDefinition: definitions;
-    isAbsolute: boolean;
-    geoProjection: ProjectionName;
     isStatic: boolean;
     isDaltonian: boolean;
-    paletteColor: ColorName;
     setCountriesSelected: (countries: number[]) => void;
     setNBCountryWithData: (nb: number) => void;
 }
 
 export function WorldMap({
-    allData,
+    rawData,
     type,
     year,
     month,
     productsSelected,
     countriesSelected,
-    isMultipleMode,
-    isCountryMode = false,
     mapDefinition,
-    isAbsolute,
     geoProjection,
+    paletteColor,
+    isAbsolute,
+    isMultipleMode,
+    isCountryMode,
     isStatic,
     isDaltonian,
-    paletteColor,
     setCountriesSelected,
     setNBCountryWithData,
 }: WorldMapProps): JSX.Element {
     const t = useTranslations("WorldMap");
     const { windowSize, theme } = useGlobal();
 
-    const correctionSize = useMemo<[number, number]>(
-        () => [windowSize.width / 2 - 5, windowSize.height / 2],
-        [windowSize.width, windowSize.height],
-    );
-
+    /**
+     * Refs for D3-managed elements and state (no React state to avoid re-renders on changes)
+     */
     const svgRef = useRef<SVGSVGElement>(null);
     const worldDataCache = useRef<{ map: any; size: definitions }[]>([]);
-    // Token to cancel stale async initializations (prevents double append)
-    const loadTokenRef = useRef(0);
+    const loadTokenRef = useRef(0); // Token to cancel stale async initializations (prevents double append)
     const projectionRef = useRef<d3.GeoProjection | null>(null);
     const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
     const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
-    // Unified zoom scale that works across both projection types
-    const unifiedZoomScaleRef = useRef<number>(1);
-    // Store geographic center [lon, lat] for preserving view across projection changes
-    const mapCenterRef = useRef<[number, number]>(ParisCoord);
+    const mapCenterRef = useRef<[number, number]>([0, 0]); // Store geographic center [lon, lat]
+
+    /**
+     * React state for interactive elements (triggers re-render on changes)
+     */
+    const [tooltipData, setTooltipData] = useState<{
+        appear: boolean;
+        year: number;
+        month: number;
+        country: CountryType;
+        x: number;
+        y: number;
+    }>({ appear: false, year: 0, month: 0, country: "103", x: 0, y: 0 });
+    const [dataPointOnMap, setDataPointOnMap] = useState<
+        Array<{
+            countryName: string;
+            x: number;
+            y: number;
+            lon: number;
+            lat: number;
+        }>
+    >([]);
+    const [mapLayer, setMapLayer] = useState<d3.Selection<
+        SVGGElement,
+        unknown,
+        null,
+        undefined
+    > | null>(null);
+    const [legendLayer, setLegendLayer] = useState<d3.Selection<
+        SVGGElement,
+        unknown,
+        null,
+        undefined
+    > | null>(null);
+
+    /**
+     * Memoized values and functions (re-computed only when dependencies change, stable references for D3 to avoid re-attaching handlers)
+     */
+
+    const correctionSize = useMemo<{ width: number; height: number }>(
+        () => ({
+            width: windowSize.width * 0.5 - 5,
+            height: windowSize.height * 0.5,
+        }),
+        [windowSize.width, windowSize.height],
+    );
+
+    // Filter and aggregate data
+    const lectureData = useMemo(() => {
+        if (!rawData || !rawData[year] || productsSelected.length === 0)
+            return {};
+
+        const yearData = rawData[year];
+        const dataByCountry: Record<string, Record<number, number>> = {};
+
+        const productsSet = new Set(productsSelected);
+
+        const N = yearData.length;
+        for (let i = 0; i < N; i++) {
+            const entry = yearData[i];
+
+            // Check month match
+            if (entry[2] !== month) continue;
+
+            // Check product match
+            if (!productsSet.has(entry[3])) continue;
+
+            // Get country name and skip if not found
+            const countryName = countryNumberToName.get(entry[0]);
+            if (!countryName) continue;
+
+            const typeIndex = entry[1];
+            const value = entry[4] || 0;
+
+            // Use nullish coalescing assignment
+            (dataByCountry[countryName] ??= {})[typeIndex] =
+                (dataByCountry[countryName][typeIndex] || 0) + value;
+        }
+
+        return dataByCountry;
+    }, [rawData, year, month, productsSelected]);
 
     // Helper to get geographic center from planar transform
     const getGeoCenterFromTransform = useCallback(
@@ -126,8 +193,8 @@ export function WorldMap({
         ): [number, number] | null => {
             // Screen center in untransformed coordinates
             const screenCenter: [number, number] = [
-                correctionSize[0],
-                correctionSize[1],
+                correctionSize.width,
+                correctionSize.height,
             ];
             const untransformed = transform.invert(screenCenter);
             const geoCenter = proj.invert?.(untransformed);
@@ -147,223 +214,166 @@ export function WorldMap({
             if (!projected) return d3.zoomIdentity.scale(scale);
             // We want the projected point to appear at screen center
             // transform applies as: screenX = projectedX * k + x
-            // So: correctionSize[0] = projected[0] * scale + x => x = correctionSize[0] - projected[0] * scale
-            const x = correctionSize[0] - projected[0] * scale;
-            const y = correctionSize[1] / 2 - projected[1] * scale;
+            // So: correctionSize.width = projected[0] * scale + x => x = correctionSize.width - projected[0] * scale
+            const x = correctionSize.width - projected[0] * scale;
+            const y = correctionSize.height - projected[1] * scale;
             return d3.zoomIdentity.translate(x, y).scale(scale);
         },
         [correctionSize],
     );
 
-    const [tooltipData, setTooltipData] = useState<{
-        appear: boolean;
-        year: number;
-        month: number;
-        country: CountryType;
-    }>({ appear: false, year: 0, month: 0, country: "103" });
-    const [tooltipPosition, setTooltipPosition] = useState<{
-        x: number;
-        y: number;
-    }>({ x: 0, y: 0 });
-    const [dataPointOnMap, setDataPointOnMap] = useState<
-        Array<{
-            countryName: string;
-            x: number;
-            y: number;
-            lon: number;
-            lat: number;
-        }>
-    >([]);
-    const [layer, setLayer] = useState<d3.Selection<
-        SVGGElement,
-        unknown,
-        null,
-        undefined
-    > | null>(null);
-    const [legendLayer, setLegendLayer] = useState<d3.Selection<
-        SVGGElement,
-        unknown,
-        null,
-        undefined
-    > | null>(null);
+    // Effect 2: Apply the zoom on the legend (stable reference to prevent re-attaching)
+    const applyZoomOnElement = useCallback(
+        (
+            mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
+            legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
+            radiusScale: d3.ScaleLinear<number, number>,
+            zoomScale: number,
+            isStatic = false,
+        ) => {
+            // Keep data points at constant visual size when isStatic
+            if (isStatic) {
+                mapLayer
+                    .selectAll<SVGCircleElement, any>(".data-point")
+                    .attr(
+                        "r",
+                        (d) => legendScaleRef.current!(d.value) / zoomScale,
+                    );
+                mapLayer
+                    .selectAll<SVGLineElement, any>(".data-arrow")
+                    .attr(
+                        "stroke-width",
+                        (d) => legendScaleRef.current!(d.value) / zoomScale,
+                    );
 
-    // Effect 1: Filter and aggregate data using useMemo (no extra render)
-    const lectureData = useMemo(() => {
-        if (!allData || !allData[year]) return {};
+                const arrowHeadSelection = mapLayer.selectAll<
+                    SVGPathElement,
+                    any
+                >(".arrow-head");
 
-        const yearData = allData[year];
-        const dataByCountry: {
-            [key: string]: Record<string, number>;
-        } = {};
+                const max =
+                    d3.max(arrowHeadSelection.data(), (d) => d.value) || 1;
 
-        // Convert to Set for O(1) lookup (faster than array.includes)
-        const productsSet =
-            productsSelected.length > 0 ? new Set(productsSelected) : null;
-        const L = yearData.length;
-
-        // Single pass: filter and aggregate in one loop (no intermediate array)
-        for (let i = 0; i < L; i++) {
-            const entry = yearData[i];
-
-            // Early exit: check month first (fastest check)
-            if (entry[2] !== month) continue;
-
-            // Check product match
-            const productMatch = productsSet
-                ? productsSet.has(entry[3])
-                : entry[3] === 0;
-            if (!productMatch) continue;
-
-            // Get country name and skip if not found
-            const countryName =
-                pays[entry[0].toString() as keyof typeof pays]?.en;
-            if (!countryName) continue;
-
-            const typeIndex = entry[1].toString();
-            const value = entry[4] || 0;
-
-            // Initialize country object if needed
-            if (!dataByCountry[countryName]) {
-                dataByCountry[countryName] = {};
+                arrowHeadSelection.attr("d", (d) =>
+                    calculateArrowHead(
+                        d,
+                        config.arrowHeadSize / zoomScale,
+                        max,
+                    ),
+                );
             }
 
-            // Aggregate values (sum if multiple entries per country/type)
-            dataByCountry[countryName][typeIndex] =
-                (dataByCountry[countryName][typeIndex] || 0) + value;
-        }
+            const effectiveZoom = isStatic ? 1 : zoomScale;
 
-        return dataByCountry;
-    }, [allData, year, month, productsSelected]);
-
-    // Effect 2: Apply the zoom on the legend (stable reference to prevent re-attaching)
-    const applyLegendZoom = useCallback(
-        (
-            legend: d3.Selection<SVGGElement, unknown, null, undefined>,
-            zoomScale: number,
-            radiusScale: d3.ScaleLinear<number, number>,
-        ) => {
-            if (!legend) return;
-            if (isStatic) zoomScale = 1;
-            const baseY = 110;
-            legend
+            const legendCircleX = Math.max(
+                config.legendCircleBaseX +
+                    config.legendCircleXFactor * (effectiveZoom - 1),
+                config.legendCircleBaseX,
+            );
+            legendLayer
                 .selectAll<SVGCircleElement, number>(".legend-circle")
-                .attr("r", (d) => radiusScale(d) * zoomScale)
-                .attr("cy", (d) => baseY - radiusScale(d) * zoomScale)
-                .attr("cx", () => Math.max(100 + 50 * (zoomScale - 1), 100));
+                .attr("r", (d) => radiusScale(d) * effectiveZoom)
+                .attr(
+                    "cy",
+                    (d) =>
+                        config.legendYposition - radiusScale(d) * effectiveZoom,
+                )
+                .attr("cx", legendCircleX);
 
-            if (isCountryMode)
-                legend
-                    .selectAll<SVGTextElement, number>(".legend-label")
-                    .attr(
-                        "y",
-                        (d) => baseY - radiusScale(d) * zoomScale * 2 + 5,
-                    );
-            else
-                legend
-                    .selectAll<SVGTextElement, number>(".legend-label")
-                    .attr(
-                        "y",
-                        (d, i) =>
-                            45 +
-                            25 * i +
-                            (radiusScale(d) * zoomScale * (i - 2)) / 2,
-                    );
+            legendLayer
+                .selectAll<SVGLineElement, number>(".legend-tick")
+                .attr(
+                    "y1",
+                    (d) =>
+                        config.legendYposition -
+                        radiusScale(d) * effectiveZoom * 2,
+                )
+                .attr(
+                    "y2",
+                    (d) =>
+                        config.legendYposition -
+                        radiusScale(d) * effectiveZoom * 2,
+                )
+                .attr("x1", legendCircleX);
 
-            legend
+            const labelY = isCountryMode
+                ? (d: number) =>
+                      config.legendYposition -
+                      radiusScale(d) * effectiveZoom * 2 +
+                      config.legendLabelOffset
+                : (d: number, i: number) =>
+                      config.legendLineBaseY +
+                      config.legendLineSpacing * i +
+                      (radiusScale(d) * effectiveZoom * (i - 2)) / 2;
+            legendLayer
+                .selectAll<SVGTextElement, number>(".legend-label")
+                .attr("y", labelY);
+            legendLayer
                 .selectAll<SVGLineElement, number>(".legend-line")
                 .attr(
                     "y1",
                     (d, i) =>
-                        45 +
-                        25 * i +
-                        (radiusScale(d) * zoomScale * (i - 2)) / 2,
+                        config.legendLineBaseY +
+                        config.legendLineSpacing * i +
+                        (radiusScale(d) * effectiveZoom * (i - 2)) / 2,
                 )
                 .attr(
                     "y2",
                     (d, i) =>
-                        45 +
-                        25 * i +
-                        (radiusScale(d) * zoomScale * (i - 2)) / 2,
+                        config.legendLineBaseY +
+                        config.legendLineSpacing * i +
+                        (radiusScale(d) * effectiveZoom * (i - 2)) / 2,
                 )
-                .attr("stroke-width", (d) => radiusScale(d) * zoomScale);
+                .attr("stroke-width", (d) => radiusScale(d) * effectiveZoom);
 
-            legend
-                .selectAll<SVGLineElement, number>(".legend-tick")
-                .attr("y1", (d) => baseY - radiusScale(d) * zoomScale * 2)
-                .attr("y2", (d) => baseY - radiusScale(d) * zoomScale * 2)
-                .attr("x1", () => Math.max(100 + 50 * (zoomScale - 1), 100));
+            const exp = isCountryMode
+                ? config.countryModeExponent
+                : config.continentModeExponent;
+            const rectWidth = clampedScale(
+                config.legendWidth,
+                config.legendMaxWidth,
+                effectiveZoom,
+                exp,
+            );
+            const rectHeight = clampedScale(
+                config.legendHeight,
+                config.legendMaxHeight,
+                effectiveZoom,
+                exp,
+            );
 
-            const element = legend
-                .select<SVGGElement>(function () {
-                    return (this as SVGGElement).parentNode as SVGGElement;
-                })
-                .selectAll<SVGRectElement, unknown>(".legend-background");
-            const clipRect = legend
-                .select<SVGGElement>(function () {
-                    return (this as SVGGElement).parentNode as SVGGElement;
-                })
-                .selectAll<SVGRectElement, unknown>(".legend-clip-rect");
-            const legendText = legend
-                .select<SVGGElement>(function () {
-                    return (this as SVGGElement).parentNode as SVGGElement;
-                })
-                .selectAll<SVGTextElement, unknown>(".legend-text");
-
-            let rectWidth = config.legendWidth;
-            let rectHeight = config.legendHeight;
-            if (isCountryMode) {
-                rectWidth = Math.max(
-                    Math.min(
-                        config.legendWidth * zoomScale ** 0.6,
-                        config.legendMaxWidth,
-                    ),
-                    config.legendWidth,
-                );
-                rectHeight = Math.max(
-                    Math.min(
-                        config.legendHeight * zoomScale ** 0.6,
-                        config.legendMaxHeight,
-                    ),
-                    config.legendHeight,
-                );
-            } else {
-                rectWidth = Math.max(
-                    Math.min(
-                        config.legendWidth * zoomScale ** 0.18,
-                        config.legendMaxWidth,
-                    ),
-                    config.legendWidth,
-                );
-                rectHeight = Math.max(
-                    Math.min(
-                        config.legendHeight * zoomScale ** 0.18,
-                        config.legendMaxHeight,
-                    ),
-                    config.legendHeight,
-                );
-            }
-            element
-                .attr("width", rectWidth)
-                .attr("height", rectHeight)
-                .attr("x", 0)
-                .attr("y", config.legendHeight - rectHeight);
-            clipRect
+            const parentGroup = legendLayer.select<SVGGElement>(function () {
+                return (this as SVGGElement).parentNode as SVGGElement;
+            });
+            parentGroup
+                .selectAll<SVGRectElement, unknown>(
+                    ".legend-background, .legend-clip-rect",
+                )
                 .attr("width", rectWidth)
                 .attr("height", rectHeight)
                 .attr("x", 0)
                 .attr("y", config.legendHeight - rectHeight);
 
-            legendText
+            parentGroup
+                .selectAll<SVGTextElement, unknown>(".legend-text")
                 .attr("x", 10)
-                .attr("y", -rectHeight + config.legendHeight + 25);
+                .attr(
+                    "y",
+                    -rectHeight +
+                        config.legendHeight +
+                        config.legendLineSpacing,
+                );
         },
-        [isCountryMode, isStatic],
+        [isCountryMode],
     );
+
+    /**
+     * Effects for D3 manipulations (runs on mount and when dependencies change, uses memoized values/functions to avoid unnecessary re-renders or re-attaching handlers)
+     */
 
     // Effect 3: Memoized event handlers (stable references to prevent re-attaching)
     const handleCountryMouseover = useCallback(
         (event: any) => {
-            console.log("Mouseover on country:", event.target.__data__);
             // Visual feedback
 
             if (event.target.__data__.continentCode) {
@@ -391,32 +401,19 @@ export function WorldMap({
                     });
 
             // Tooltip data (read from ref to get current data)
-            let currentCountryNumberCode: string | undefined = undefined;
-            if (event.target.__data__.properties) {
-                const currentCountryName =
-                    event.target.__data__.properties.name;
-                currentCountryNumberCode = Object.keys(pays).find(
-                    (key) =>
-                        pays[key as keyof typeof pays].en ===
-                        currentCountryName,
-                );
-            } else if (event.target.__data__.continentCode) {
-                const continentCode = event.target.__data__.continentCode;
-                currentCountryNumberCode = Object.keys(pays).find(
-                    (key) =>
-                        pays[key as keyof typeof pays].code === continentCode,
-                );
-            }
-            console.log("Identified country code:", currentCountryNumberCode);
+            const currentCountryNumberCode =
+                countryNameToNumber.get(
+                    event.target.__data__.properties?.name,
+                ) ||
+                countryCodeToNumber.get(event.target.__data__.continentCode);
+
             if (!currentCountryNumberCode) return;
 
             setTooltipData({
                 appear: true,
                 year,
                 month,
-                country: currentCountryNumberCode as CountryType,
-            });
-            setTooltipPosition({
+                country: String(currentCountryNumberCode) as CountryType,
                 x: event.pageX,
                 y: event.pageY,
             });
@@ -437,6 +434,9 @@ export function WorldMap({
 
     // Effect 5: Load map and draw countries (runs once on mount, then only if mode or window size changes)
     useEffect(() => {
+        const abortController = new AbortController();
+        const { signal } = abortController;
+
         const loadMap = async () => {
             console.log("Initializing map...");
             // Mark this async init with a token
@@ -447,35 +447,64 @@ export function WorldMap({
             // Create projection and path
             const correctProjection = projections.find(
                 (p) => p.name === geoProjection,
-            );
-            if (!correctProjection) return;
+            )!;
 
             const projection = correctProjection
                 .value()
                 .scale(config.projectionScale)
-                .translate(correctionSize);
+                .translate([correctionSize.width, correctionSize.height]);
             projectionRef.current = projection;
 
             const pathGenerator = d3.geoPath().projection(projection);
 
             // Clear any previous map root to avoid duplicate renderings
-            // (use a single root group so repeated inits remove prior map)
             const svgSel = d3.select(svg);
             svgSel.selectAll(".map-root").remove();
 
+            // Create SVG (attach a single root group to make init idempotent)
+            const mapSvg = svgSel
+                .attr("width", correctionSize.width * 2)
+                .attr("height", correctionSize.height * 2)
+                .attr(
+                    "viewBox",
+                    `0 0 ${correctionSize.width * 2} ${correctionSize.height * 2}`,
+                );
+
+            const root = mapSvg.append("g").attr("class", "map-root");
+
+            const currentMapLayer = root.append("g").attr("class", "map-layer");
+            setMapLayer(currentMapLayer);
+
+            const legendLayer = root
+                .append("g")
+                .attr("class", "legend-layer")
+                .attr(
+                    "transform",
+                    `translate(20, ${correctionSize.height * config.legendHeightRatio})`,
+                )
+                .attr("pointer-events", "none");
+
+            const correctLegend = createLegend(
+                legendLayer,
+                t("legend", { unite: t("ton-unit") }),
+            );
+            setLegendLayer(correctLegend);
+
             try {
                 // Fetch or use cached world topology data
-                const worldDataCached = worldDataCache.current;
-                const cachedEntry = worldDataCached.find(
+                const cachedEntry = worldDataCache.current.find(
                     (entry) => entry.size === mapDefinition,
                 );
                 let worldData = cachedEntry?.map;
                 if (!worldData) {
                     const size = MAP_DEFINITIONS[mapDefinition];
+                    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
                     const url = `${basePath}/world/world-${size}.json`;
-                    const response = await fetch(url);
+
+                    const response = await fetch(url, { signal });
                     if (!response.ok)
                         throw new Error("Failed to load world data");
+                    if (signal.aborted) return;
                     worldData = await response.json();
 
                     worldDataCache.current.push({
@@ -500,7 +529,7 @@ export function WorldMap({
                 } else {
                     Object.keys(continent).forEach((cont) => {
                         const countriesInContinent =
-                            continent[cont as keyof typeof continent].countries;
+                            continent[cont as ContinentType].countries;
 
                         const countriesSet = new Set(
                             Object.entries(countriesInContinent).map(
@@ -520,21 +549,19 @@ export function WorldMap({
                             geometriesToMerge,
                         );
 
-                        const continentName = Object.keys(pays).find(
-                            (value) => {
-                                return (
-                                    pays[value as keyof typeof pays].code ===
-                                    cont
-                                );
-                            },
-                        );
+                        const continentCodeNumber =
+                            countryCodeToNumber.get(cont);
+                        if (!continentCodeNumber) return;
 
                         const mergedFeature: CountryData = {
                             type: "Feature",
                             properties: {
                                 name:
-                                    pays[continentName as keyof typeof pays]
-                                        .en || cont,
+                                    pays[
+                                        String(
+                                            continentCodeNumber,
+                                        ) as CountryType
+                                    ].en || cont,
                             },
                             geometry: mergedGeometry,
                         };
@@ -542,44 +569,12 @@ export function WorldMap({
                     });
                 }
 
-                // Create SVG (attach a single root group to make init idempotent)
-                const mapSvg = svgSel
-                    .attr("width", windowSize.width - 10)
-                    .attr("height", windowSize.height)
-                    .attr(
-                        "viewBox",
-                        `0 0 ${windowSize.width - 10} ${windowSize.height}`,
-                    );
-
-                const root = mapSvg.append("g").attr("class", "map-root");
-
-                const mapLayer = root.append("g").attr("class", "map-layer");
-
-                const legendLayer = root
-                    .append("g")
-                    .attr("class", "legend-layer")
-                    .attr(
-                        "transform",
-                        `translate(20, ${windowSize.height * 0.8})`,
-                    )
-                    .attr("pointer-events", "none");
-
-                const correctLegend = createLegend(
-                    legendLayer,
-                    t("legend", { unite: t("ton-unit") }),
-                );
-
-                setLayer(mapLayer);
-                setLegendLayer(correctLegend);
-
                 const zoom = d3
                     .zoom<SVGSVGElement, unknown>()
                     .scaleExtent(config.scaleExtent)
                     .on("zoom", (event) => {
-                        mapLayer.attr("transform", event.transform);
+                        currentMapLayer.attr("transform", event.transform);
                         currentTransformRef.current = event.transform;
-                        // Update unified zoom scale for cross-projection sync
-                        unifiedZoomScaleRef.current = event.transform.k;
 
                         // Update geographic center for cross-projection sync
                         const geoCenter = getGeoCenterFromTransform(
@@ -590,50 +585,13 @@ export function WorldMap({
                             mapCenterRef.current = geoCenter;
                         }
 
-                        applyLegendZoom(
+                        applyZoomOnElement(
+                            currentMapLayer,
                             correctLegend,
-                            event.transform.k,
                             legendScaleRef.current!,
+                            event.transform.k,
+                            isStatic,
                         );
-
-                        // Keep data points at constant visual size when isStatic
-                        if (isStatic && legendScaleRef.current) {
-                            mapLayer
-                                .selectAll<SVGCircleElement, any>(".data-point")
-                                .attr(
-                                    "r",
-                                    (d) =>
-                                        legendScaleRef.current!(d.value) /
-                                        event.transform.k,
-                                );
-                            mapLayer
-                                .selectAll<SVGLineElement, any>(".data-arrow")
-                                .attr(
-                                    "stroke-width",
-                                    (d) =>
-                                        legendScaleRef.current!(d.value) /
-                                        event.transform.k,
-                                );
-
-                            const arrowHeadSelection = mapLayer.selectAll<
-                                SVGPathElement,
-                                any
-                            >(".arrow-head");
-
-                            const max =
-                                d3.max(
-                                    arrowHeadSelection.data(),
-                                    (d) => d.value,
-                                ) || 1;
-
-                            arrowHeadSelection.attr("d", (d) =>
-                                calculateArrowHead(
-                                    d,
-                                    17 / event.transform.k,
-                                    max,
-                                ),
-                            );
-                        }
                     });
 
                 if (correctProjection.drag) {
@@ -647,29 +605,39 @@ export function WorldMap({
                         simpleDrag({
                             projection,
                             pathGenerator,
-                            mapLayer,
+                            mapLayer: currentMapLayer,
                             projectionScale: config.projectionScale,
                             scaleExtent: config.scaleExtent,
                             isStatic,
                             legendScale: legendScaleRef.current!,
                             // Use unified zoom scale to sync with planar projection zoom
                             initialTransform: d3.zoomIdentity.scale(
-                                unifiedZoomScaleRef.current,
+                                currentTransformRef.current.k,
                             ),
                             initialRotation,
                             onZoomChange: (zoomScale, rotation) => {
                                 // Sync unified zoom scale when globe changes
-                                unifiedZoomScaleRef.current = zoomScale;
+                                const currentTransform =
+                                    currentTransformRef.current;
+                                const newTransform = d3.zoomIdentity
+                                    .translate(
+                                        currentTransform.x,
+                                        currentTransform.y,
+                                    )
+                                    .scale(zoomScale);
+                                currentTransformRef.current = newTransform;
                                 // Convert rotation back to geographic center: center = [-rotation[0], -rotation[1]]
                                 mapCenterRef.current = [
                                     -rotation[0],
                                     -rotation[1],
                                 ];
                                 // Also update legend
-                                applyLegendZoom(
+                                applyZoomOnElement(
+                                    currentMapLayer,
                                     correctLegend,
-                                    zoomScale,
                                     legendScaleRef.current!,
+                                    zoomScale,
+                                    isStatic,
                                 );
                             },
                         }),
@@ -680,22 +648,19 @@ export function WorldMap({
                     const restoredTransform = getTransformForGeoCenter(
                         mapCenterRef.current,
                         projection,
-                        unifiedZoomScaleRef.current,
+                        currentTransformRef.current.k,
                     );
                     mapSvg.call(zoom.transform, restoredTransform);
                 }
 
                 // Draw countries
-                mapLayer
+                currentMapLayer
                     .selectAll(".country")
                     .data(features)
                     .enter()
                     .append("path")
                     .attr("class", (d: any) => {
-                        return isKnownCountry(
-                            d.properties.name,
-                            isCountryMode,
-                        ) || d.properties.name === "France"
+                        return isKnownCountry(d.properties.name, isCountryMode)
                             ? "country known-country"
                             : "country";
                     })
@@ -716,7 +681,7 @@ export function WorldMap({
                     });
 
                 // Create arrow layer after countries so arrows appear on top
-                mapLayer.append("g").attr("class", "arrow-layer");
+                currentMapLayer.append("g").attr("class", "arrow-layer");
 
                 // Build a list of points with projected positions
                 const pointData = features
@@ -724,7 +689,7 @@ export function WorldMap({
                         const countryName = feature.properties.name;
                         if (
                             isCountryMode &&
-                            !pays_english.has(countryName) &&
+                            !englishCountriesName.has(countryName) &&
                             countryName !== "France"
                         )
                             return null;
@@ -749,75 +714,73 @@ export function WorldMap({
                     y: number;
                 }>;
                 setDataPointOnMap(pointData);
-            } catch {
+            } catch (error) {
+                // Ignore abort errors (expected on cleanup)
+                if (
+                    error instanceof DOMException &&
+                    error.name === "AbortError"
+                ) {
+                    return;
+                }
                 d3.select(svg)
                     .append("text")
-                    .attr("x", correctionSize[0])
-                    .attr("y", correctionSize[1])
+                    .attr("x", correctionSize.width)
+                    .attr("y", correctionSize.height)
                     .attr("text-anchor", "middle")
                     .text(t("error-data"));
             }
         };
         loadMap();
+
+        return () => {
+            abortController.abort();
+        };
     }, [
-        applyLegendZoom,
         correctionSize,
-        getGeoCenterFromTransform,
-        getTransformForGeoCenter,
-        isCountryMode,
-        windowSize.height,
-        windowSize.width,
-        mapDefinition,
         theme,
+        mapDefinition,
         geoProjection,
         isStatic,
-        legendScaleRef,
+        isCountryMode,
+        applyZoomOnElement,
+        getGeoCenterFromTransform,
+        getTransformForGeoCenter,
     ]);
 
     // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
     useEffect(() => {
-        if (!layer) return;
+        if (!mapLayer) return;
 
-        layer.selectAll(".country").on("click", (_: any, d: any) => {
-            const countryCode = Object.keys(pays).find(
-                (key) =>
-                    pays[key as keyof typeof pays].en === d.properties.name,
+        mapLayer.selectAll(".known-country").on("click", (_: any, d: any) => {
+            const countryNumberCode = countryNameToNumber.get(
+                d.properties.name,
             );
-            if (!countryCode) return;
+            if (countryNumberCode === undefined || countryNumberCode === 103)
+                return;
 
-            const correctNumberCode = Number(countryCode);
             if (isMultipleMode) {
                 const newSelection: number[] = countriesSelected.includes(
-                    correctNumberCode,
+                    countryNumberCode,
                 )
                     ? countriesSelected.filter(
-                          (code: number) => code !== correctNumberCode,
+                          (code: number) => code !== countryNumberCode,
                       )
-                    : [...countriesSelected, correctNumberCode];
+                    : [...countriesSelected, countryNumberCode];
                 setCountriesSelected(newSelection);
             } else {
-                if (countriesSelected[0] === correctNumberCode)
+                if (countriesSelected[0] === countryNumberCode)
                     setCountriesSelected([]);
-                else setCountriesSelected([correctNumberCode]);
+                else setCountriesSelected([countryNumberCode]);
             }
         });
-    }, [
-        countriesSelected,
-        isMultipleMode,
-        layer,
-        lectureData,
-        setCountriesSelected,
-        type,
-    ]);
+    }, [countriesSelected, isMultipleMode, mapLayer, setCountriesSelected]);
 
     // Effect 7: Attach event handlers when map layer changes
     useEffect(() => {
         const svg = svgRef.current;
         if (!svg) return;
 
-        const mapLayer =
-            layer ?? d3.select(svg).select<SVGGElement>(".map-layer");
-        if (mapLayer.empty()) return;
+        if (!mapLayer || mapLayer.empty()) return;
 
         // Attach handlers (handlers are stable and read from ref)
         mapLayer
@@ -831,7 +794,7 @@ export function WorldMap({
                 .on("mouseover", null)
                 .on("mouseout", null);
         };
-    }, [handleCountryMouseover, handleCountryMouseout, layer]);
+    }, [handleCountryMouseover, handleCountryMouseout, mapLayer]);
 
     // Effect 8: Update data based on filtered data
     useEffect(() => {
@@ -841,12 +804,13 @@ export function WorldMap({
         if (!svg) return;
 
         d3.select(svg).selectAll(".color-legend").remove();
-        const mapLayer =
-            layer ?? d3.select(svg).select<SVGGElement>(".map-layer");
-        if (mapLayer.empty()) return;
+        if (!mapLayer || mapLayer.empty()) return;
 
         const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
-        legend.transition().duration(animationDuration).attr("opacity", "1");
+        legend
+            .transition()
+            .duration(config.animationDuration)
+            .attr("opacity", "1");
 
         const legendTitle = legend.selectAll<SVGTextElement, unknown>(
             ".legend-text",
@@ -855,7 +819,7 @@ export function WorldMap({
         if (type === 4) {
             legend
                 .transition()
-                .duration(animationDuration)
+                .duration(config.animationDuration)
                 .attr("opacity", "0");
             legendTitle.text(t("legend", { unite: t("euro-unit") }));
 
@@ -880,7 +844,7 @@ export function WorldMap({
 
             arrows
                 .transition()
-                .duration(animationDuration)
+                .duration(config.animationDuration)
                 .attr("stroke-dashoffset", function () {
                     const length = (this as SVGPathElement).getTotalLength();
                     return `${length}`;
@@ -897,7 +861,7 @@ export function WorldMap({
 
             headArrows
                 .transition()
-                .duration(animationDuration * 0.3)
+                .duration(config.animationDuration * 0.3)
                 .attr("d", (d) => {
                     if (d.arcPoints.length < 2) return "";
 
@@ -913,7 +877,10 @@ export function WorldMap({
                 (typeof pointData)[number]
             >(".data-point");
 
-            circles.transition().duration(animationDuration).attr("r", 0);
+            circles
+                .transition()
+                .duration(config.animationDuration)
+                .attr("r", 0);
 
             const colorScale = MakeHuexBalanceProjection(
                 mapLayer,
@@ -925,7 +892,7 @@ export function WorldMap({
             );
             const colorLegend = Legend(colorScale, {
                 width: 50,
-                height: windowSize.height * 0.8,
+                height: correctionSize.height * config.legendHeightRatio,
                 ticks: 10,
                 title: t("balance"),
                 marginTop: 60,
@@ -934,12 +901,7 @@ export function WorldMap({
             d3.select(svg).append(() => colorLegend);
             return;
         }
-        console.log(
-            legendTitle,
-            "new value:",
-            t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
-            type,
-        );
+
         legendTitle.text(
             t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
         );
@@ -988,7 +950,7 @@ export function WorldMap({
 
             countries
                 .transition()
-                .duration(animationDuration)
+                .duration(config.animationDuration)
                 .attr("fill", (d: any) => {
                     const isData = pointData.find(
                         (p) => p.countryName === d.properties.name,
@@ -1011,7 +973,6 @@ export function WorldMap({
                 pointData,
                 currentTransformRef.current.k,
                 maxValue,
-                applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
                 paletteColor,
@@ -1065,7 +1026,7 @@ export function WorldMap({
 
             countries
                 .transition()
-                .duration(animationDuration)
+                .duration(config.animationDuration)
                 .attr("fill", (d: any) => {
                     const findNumberCode = Object.keys(pays).find(
                         (key) =>
@@ -1092,7 +1053,6 @@ export function WorldMap({
                 pointData,
                 currentTransformRef.current.k,
                 maxValue,
-                applyLegendZoom,
                 handleCountryMouseover,
                 handleCountryMouseout,
                 paletteColor,
@@ -1101,12 +1061,12 @@ export function WorldMap({
             );
         }
     }, [
-        applyLegendZoom,
+        applyZoomOnElement,
         lectureData,
         type,
         dataPointOnMap,
         legendLayer,
-        windowSize.height,
+        correctionSize,
         isCountryMode,
         handleCountryMouseover,
         handleCountryMouseout,
@@ -1122,8 +1082,11 @@ export function WorldMap({
         <div className="world-map-container">
             <svg ref={svgRef} />
             <TooltipMap
-                usefullData={lectureData}
-                position={tooltipPosition}
+                countriesValues={lectureData}
+                position={{
+                    x: tooltipData.x,
+                    y: tooltipData.y,
+                }}
                 country={tooltipData.country}
                 year={tooltipData.year}
                 month={tooltipData.month}
@@ -1190,18 +1153,12 @@ function makeCircleProjection(
     }>,
     zoom: number,
     maxValue: number,
-    applyZoom: (
-        legend: d3.Selection<SVGGElement, unknown, null, undefined>,
-        zoomScale: number,
-        radiusScale: d3.ScaleLinear<number, number, never>,
-    ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
     palette: ColorName,
     isGlobe: boolean = false,
     isStatic: boolean = false,
 ): d3.ScaleLinear<number, number, never> {
-    console.log("Nouvelle couleur de palette pour les cercles :", palette);
     const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, 30]);
     // When isStatic, divide radius by zoom to keep constant visual size
     const effectiveRadius = (d: { value: number }) =>
@@ -1226,8 +1183,8 @@ function makeCircleProjection(
             .enter()
             .append("circle")
             .attr("class", "legend-circle")
-            .attr("cx", 100)
-            .attr("cy", (d) => 110 - radiusScale(d))
+            .attr("cx", config.legendCircleBaseX)
+            .attr("cy", (d) => config.legendYposition - radiusScale(d))
             .attr("r", (d) => radiusScale(d))
             .attr("fill", colors[palette].fill)
             .attr("opacity", 0.7)
@@ -1240,10 +1197,10 @@ function makeCircleProjection(
             .enter()
             .append("line")
             .attr("class", "legend-tick")
-            .attr("x1", 100)
-            .attr("y1", (d) => 110 - radiusScale(d) * 2)
-            .attr("x2", 65)
-            .attr("y2", (d) => 110 - radiusScale(d) * 2)
+            .attr("x1", config.legendCircleBaseX)
+            .attr("y1", (d) => config.legendYposition - radiusScale(d) * 2)
+            .attr("x2", config.legendCircleBaseY)
+            .attr("y2", (d) => config.legendYposition - radiusScale(d) * 2)
             .attr("stroke", "var(--fg)")
             .attr("stroke-width", 1);
 
@@ -1264,8 +1221,6 @@ function makeCircleProjection(
                         maximumFractionDigits: 0,
                     }) + " 000",
             );
-
-        applyZoom(legendLayer, zoom, radiusScale);
     }
 
     // Bind data to circles (only countries with data)
@@ -1275,12 +1230,11 @@ function makeCircleProjection(
     circles
         .exit()
         .transition()
-        .duration(animationDuration)
+        .duration(config.animationDuration)
         .attr("r", 0)
         .remove();
 
     // Enter + Update
-    console.log(colors[palette].fill);
     circles
         .enter()
         .append("circle")
@@ -1294,12 +1248,12 @@ function makeCircleProjection(
         .attr("stroke-width", 1)
         .style("cursor", "pointer")
         .transition()
-        .duration(animationDuration)
+        .duration(config.animationDuration)
         .attr("r", effectiveRadius);
 
     circles
         .transition()
-        .duration(animationDuration)
+        .duration(config.animationDuration)
         .attr("r", effectiveRadius)
         .attr("fill", colors[palette].fill)
         .attr("stroke", colors[palette].stroke);
@@ -1325,11 +1279,6 @@ function makeArrowProjection(
     }>,
     zoom: number,
     maxValue: number,
-    applyZoom: (
-        legend: d3.Selection<SVGGElement, unknown, null, undefined>,
-        zoomScale: number,
-        strokeScale: d3.ScaleLinear<number, number, never>,
-    ) => void,
     onMouseover: (event: any) => void,
     onMouseout: (event: any) => void,
     palette: ColorName,
@@ -1362,7 +1311,10 @@ function makeArrowProjection(
             if (!value) return null;
 
             // Create interpolation in geographic coordinates (lon, lat)
-            const interpolate = d3.geoInterpolate(ParisCoord, targetGeoCoords);
+            const interpolate = d3.geoInterpolate(
+                config.parisCoord,
+                targetGeoCoords,
+            );
 
             // Generate arc points by interpolating and then projecting to screen coordinates
             // Use fine sampling (0.01 = 100 points) to handle arcs that cross behind the globe
@@ -1397,7 +1349,7 @@ function makeArrowProjection(
     arrowPath
         .exit()
         .transition("exit")
-        .duration(animationDuration)
+        .duration(config.animationDuration)
         .attr("stroke-dashoffset", function () {
             const length = (this as SVGPathElement).getTotalLength();
             return `${length}`;
@@ -1425,7 +1377,7 @@ function makeArrowProjection(
         .attr("stroke-width", (d) => effectiveRadius(d.value))
         .attr("stroke", colors[palette].fill)
         .transition("update")
-        .duration(animationDuration)
+        .duration(config.animationDuration)
         .attr("stroke-dashoffset", "0");
 
     // Create/Update custom arrowheads as separate paths
@@ -1436,7 +1388,7 @@ function makeArrowProjection(
     arrowheads
         .exit()
         .transition("exit-head")
-        .duration(animationDuration * 0.2)
+        .duration(config.animationDuration * 0.2)
         .attr("d", function (this: SVGPathElement) {
             const d = d3.select(this).datum() as (typeof arcsData)[number];
             if (d.arcPoints.length < 2) return "";
@@ -1447,7 +1399,9 @@ function makeArrowProjection(
         })
         .remove();
 
-    const arrowheadSize = isStatic ? 17 / zoom : 17; // Base size of arrowhead, scaled down when static
+    const arrowheadSize = isStatic
+        ? config.arrowHeadSize / zoom
+        : config.arrowHeadSize; // Base size of arrowhead, scaled down when static
     const arrowheadEnter = arrowheads
         .enter()
         .append("path")
@@ -1468,14 +1422,14 @@ function makeArrowProjection(
             return `M${tipX},${tipY}L${tipX},${tipY}L${tipX},${tipY}Z`;
         })
         .transition("update-head")
-        .delay(animationDuration * 0.9) // Start fading in near the end of arrow animation
-        .duration(animationDuration * 0.2)
+        .delay(config.animationDuration * 0.9) // Start fading in near the end of arrow animation
+        .duration(config.animationDuration * 0.2)
         .attr("d", (d) => calculateArrowHead(d, arrowheadSize, maxValue));
 
     arrowheadEnter
         .transition("enter-head")
-        .delay(animationDuration * 0.9) // Start fading in near the end of arrow animation
-        .duration(animationDuration * 0.2)
+        .delay(config.animationDuration * 0.9) // Start fading in near the end of arrow animation
+        .duration(config.animationDuration * 0.2)
         .attr("d", (d) => calculateArrowHead(d, arrowheadSize, maxValue));
 
     // Attach hover handlers to both arrows and arrowheads
@@ -1497,12 +1451,18 @@ function makeArrowProjection(
             .attr("x1", 80)
             .attr(
                 "y1",
-                (d, i) => 45 + 25 * i + (effectiveRadius(d) * (i - 2)) / 2,
+                (d, i) =>
+                    config.legendLineBaseY +
+                    config.legendLineSpacing * i +
+                    (effectiveRadius(d) * (i - 2)) / 2,
             )
             .attr("x2", 125)
             .attr(
                 "y2",
-                (d, i) => 45 + 25 * i + (effectiveRadius(d) * (i - 2)) / 2,
+                (d, i) =>
+                    config.legendLineBaseY +
+                    config.legendLineSpacing * i +
+                    (effectiveRadius(d) * (i - 2)) / 2,
             )
             .attr("stroke", colors[palette].fill)
             .attr("stroke-width", (d) => effectiveRadius(d));
@@ -1516,7 +1476,10 @@ function makeArrowProjection(
             .attr("x", 10)
             .attr(
                 "y",
-                (d, i) => 45 + 25 * i + (effectiveRadius(d) * (i - 2)) / 2,
+                (d, i) =>
+                    config.legendLineBaseY +
+                    config.legendLineSpacing * i +
+                    (effectiveRadius(d) * (i - 2)) / 2,
             )
             .attr("fill", "var(--fg)")
             .attr("font-size", 12)
@@ -1527,8 +1490,6 @@ function makeArrowProjection(
                         maximumFractionDigits: 0,
                     }) + " 000",
             );
-
-        applyZoom(legendLayer, zoom, strokeScale);
     }
     return strokeScale;
 }
@@ -1601,7 +1562,7 @@ function MakeHuexBalanceProjection(
 
     countries
         .transition()
-        .duration(animationDuration)
+        .duration(config.animationDuration)
         .attr("fill", (d: any) => {
             const countryName = d.properties.name;
             const point = pointData.find((p) => p.countryName === countryName);

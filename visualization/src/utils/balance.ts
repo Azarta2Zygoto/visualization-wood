@@ -2,7 +2,7 @@ import pays from "@/data/countries.json";
 
 interface MakeBalanceProps {
     lectureData: {
-        [key: string]: Record<string, number>;
+        [key: string]: Record<number, number>;
     };
     countries?: {
         countryName: string;

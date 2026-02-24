@@ -15,7 +15,22 @@ export function isKnownCountry(
     isCountryMode: boolean,
 ): boolean {
     if (!country) return false;
-    return isCountryMode
-        ? pays_english.has(country) || country === "France"
-        : true;
+    return isCountryMode ? pays_english.has(country) : true;
+}
+
+/**
+ *  Scales a base value by a given scale factor raised to an exponent, while ensuring the result does not exceed a specified maximum or fall below the base value.
+ * @param base - The initial value to be scaled.
+ * @param max - The maximum allowed value after scaling.
+ * @param scale - The factor by which to scale the base value.
+ * @param exp - The exponent to which the scale factor is raised, allowing for non-linear scaling.
+ */
+
+export function clampedScale(
+    base: number,
+    max: number,
+    scale: number,
+    exp: number,
+): number {
+    return Math.max(Math.min(base * scale ** exp, max), base);
 }

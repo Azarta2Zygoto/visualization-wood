@@ -8,7 +8,6 @@ import { hasFlag } from "country-flag-icons";
 
 import { useGlobal } from "@/components/globalProvider";
 import pays from "@/data/countries.json";
-import type_data from "@/data/exports.json";
 import month_names from "@/data/months.json";
 import type { CountryType } from "@/metadata/types";
 
@@ -23,8 +22,8 @@ const AllNoData = {
 
 interface TooltipMapProps {
     appear: boolean;
-    usefullData: {
-        [key: string]: Record<keyof typeof type_data, number>;
+    countriesValues: {
+        [key: string]: Record<number, number>;
     };
     year: number;
     month: number;
@@ -34,7 +33,7 @@ interface TooltipMapProps {
 
 export default function TooltipMap({
     appear,
-    usefullData,
+    countriesValues,
     year,
     month,
     country,
@@ -50,8 +49,8 @@ export default function TooltipMap({
     }>({ x, y });
 
     const values = useMemo(
-        () => calculateData(usefullData, pays[country].en),
-        [usefullData, country],
+        () => calculateData(countriesValues, pays[country].en),
+        [countriesValues, country],
     );
 
     useLayoutEffect(() => {
@@ -152,8 +151,8 @@ export default function TooltipMap({
 }
 
 function calculateData(
-    usefullData: {
-        [key: string]: Record<keyof typeof type_data, number>;
+    countriesValues: {
+        [key: string]: Record<number, number>;
     },
     countryname: string,
 ): {
@@ -163,13 +162,13 @@ function calculateData(
     import_tonnes: number;
     balance_euro: number;
 } {
-    const countryData = usefullData[countryname];
+    const countryData = countriesValues[countryname];
     if (!countryData) return AllNoData;
 
-    const exportDataEuro = countryData["2"];
-    const importDataEuro = countryData["3"];
-    const exportTonnes = countryData["0"];
-    const importTonnes = countryData["1"];
+    const exportDataEuro = countryData[2];
+    const importDataEuro = countryData[3];
+    const exportTonnes = countryData[0];
+    const importTonnes = countryData[1];
     const balanceDataEuro =
         exportDataEuro && importDataEuro
             ? exportDataEuro - importDataEuro

@@ -163,7 +163,7 @@ export default function HomePage(): JSX.Element {
             />
 
             <WorldMap
-                allData={allData}
+                rawData={allData}
                 type={typeData}
                 year={currentYear}
                 month={currentMonth}
