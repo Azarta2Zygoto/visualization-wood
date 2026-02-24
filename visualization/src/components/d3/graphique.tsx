@@ -286,13 +286,13 @@ export default function Graphique({
         // Pays
         if (mot === "entre") {
             if (countryNames.length === 1) {
-                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0])} et la France`);
+                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0] as string)} et la France`);
             } else if (countryNames.length > 1) {
                 titleParts.push(`${mot} plusieurs pays et la France`);
             }
         } else {
             if (countryNames.length === 1) {
-                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0])}`);
+                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0] as string)}`);
             } else if (countryNames.length > 1) {
                 titleParts.push(`${mot} plusieurs pays`);
             }
