@@ -20,6 +20,21 @@ import all_icons from "@/data/symboles.json";
 import updateMultiLines_with_icons from "./line_chart_with_icons";
 import updateMirrorStackedAreaChart from "./mirror_stacked_area_chart";
 
+const MONTH_TO_JS_MONTH: Record<number, number> = {
+    6: 0,
+    11: 1,
+    1: 2,
+    12: 3,
+    5: 4,
+    10: 5,
+    4: 6,
+    8: 7,
+    2: 8,
+    3: 9,
+    9: 10,
+    7: 11,
+};
+
 interface GraphiqueProps {
     allData: { [key: string]: number[][] };
     type: number[];
@@ -81,8 +96,6 @@ export default function Graphique({
     //countriesSelected = [34]; //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
     const current_graph = useRef<Number>(0);
     // ajouter toutes les nouvelles années dans la map
-
-    console.log(productsSelected);
     useEffect(() => {
         let updated = false;
 
@@ -131,16 +144,12 @@ export default function Graphique({
     }, [dataVersion]);
 
     const groupedData_plot = useMemo(() => {
-        console.log("group data");
-        console.time("groupedData");
-
         const groupedData = d3.group(
             data_plot,
             (d) => d.type,
             (d) => d.pays,
             (d) => d.produit,
         );
-        console.timeEnd("groupedData");
 
         return Array.from(groupedData, ([key, values]) => ({
             symbol: key, // le nom de la série
@@ -149,13 +158,11 @@ export default function Graphique({
     }, [data_plot]);
 
     const flatten_data_plot = useMemo(() => {
-        console.log("flatten data");
         return flattenGroupedData3(groupedData_plot);
     }, [groupedData_plot]);
 
     //on importe la map des icones que on filtre
     const map_icons = useMemo(() => {
-        console.log("load icon data");
         return Object.fromEntries(
             Object.entries(all_icons).filter(([key]) =>
                 iconSelected.includes(key),
@@ -164,7 +171,6 @@ export default function Graphique({
     }, [iconSelected]);
 
     const events_filtered = useMemo(() => {
-        console.log("filter event");
         return filterevents(allEvents, map_icons, countriesSelected);
     }, [allEvents, map_icons, countriesSelected]);
 
@@ -220,7 +226,80 @@ export default function Graphique({
     }, [flatten_data_plot, map_icons, events_filtered]);
 
     //On retourne le container
-    const titre = "Mon texte ici"
+    const countryMap = new Map<string, Country>(Object.entries(pays));
+    const typeMap: Record<string, string> = type_data;
+    const produitMap: Record<string, { name: string; code: string }> = list_products;
+    const titre = useMemo(() => {
+        const countryNames = countriesSelected
+            .map((id) => countryMap.get(String(id))?.fr)
+            .filter(Boolean);
+
+        const productNames = productsSelected
+            .map((id) => produitMap[String(id)]?.name)
+            .filter(Boolean);
+
+        const typeNames = type
+            .map((id) => typeMap[String(id)])
+            .filter(Boolean);
+
+        let titleParts: string[] = [];
+
+        // Type (Import / Export / Balance)
+        let unit = "";
+        let mot = "";
+        if (typeNames.length >= 1) {
+            // Détection unité directement avec includes
+            const lowerTypes = typeNames.map(t => t.toLowerCase());
+
+            if (lowerTypes.some(t => t.includes("valeur"))) {
+                unit = "k€";
+            } else if (lowerTypes.some(t => t.includes("volume"))) {
+                unit = "Tonnes";
+            }
+
+            // Nettoyage des parenthèses
+            const cleanedTypes = typeNames.map(t =>
+                t.replace(/\(.*?\)/g, "").trim()
+            );
+
+            if (cleanedTypes.length === 1) {
+                if (cleanedTypes[0].includes("Exportation")) {
+                    mot = "vers";
+                }
+                else {
+                    mot = "depuis";
+                }
+                titleParts.push(`${cleanedTypes[0]} (${unit})`);
+            } else {
+                mot = "entre";
+                titleParts.push(`${cleanedTypes.join(" et ")} (${unit})`);
+
+            }
+        }
+        // Produit
+        if (productNames.length === 1) {
+            titleParts.push(`de ${productNames[0].toLowerCase()}`);
+        } else if (productNames.length > 1) {
+            titleParts.push("de plusieurs produits");
+        }
+
+        // Pays
+        if (mot === "entre") {
+            if (countryNames.length === 1) {
+                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0])} et la France`);
+            } else if (countryNames.length > 1) {
+                titleParts.push(`${mot} plusieurs pays et la France`);
+            }
+        } else {
+            if (countryNames.length === 1) {
+                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0])}`);
+            } else if (countryNames.length > 1) {
+                titleParts.push(`${mot} plusieurs pays`);
+            }
+        }
+
+        return titleParts.join(" ");
+    }, [countriesSelected, productsSelected, type]);
     return (
         <div className="graph-wrapper">
 
@@ -244,20 +323,6 @@ function addYearToNestedMap(
     if (!allData[year] || processedYearsRef.current.has(year)) return;
 
     const parseDateMonth = d3.timeParse("%m %Y");
-    const monthToJSMonth: Record<number, number> = {
-        6: 0,
-        11: 1,
-        1: 2,
-        12: 3,
-        5: 4,
-        10: 5,
-        4: 6,
-        8: 7,
-        2: 8,
-        3: 9,
-        9: 10,
-        7: 11,
-    };
 
     const yearData = allData[year];
 
@@ -272,7 +337,7 @@ function addYearToNestedMap(
 
         const date =
             parseDateMonth(
-                `${monthToJSMonth[monthId as keyof typeof monthToJSMonth]} ${year}`,
+                `${MONTH_TO_JS_MONTH[monthId as keyof typeof MONTH_TO_JS_MONTH]} ${year}`,
             ) ?? new Date(0);
 
         const nestedMap = nestedMapRef.current;
@@ -339,99 +404,6 @@ function flattenGlobalMap(
     return result.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
-function filterData(
-    allData: { [key: string]: number[][] },
-    {
-        type,
-        productsSelected,
-        countriesSelected,
-    }: {
-        type: number[];
-        productsSelected: number[];
-        countriesSelected: number[];
-    },
-): DataPoint[] {
-    if (!allData || Object.keys(allData).length === 0) {
-        return [];
-    }
-    const parseDateMonth = d3.timeParse("%m %Y");
-    const monthToJSMonth: Record<number, number> = {
-        //conversion de l'id en mois réel
-        6: 0,
-        11: 1,
-        1: 2,
-        12: 3,
-        5: 4,
-        10: 5,
-        4: 6,
-        8: 7,
-        2: 8,
-        3: 9,
-        9: 10,
-        7: 11,
-    };
-
-    const countryMap = new Map<string, Country>(Object.entries(pays));
-    const typeMap: Record<string, string> = type_data;
-    const produitMap: Record<string, { name: string; code: string }> =
-        list_products;
-    return Object.entries(allData) //il faut ajouter l'attribut year pour chaque année
-        .flatMap(([year, yearData]) =>
-            yearData.map((d: any) => ({
-                ...d,
-                year: +year, // ajoute l'année
-            })),
-        )
-        .filter((d, i) => {
-            const countryId = d[0];
-            const typeId = d[1];
-            const monthid = d[2];
-            const productId = d[3];
-
-            if (
-                productsSelected.length &&
-                !productsSelected.includes(productId)
-            ) {
-                return false;
-            }
-
-            if (
-                countriesSelected.length &&
-                !countriesSelected.includes(countryId)
-            ) {
-                return false;
-            }
-
-            if (type.length && !type.includes(typeId)) {
-                return false;
-            }
-
-            if (monthid == 0) {
-                //on vire le mois 0 qui correspond au total par an
-                return false;
-            }
-
-            return true;
-        })
-        .map((d) => {
-            // convertir le mois en objet Date
-            const parsedDate = parseDateMonth(
-                `${monthToJSMonth[d[2] as keyof typeof monthToJSMonth]} ${d.year}`,
-            );
-
-            return {
-                date: parsedDate ?? new Date(0), // si parseDateMonth retourne null, on met 1er Jan 1970
-                pays: countryMap.get(String(d[0]))?.fr,
-                produit: produitMap[String(d[3])].name,
-                type: typeMap[String(d[1])],
-                value: +d[4],
-            } as DataPoint;
-        })
-
-        .filter((d) => !isNaN(d.value))
-        .sort((a: any, b: any) => a.date - b.date);
-}
-
 function filterevents(
     events: any[],
     map_icons: Record<string, any>,
@@ -455,8 +427,8 @@ function filterevents(
             const dateParsed = parseDate1(event.date_debut)
                 ? parseDate1(event.date_debut)
                 : parseDate2(event.date_debut)
-                  ? parseDate2(event.date_debut)
-                  : null;
+                    ? parseDate2(event.date_debut)
+                    : null;
             if (!dateParsed) return null;
 
             // catégorie / icône
@@ -494,7 +466,6 @@ function filterevents(
 
 function flattenGroupedData3(groupedData: any[]) {
     //utilisé pour flatten un groupe avec 3 éléments
-    console.time("flattenGroupedData3");
     const flattened: {
         symbol: string;
         type: any;
@@ -516,7 +487,6 @@ function flattenGroupedData3(groupedData: any[]) {
             });
         });
     });
-    console.timeEnd("flattenGroupedData3");
     return flattened;
 }
 
@@ -546,4 +516,38 @@ function update_current_graphique(
         current_graph.current = new_num;
         svg.selectAll("*").remove();
     }
+}
+
+function withFrenchDeterminer(country: string): string {
+    const lower = country.toLowerCase();
+    // Exception spécifique
+    if (lower === "israël" || lower === "israel") {
+        return country; // pas d'article
+    }
+    if (lower === "communauté des états indépendants") {
+        return `la ${country}`;
+    }
+
+
+    // Cas pluriels connus
+    if (
+        lower.startsWith("états") ||
+        lower.startsWith("pays") ||
+        lower.endsWith("s")
+    ) {
+        return `les ${country}`;
+    }
+
+    // Cas voyelle ou h muet
+    if (/^[aeiouàâäéèêëîïôöùûü]/i.test(country)) {
+        return `l’${country}`;
+    }
+
+    // Féminin (souvent se termine par "e")
+    if (lower.endsWith("e")) {
+        return `la ${country}`;
+    }
+
+    // Masculin par défaut
+    return `le ${country}`;
 }

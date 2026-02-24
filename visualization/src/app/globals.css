@@ -709,7 +709,7 @@ label {
 /* Graphique placé sous le texte */
 .Graphique {
     position: absolute;
-    top: calc(100vh + 4rem);
+    top: calc(100vh + 8rem);
     /* espace après le texte */
     left: 50%;
     transform: translateX(-50%);
