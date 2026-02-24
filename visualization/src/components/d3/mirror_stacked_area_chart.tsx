@@ -43,9 +43,7 @@ export default function updateMirrorStackedAreaChart(
     ).sort(d3.ascending);
     const completeIndex = (type: string) => {
         const filtered = data.filter(d => d.type === type);
-        console.log(new Set(filtered.map(d => d.product)))
         const index = d3.index(filtered, d => +d.date, d => d.product);
-        console.log(allDates)
         const complete = new Map<number, Map<string, { value: number }>>();
 
         allDates.forEach(date => {
@@ -201,9 +199,11 @@ export default function updateMirrorStackedAreaChart(
             .attr("class", "mirror-tooltip")
             .style("position", "absolute")
             .style("background", "var(--bg)")
-            .style("padding", "6px")
+            .style("padding", "8px")
             .style("border", "1px solid #999")
-            .style("border-radius", "4px")
+            .style("border-radius", "6px")
+            .style("font-size", "12px")
+            .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)")
             .style("pointer-events", "none")
             .style("opacity", 0)
             .style("z-index", 9999)
@@ -272,12 +272,9 @@ export default function updateMirrorStackedAreaChart(
             .data(series, (d: any) => d.key)
             .join(
                 (enter: any) => {
-                    console.log("ENTER:", enter.data());
-
                     return enter.append("path")
                         .attr("class", "myArea")
                         .attr("fill", (d: any) => {
-                            console.log("Fill ENTER:", d.key);
                             return color(d.key);
                         })
                         .style("opacity", 0)
@@ -288,16 +285,12 @@ export default function updateMirrorStackedAreaChart(
                 },
 
                 (update: any) => {
-                    console.log("UPDATE:", update.data());
-
                     return update.call((u: any) =>
                         u.transition().duration(800).attr("d", area)
                     );
                 },
 
                 (exit: any) => {
-                    console.log("EXIT:", exit.data());
-
                     return exit.call((x: any) =>
                         x.transition().duration(400).style("opacity", 0).remove()
                     );
@@ -305,8 +298,8 @@ export default function updateMirrorStackedAreaChart(
             )
             .on("mouseover", function (this: any) {
                 Tooltip.style("opacity", 1);
-                d3.selectAll(".myArea").style("opacity", 0.2);
-                d3.select(this).style("stroke", "black").style("opacity", 1);
+                d3.selectAll(".myArea").style("opacity", 1);
+                d3.select(this).style("stroke", "black").style("opacity", 0.45);
             })
             .on("mousemove", function (event: any, d: any) {
                 const mouseX = d3.pointer(event, svg.node())[0];
@@ -319,11 +312,12 @@ export default function updateMirrorStackedAreaChart(
 
                 const value = closest[1] - closest[0];
 
-                Tooltip
+                Tooltip.style("opacity", 0.8)
                     .html(`
-              <strong>${type} : </strong>${d.key}<br>
-              <strong>Date :</strong> ${d3.timeFormat("%Y-%m-%d")(closest.data[0])}<br>
-              <strong>Valeur :</strong> ${value}
+              <strong>${d.key}</strong><br>
+              Type : ${type}<br>
+              Valeur : ${d3.format(",.0f")(value).replace(/,/g, " ")} k€<br>
+              Date : ${d3.timeFormat("%Y-%m-%d")(closest.data[0])}
             `)
                     .style("left", `${event.pageX + 10}px`)
                     .style("top", `${event.pageY - 10}px`);

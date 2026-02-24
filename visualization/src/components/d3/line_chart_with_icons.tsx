@@ -192,14 +192,14 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             .append("div")
             .attr("class", "line-chart-tooltip")
             .style("position", "absolute")
-            .style("background", "#fff")
+            .style("background", "var(--bg)")
             .style("padding", "8px")
             .style("border", "1px solid #999")
             .style("border-radius", "6px")
             .style("font-size", "12px")
             .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)")
             .style("pointer-events", "none")
-            .style("opacity", 0.6)
+            .style("opacity", 0)
             .style("z-index", 5)
             .style("max-width", "250px") // largeur max
             .style("white-space", "normal") // permet le retour à la ligne
