@@ -17,7 +17,7 @@ export const config = {
     legendCircleXFactor: 50,
     countryModeExponent: 0.6,
     continentModeExponent: 0.18,
-    mapStrokeWidth: 0.5,
+    mapStrokeWidth: 0.75,
     light: {
         validCountry: "#87ceeb",
         invalidCountry: "#d3d3d3",

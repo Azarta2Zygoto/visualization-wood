@@ -2,7 +2,8 @@
     "HomePage": {
         "title": "Echanges internationaux de bois",
         "parameters": "Paramètres",
-        "parameters-desc": "Paramètres de visualisation"
+        "parameters-desc": "Paramètres de visualisation",
+        "info-desc": "Informations globales sur le projet"
     },
     "NotFound": {
         "title": "404 - Page non trouvée",
@@ -132,5 +133,47 @@
         "close-all": "Tout fermer",
         "close": "Fermer la sélection de produits",
         "attention-text": "Par défaut, si aucun produit n'est sélectionné, tous les produits sont affichés. Sélectionnez au moins un produit pour voir les données correspondantes."
+    },
+    "InfoComponent": {
+        "info": "Informations sur le projet",
+        "title": "Echanges internationaux de bois entre la France et le reste du monde",
+        "author": "<strong>Auteurs</strong> : Clément Petitjean et Quentin Potiron",
+        "tutor": "<strong>Tuteurs</strong> : Romain Vuillemot et Théo Jaunet",
+        "cadre": "<strong>Cadre</strong> : Cours de visualisation de données à Centrale Lyon",
+        "data": "<strong>Données</strong> : les données proviennent du site d'Agreste du Ministère de l'agriculture.",
+        "description": "Ce projet de visualisation interactive de données a pour thématique l'agriculture. Il consiste à la visualisation des données d'exportation et d'importation de bois de différents types entre la France et le reste du monde. Le but étant de rendre le tout interactif pour une exploration facile des données.",
+        "code": "Le code source du projet est disponible sur GitHub au lien suivant :",
+        "intro": "Revoir l'introduction",
+        "close": "Fermer"
+    },
+    "IntroComponent": {
+        "intro": "Introduction du site web",
+        "description": "Ce projet de visualisation interactive de données a pour thématique l'agriculture. Il consiste à la visualisation des données d'exportation et d'importation de bois de différents types entre la France et le reste du monde. Le but étant de rendre le tout interactif pour une exploration facile des données.",
+        "title": "Echanges internationaux de bois entre la France et le reste du monde",
+        "close": "Fermer",
+        "attention": "Attention : ",
+        "world-map": "La carte du monde",
+        "world-map-desc": "La carte du monde est la visualisation centrale du projet. Elle représente les échanges commerciaux de bois avec la France et le reste du monde et elle permet de sélectionner un pays ou un continent.",
+        "world-map-country": "Permet de voir et sélectionner les données par pays.",
+        "world-map-continent": "Permet de voir et sélectionner les données par continent.",
+        "export": "Les exportations et importations",
+        "export-desc": "Il est possible de choisir entre les exportations, les importations et la balance commerciale. Il est aussi possible de choisir entre les volumes échangés en tonnes ou les valeurs échangées en milliers d'euros.",
+        "date": "La sélection de la date",
+        "date-desc": "Il est possible de sélectionner une année ou un mois précis entre janvier 2012 et novembre 2025.",
+        "date-load": "Seul une année est chargée de base pour éviter trop de chargements. Les données seront ensuite chargées au fur et à mesure des changements d'année. Cependant, il est possible de charger toutes les données d'un coup grâce à l'option 'Charger tout' que vous retrouverez dans la barre de droite.",
+        "product": "La sélection des produits",
+        "product-desc": "Il est possible de sélectionner un ou plusieurs produits parmi la liste de plus d'une centaines de produits. De plus, les produits sont catégorisés dans des groupes voire des sous-groupes.",
+        "historic": "Les événements historiques",
+        "historic-desc": "Enfin, des événements historiques majeurs ont été implémentés dans la visualisation pour donner plus de contexte aux variations des échanges commercieaux. Vosu pouvez sélectionner la catégorie d'événements à afficher.",
+        "param": "Les paramètres généraux",
+        "param-desc": "Afin de rendre l'expérience personalisable et plus agréable, il est possible de changer des paramètres de visualisation :",
+        "param-desc-theme": "Le thème : clair ou sombre.",
+        "param-desc-lang": "La langue : français ou anglais.",
+        "param-desc-definition": "La résolution de la carte : faible, moyenne ou élevée.",
+        "param-desc-projection": "La projection cartographique",
+        "param-desc-static": "Légende statique au zoom : rendre la taille des points et la légende insensible au zoom pour une carte plus lisible à différentes échelles.",
+        "param-desc-color": "Options de colorimétrie : différentes palettes de couleurs",
+        "param-desc-daltonian": "Mode daltonien : utilisation d'une palette de couleurs adaptée aux personnes daltoniennes.",
+        "show-again": "Afficher cette introduction lors de votre prochaine visite"
     }
 }

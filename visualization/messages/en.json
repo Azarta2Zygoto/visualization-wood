@@ -2,7 +2,8 @@
     "HomePage": {
         "title": "International trade of wood with France",
         "parameters": "Parameters",
-        "parameters-desc": "Visualization parameters"
+        "parameters-desc": "Visualization parameters",
+        "info-desc": "General information about the project"
     },
     "NotFound": {
         "title": "404 - Page not found",
@@ -132,5 +133,46 @@
         "close-all": "Close all",
         "close": "Close product selection",
         "attention-text": "If no products are selected, by default, they will be all selected."
+    },
+    "InfoComponent": {
+        "info": "Project information",
+        "title": "International trade of wood with France",
+        "author": "<strong>Authors</strong>: Clément Petitjean and Quentin Potiron",
+        "tutor": "<strong>Tutors</strong>: Romain Vuillemot and Théo Jaunet",
+        "cadre": "<strong>Setting</strong>: Data visualization course at Centrale Lyon",
+        "data": "<strong>Data</strong>: Data comes from the Agreste website of the French Ministry of Agriculture.",
+        "description": "This interactive data visualization project focuses on agriculture. It visualizes the export and import data of different types of wood between France and the rest of the world. The goal is to make it interactive for easy exploration of the data.",
+        "code": "The code for this project is available on GitHub:",
+        "intro": "Review the introduction",
+        "close": "Close"
+    },
+    "IntroComponent": {
+        "intro": "Introduction to the website",
+        "title": "International trade of wood with France",
+        "description": "This interactive data visualization project focuses on agriculture. It visualizes the export and import data of different types of wood between France and the rest of the world. The goal is to make it interactive for easy exploration of the data.",
+        "close": "Close",
+        "attention": "Attention:",
+        "world-map": "The world map",
+        "world-map-desc": "The main component of the visualization is the world map. It shows the trade flows between France and other countries. The size of the points on the map represents the volume or value of trade, while the color represents the type of trade (export, import, balance).",
+        "world-map-country": "Allow the selection of data by country.",
+        "world-map-continent": "Allow the selection of data by continent.",
+        "export": "The selection of the type of trade",
+        "export-desc": "It is possible to select the type of trade to display: exports, imports or trade balance.",
+        "date": "The selection of the date",
+        "date-desc": "The visualization covers the period from 1995 to 2020. By default, the most recent year is displayed, but it is possible to navigate through the years using the arrows in the configuration bar.",
+        "date-load": "Only data for the first year are loaded by default. Then the web app loads data for other years when you navigate to them. You can also choose to load all data at once with the button 'Load all' at the right side of the app, but this may take some time.",
+        "product": "The selection of products",
+        "product-desc": "The visualization allows you to select the types of wood products to display. By default, all products are selected, but you can choose to focus on specific categories of products.",
+        "historic": "Historical events",
+        "historic-desc": "To provide context to the data, we have included a selection of historical events related to the wood trade. These events are displayed on the map and can help explain certain trends or anomalies in the data.",
+        "param": "Visualization parameters",
+        "param-desc": "The visualization parameters allow you to customize the appearance of the map and the way data is displayed. Here are the element you can change:",
+        "param-desc-theme": "The theme: light or dark.",
+        "param-desc-lang": "The language: English or French.",
+        "param-desc-definition": "The map definition: low, medium or high. This changes the level of detail of the map.",
+        "param-desc-projection": "The map projection: different ways to project the world map.",
+        "param-desc-static": "Static map: make point sizes and legend insensitive to zoom for a more readable map at different scales.",
+        "param-desc-color": "Colorimetry options: choose between different color palettes for the map.",
+        "param-desc-daltonian": "Daltonian mode: use a color palette suitable for colorblind people."
     }
 }

@@ -101,3 +101,5 @@ export const GEO_PROJECTION_STORAGE_KEY = "geoProjection";
 export const IS_STATIC_STORAGE_KEY = "isStatic";
 export const IS_DALTONIAN_STORAGE_KEY = "isDaltonian";
 export const PALETTE_COLOR_STORAGE_KEY = "paletteColor";
+export const ADD_ALL_YEARS_STORAGE_KEY = "addAllYears";
+export const SHOW_INTRO_STORAGE_KEY = "showIntro";

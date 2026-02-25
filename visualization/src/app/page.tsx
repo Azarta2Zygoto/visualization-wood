@@ -10,11 +10,14 @@ import ParamBar from "@/components/ParamBar";
 import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/d3/graphique";
 import { WorldMap } from "@/components/d3/map";
+import { InfoComponent } from "@/components/infoComponent";
+import IntroComponent from "@/components/introComponent";
 import Loading from "@/components/loading";
 import metadata_app from "@/data/metadata.json";
-import { type definitions } from "@/metadata/constants";
+import { SHOW_INTRO_STORAGE_KEY, type definitions } from "@/metadata/constants";
 import type { ColorName, ProjectionName } from "@/metadata/types";
 import { getAllChildren } from "@/utils/MODLecture";
+import Icon from "@/utils/icon";
 import { readNpz } from "@/utils/read";
 
 export default function HomePage(): JSX.Element {
@@ -45,6 +48,20 @@ export default function HomePage(): JSX.Element {
     const [AddAllYears, setAddAllYears] = useState<boolean>(false);
     const [paletteColor, setPaletteColor] = useState<ColorName>("orange");
     const [isDaltonian, setIsDaltonian] = useState<boolean>(false);
+    const [isOpenInfo, setIsOpenInfo] = useState<boolean>(false);
+    const [isOpenIntro, setIsOpenIntro] = useState<boolean>(false);
+    const [isOpenIntroDefault, setIsOpenIntroDefault] = useState<boolean>(true);
+
+    useEffect(() => {
+        const storedOpenIntro = localStorage.getItem(SHOW_INTRO_STORAGE_KEY);
+
+        if (storedOpenIntro !== null) {
+            setIsOpenIntroDefault(storedOpenIntro === "true");
+            setIsOpenIntro(storedOpenIntro === "true");
+        } else {
+            setIsOpenIntro(true);
+        }
+    }, []);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -130,9 +147,10 @@ export default function HomePage(): JSX.Element {
         fetchData(AddAllYears ? metadata_app.bois.start_year : currentYear);
     }, [currentYear, AddAllYears]);
 
-    useEffect(() => {
-        console.log("Changement des années", AddAllYears);
-    }, [AddAllYears]);
+    function openIntro() {
+        setIsOpenIntro(true);
+        setIsOpenInfo(false);
+    }
 
     return (
         <Fragment>
@@ -146,15 +164,27 @@ export default function HomePage(): JSX.Element {
             >
                 {t("parameters")}
             </button>
+            <button
+                className="btn btn-info"
+                type="button"
+                aria-label={t("info-desc")}
+                title={t("info-desc")}
+                onClick={() => setIsOpenInfo((prev) => !prev)}
+            >
+                <Icon
+                    name="info-circle-fill"
+                    size={20}
+                />
+            </button>
 
             <ParamBar
-                open={isOpenParamBar}
+                isOpen={isOpenParamBar}
                 mapDefinition={mapDefinition}
                 geoProjection={geoProjection}
                 isStatic={IsStatic}
                 isDaltonian={isDaltonian}
                 paletteColor={paletteColor}
-                setOpen={setIsOpenParamBar}
+                onClose={() => setIsOpenParamBar(false)}
                 setMapDefinition={setMapDefinition}
                 setGeoProjection={setGeoProjection}
                 setIsStatic={setIsStatic}
@@ -227,6 +257,17 @@ export default function HomePage(): JSX.Element {
                 }
                 iconSelected={iconSelected}
                 allEvents={allEvents}
+            />
+            <InfoComponent
+                isOpen={isOpenInfo}
+                onClose={() => setIsOpenInfo(false)}
+                onOpenIntro={openIntro}
+            />
+            <IntroComponent
+                isOpen={isOpenIntro}
+                isOpenDefault={isOpenIntroDefault}
+                onClose={() => setIsOpenIntro(false)}
+                setShowIntro={setIsOpenIntroDefault}
             />
         </Fragment>
     );
