@@ -34,6 +34,8 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     const margin = { top: 40, right: 100, bottom: 40, left: 50 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
+    // Constante pour le wrapping du texte de la légende basée sur la largeur du conteneur
+    const LEGEND_MAX_CHARS_PER_LINE = Math.max(10, Math.floor((margin.right) / 2));
 
     // créer le groupe plot principal si inexistant
     let g = svg_animated.select<SVGGElement>("g.plot");
@@ -325,26 +327,84 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             (enter) => {
                 const gEnter = enter
                     .append("g")
-                    .attr("transform", (d, i) => `translate(0,${i * 25})`);
-                gEnter
-                    .append("rect")
+                    .attr("transform", (d, i) => {
+                        let yOffset = 0;
+                        for (let j = 0; j < i; j++) {
+                            const lineCount = wrapText(stocks[j].symbol, LEGEND_MAX_CHARS_PER_LINE).length;
+                            yOffset += Math.max(lineCount * 16 + 8, 25);
+                        }
+                        return `translate(0,${yOffset})`;
+                    });
+
+                // Créer le texte et calculer sa hauteur
+                const textElement = gEnter
+                    .append("text")
+                    .attr("x", 20)
+                    .attr("y", 0)
+                    .style("font-size", "12px")
+                    .style("line-height", "16px");
+
+                textElement.selectAll("tspan").remove();
+                textElement
+                    .selectAll("tspan")
+                    .data((d: any) => wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE))
+                    .enter()
+                    .append("tspan")
+                    .attr("x", 20)
+                    .attr("dy", (d, i) => i === 0 ? 0 : "16px")
+                    .text((d: string) => d);
+
+                // Ajouter le rectangle après le texte
+                const rect = gEnter
+                    .insert("rect", "text")
                     .attr("width", 15)
                     .attr("height", 15)
                     .attr("fill", (d) => color(d.symbol));
-                gEnter
-                    .append("text")
-                    .attr("x", 20)
-                    .attr("y", 12)
-                    .text((d) => d.symbol);
+
+                // Positionner le rect au centre vertically
+                rect.attr("y", (d: any) => {
+                    const lineCount = wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE).length;
+                    const textHeight = lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
+                    return textHeight;
+                });
+
                 return gEnter;
             },
             (update) =>
-                update.call((update) =>
+                update.call((update) => {
                     update
                         .transition()
                         .duration(500)
-                        .attr("transform", (d, i) => `translate(0,${i * 25})`),
-                ),
+                        .attr("transform", (d, i) => {
+                            let yOffset = 0;
+                            for (let j = 0; j < i; j++) {
+                                const lineCount = wrapText(stocks[j].symbol, LEGEND_MAX_CHARS_PER_LINE).length;
+                                yOffset += Math.max(lineCount * 16 + 8, 25);
+                            }
+                            return `translate(0,${yOffset})`;
+                        });
+
+                    // Mettre à jour le texte
+                    update.select("text").selectAll("tspan").remove();
+                    update
+                        .select("text")
+                        .selectAll("tspan")
+                        .data((d: any) => wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE))
+                        .enter()
+                        .append("tspan")
+                        .attr("x", 20)
+                        .attr("dy", (d, i) => i === 0 ? 0 : "16px")
+                        .text((d: string) => d);
+
+                    // Mettre à jour le rect
+                    update
+                        .select("rect")
+                        .attr("y", (d: any) => {
+                            const lineCount = wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE).length;
+                            const textHeight = lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
+                            return textHeight;
+                        });
+                }),
             (exit) =>
                 exit.call((exit) =>
                     exit.transition().duration(500).attr("opacity", 0).remove(),
@@ -527,6 +587,36 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     }
     gZoom.call(zoom as any);
     return svg_animated.node();
+}
+
+// Fonction pour diviser le texte en lignes si trop long
+function wrapText(text: string, maxCharsPerLine: number): string[] {
+    if (text.length <= maxCharsPerLine) {
+        return [text];
+    }
+
+    const words = text.split(" ");
+    const lines: string[] = [];
+    let currentLine = "";
+
+    for (const word of words) {
+        const testLine = currentLine ? currentLine + " " + word : word;
+
+        if (testLine.length > maxCharsPerLine && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = testLine;
+        }
+
+        if (lines.length >= 2) break; // Max 2 lignes
+    }
+
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+
+    return lines;
 }
 
 function updateColorDomain(

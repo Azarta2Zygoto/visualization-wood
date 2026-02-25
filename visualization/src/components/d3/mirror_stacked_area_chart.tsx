@@ -26,6 +26,8 @@ export default function updateMirrorStackedAreaChart(
     const marginBottom = 40;
     const marginLeft = 50;
     const iconSize = 30; // taille d'affichage des icones
+    // Constante pour le wrapping du texte de la légende basée sur la largeur du conteneur
+    const LEGEND_MAX_CHARS_PER_LINE = Math.max(10, Math.floor((marginRight) / 2));
 
     /* =========================
        ROOT GROUP (create once)
@@ -240,12 +242,14 @@ export default function updateMirrorStackedAreaChart(
             .attr("transform", `translate(${marginLeft},0)`);
     }
 
-    let xAxis = root.select<SVGGElement>(".x-axis");
+    // Sélection ou création de l'axe X à l'intérieur de plotGroup pour avoir le clip
+    let xAxis = plotGroup.select<SVGGElement>(".x-axis");
     if (xAxis.empty()) {
-        xAxis = root.append("g")
-            .attr("class", "x-axis");
+        xAxis = plotGroup.append("g")
+            .attr("class", "x-axis")
+            // placer initialement à y=0 ou sur l’axe 0
+            .attr("transform", `translate(0,${y(0)})`);
     }
-
     function updateAxes() {
         yAxis
             .transition()
@@ -332,35 +336,107 @@ export default function updateMirrorStackedAreaChart(
     drawAreas(gImport, importSeries, areaImport, "Import");
 
     /* =========================
-       LEGEND (join)
+       LEGEND (join with wrapping)
     ========================= */
 
     let legend = root.select<SVGGElement>(".legend");
     if (legend.empty()) {
-        legend = root.append("g")
+        legend = root
+            .append("g")
             .attr("class", "legend")
             .attr("transform", `translate(${width - marginRight + 10}, ${marginTop})`);
     }
 
-    legend.selectAll("g")
-        .data(products)
+    legend
+        .selectAll("g")
+        .data(products, (d: any) => d)
         .join(
-            enter => {
-                const g = enter.append("g");
-                g.append("rect")
-                    .attr("width", 15)
-                    .attr("height", 15);
-                g.append("text")
+            (enter) => {
+                const gEnter = enter
+                    .append("g")
+                    .attr("transform", (d, i) => {
+                        let yOffset = 0;
+                        for (let j = 0; j < i; j++) {
+                            const lineCount = wrapText(products[j], LEGEND_MAX_CHARS_PER_LINE).length;
+                            yOffset += Math.max(lineCount * 16 + 8, 25);
+                        }
+                        return `translate(0,${yOffset})`;
+                    });
+
+                // Créer le texte et calculer sa hauteur
+                const textElement = gEnter
+                    .append("text")
                     .attr("x", 20)
-                    .attr("y", 12);
-                return g;
-            }
-        )
-        .attr("transform", (_, i) => `translate(0, ${i * 25})`)
-        .call(g => {
-            g.select("rect").attr("fill", d => color(d));
-            g.select("text").text(d => d);
-        });
+                    .attr("y", 0)
+                    .style("font-size", "12px")
+                    .style("line-height", "16px");
+
+                textElement.selectAll("tspan").remove();
+                textElement
+                    .selectAll("tspan")
+                    .data((d: any) => wrapText(d, LEGEND_MAX_CHARS_PER_LINE))
+                    .enter()
+                    .append("tspan")
+                    .attr("x", 20)
+                    .attr("dy", (d, i) => i === 0 ? 0 : "16px")
+                    .text((d: string) => d);
+
+                // Ajouter le rectangle après le texte
+                const rect = gEnter
+                    .insert("rect", "text")
+                    .attr("width", 15)
+                    .attr("height", 15)
+                    .attr("fill", (d) => color(d));
+
+                // Positionner le rect au centre vertically
+                rect.attr("y", (d: any) => {
+                    const lineCount = wrapText(d, LEGEND_MAX_CHARS_PER_LINE).length;
+                    const textHeight = lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
+                    return textHeight;
+                });
+
+                return gEnter;
+            },
+            (update) =>
+                update.call((update) => {
+                    update
+                        .transition()
+                        .duration(500)
+                        .attr("transform", (d, i) => {
+                            let yOffset = 0;
+                            for (let j = 0; j < i; j++) {
+                                const lineCount = wrapText(products[j], LEGEND_MAX_CHARS_PER_LINE).length;
+                                yOffset += Math.max(lineCount * 16 + 8, 25);
+                            }
+                            return `translate(0,${yOffset})`;
+                        });
+
+                    // Mettre à jour le texte
+                    update.select("text").selectAll("tspan").remove();
+                    update
+                        .select("text")
+                        .selectAll("tspan")
+                        .data((d: any) => wrapText(d, LEGEND_MAX_CHARS_PER_LINE))
+                        .enter()
+                        .append("tspan")
+                        .attr("x", 20)
+                        .attr("dy", (d, i) => i === 0 ? 0 : "16px")
+                        .text((d: string) => d);
+
+                    // Mettre à jour le rect
+                    update
+                        .select("rect")
+                        .attr("y", (d: any) => {
+                            const lineCount = wrapText(d, LEGEND_MAX_CHARS_PER_LINE).length;
+                            const textHeight = lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
+                            return textHeight;
+                        });
+                }),
+            (exit) =>
+                exit.call((exit) =>
+                    exit.transition().duration(500).attr("opacity", 0).remove(),
+                ),
+        );
 
     /* =========================
    ICONS
@@ -499,4 +575,34 @@ export default function updateMirrorStackedAreaChart(
 
 
 
+}
+
+// Fonction pour diviser le texte en lignes si trop long
+function wrapText(text: string, maxCharsPerLine: number): string[] {
+    if (text.length <= maxCharsPerLine) {
+        return [text];
+    }
+
+    const words = text.split(" ");
+    const lines: string[] = [];
+    let currentLine = "";
+
+    for (const word of words) {
+        const testLine = currentLine ? currentLine + " " + word : word;
+
+        if (testLine.length > maxCharsPerLine && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = testLine;
+        }
+
+        if (lines.length >= 2) break; // Max 2 lignes
+    }
+
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+
+    return lines;
 }
