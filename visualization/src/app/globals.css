@@ -31,7 +31,7 @@
     --fg: #171717;
     --color-special: #6496fa;
     --color-special-shadow: #6496fa88;
-    --color-text-special: #192b50;
+    --color-text-special: #122a5a;
     --color-mat: #b2d3ffbb;
     --color-page: #f3ede6;
     --low-border-color: #666;
@@ -800,6 +800,20 @@ ul {
 .graph-wrapper {
     position: relative;
     width: 100%;
+}
+.slider-bar {
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    bottom: 5%;
+    transform: translateX(-50%);
+    margin-top: 1rem;
+    width: 80%;
+    max-width: 1000px;
+    padding: 2rem;
+    background-color: var(--on-map);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
 }
 
 /* Texte placé juste après la carte (qui fait 100vh) */

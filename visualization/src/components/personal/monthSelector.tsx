@@ -9,12 +9,11 @@ import {
 } from "@/components/ui/popover";
 import month_list from "@/data/months.json";
 
+const months_order = [6, 11, 1, 12, 5, 10, 4, 8, 2, 3, 9, 7] as const;
 interface MonthSelectorProps {
     currentMonth: number;
     setCurrentMonth: (month: number) => void;
 }
-
-const months_order = [6, 11, 1, 12, 5, 10, 4, 8, 2, 3, 9, 7];
 
 export default function MonthSelector({
     currentMonth,

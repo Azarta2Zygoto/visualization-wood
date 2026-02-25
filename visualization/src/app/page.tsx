@@ -13,6 +13,7 @@ import { WorldMap } from "@/components/d3/map";
 import { InfoComponent } from "@/components/infoComponent";
 import IntroComponent from "@/components/introComponent";
 import Loading from "@/components/loading";
+import SlidingYears from "@/components/personal/slidingYears";
 import metadata_app from "@/data/metadata.json";
 import { SHOW_INTRO_STORAGE_KEY, type definitions } from "@/metadata/constants";
 import type { ColorName, ProjectionName } from "@/metadata/types";
@@ -51,6 +52,7 @@ export default function HomePage(): JSX.Element {
     const [isOpenInfo, setIsOpenInfo] = useState<boolean>(false);
     const [isOpenIntro, setIsOpenIntro] = useState<boolean>(false);
     const [isOpenIntroDefault, setIsOpenIntroDefault] = useState<boolean>(true);
+    const [isSlidingYears, setIsSlidingYears] = useState<boolean>(false);
 
     useEffect(() => {
         const storedOpenIntro = localStorage.getItem(SHOW_INTRO_STORAGE_KEY);
@@ -174,6 +176,7 @@ export default function HomePage(): JSX.Element {
                 <Icon
                     name="info-circle-fill"
                     size={20}
+                    color="var(--color-text-special)"
                 />
             </button>
 
@@ -268,6 +271,14 @@ export default function HomePage(): JSX.Element {
                 isOpenDefault={isOpenIntroDefault}
                 onClose={() => setIsOpenIntro(false)}
                 setShowIntro={setIsOpenIntroDefault}
+            />
+            <SlidingYears
+                currentMonth={currentMonth}
+                currentYear={currentYear}
+                onChange={(month, year) => {
+                    setCurrentMonth(month);
+                    setCurrentYear(year);
+                }}
             />
         </Fragment>
     );
