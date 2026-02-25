@@ -2,7 +2,8 @@
     "HomePage": {
         "title": "Echanges internationaux de bois",
         "parameters": "Paramètres",
-        "parameters-desc": "Paramètres de visualisation"
+        "parameters-desc": "Paramètres de visualisation",
+        "info-desc": "Informations globales sur le projet"
     },
     "NotFound": {
         "title": "404 - Page non trouvée",
@@ -132,5 +133,15 @@
         "close-all": "Tout fermer",
         "close": "Fermer la sélection de produits",
         "attention-text": "Par défaut, si aucun produit n'est sélectionné, tous les produits sont affichés. Sélectionnez au moins un produit pour voir les données correspondantes."
+    },
+    "InfoComponent": {
+        "info": "Informations sur le projet",
+        "title": "Echanges internationaux de bois entre la France et le reste du monde",
+        "author": "<strong>Auteurs</strong> : Clément Petitjean et Quentin Potiron",
+        "tutor": "<strong>Tuteurs</strong> : Romain Vuillemot et Théo Jaunet",
+        "cadre": "<strong>Cadre</strong> : Cours de visualisation de données à Centrale Lyon",
+        "data": "<strong>Données</strong> : les données proviennent du site d'Agreste du Ministère de l'agriculture.",
+        "description": "Ce projet de visualisation interactive de données a pour thématique l'agriculture. Il consiste à la visualisation des données d'exportation et d'importation de bois de différents types entre la France et le reste du monde. Le but étant de rendre le tout interactif pour une exploration facile des données.",
+        "code": "Le code source du projet est disponible sur GitHub au lien suivant :"
     }
 }

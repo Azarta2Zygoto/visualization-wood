@@ -132,5 +132,15 @@
         "close-all": "Close all",
         "close": "Close product selection",
         "attention-text": "If no products are selected, by default, they will be all selected."
+    },
+    "InfoComponent": {
+        "info": "Project information",
+        "title": "International trade of wood with France",
+        "author": "<strong>Authors</strong>: Clément Petitjean and Quentin Potiron",
+        "tutor": "<strong>Tutors</strong>: Romain Vuillemot and Théo Jaunet",
+        "cadre": "<strong>Setting</strong>: Data visualization course at Centrale Lyon",
+        "data": "<strong>Data</strong>: Data comes from the Agreste website of the French Ministry of Agriculture.",
+        "description": "This interactive data visualization project focuses on agriculture. It visualizes the export and import data of different types of wood between France and the rest of the world. The goal is to make it interactive for easy exploration of the data.",
+        "code": "The code for this project is available on GitHub:"
     }
 }

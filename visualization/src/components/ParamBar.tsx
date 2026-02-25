@@ -22,13 +22,13 @@ import { projections } from "@/metadata/geoprojections";
 import type { ColorName, ProjectionName } from "@/metadata/types";
 
 interface ParamBarProps {
-    open: boolean;
+    isOpen: boolean;
     mapDefinition: definitions;
     geoProjection: ProjectionName;
     isStatic: boolean;
     isDaltonian: boolean;
     paletteColor: ColorName;
-    setOpen: (open: boolean) => void;
+    onClose: () => void;
     setMapDefinition: (definition: definitions) => void;
     setGeoProjection: (projection: ProjectionName) => void;
     setIsStatic: (isStatic: boolean) => void;
@@ -37,13 +37,13 @@ interface ParamBarProps {
 }
 
 export default function ParamBar({
-    open,
+    isOpen,
     mapDefinition,
     geoProjection,
     isStatic,
     isDaltonian,
     paletteColor,
-    setOpen,
+    onClose,
     setMapDefinition,
     setGeoProjection,
     setIsStatic,
@@ -56,12 +56,12 @@ export default function ParamBar({
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if ((e.key === "Escape" || e.key === "Backspace") && open)
-                setOpen(false);
+            if ((e.key === "Escape" || e.key === "Backspace") && isOpen)
+                onClose();
         };
         document.addEventListener("keydown", handleEscape);
         return () => document.removeEventListener("keydown", handleEscape);
-    }, [open, setOpen]);
+    }, [isOpen, onClose]);
 
     useEffect(() => {
         const storedDefinition = localStorage.getItem(
@@ -139,8 +139,8 @@ export default function ParamBar({
         <Fragment>
             <div
                 className="overlay"
-                onClick={() => setOpen(false)}
-                style={{ display: open ? "block" : "none" }}
+                onClick={onClose}
+                style={{ display: isOpen ? "block" : "none" }}
                 aria-hidden
                 role="presentation"
             />
@@ -148,10 +148,10 @@ export default function ParamBar({
                 className="param-bar"
                 role="dialog"
                 aria-modal="true"
-                aria-hidden={!open}
+                aria-hidden={!isOpen}
                 aria-label={t("settings")}
                 style={{
-                    transform: open
+                    transform: isOpen
                         ? "translateX(-50%)"
                         : "translateX(-50%) translateY(-200%)",
                 }}
@@ -222,7 +222,7 @@ export default function ParamBar({
                 <button
                     className="btn"
                     type="button"
-                    onClick={() => setOpen(false)}
+                    onClick={onClose}
                     style={{ width: "200px", margin: "0.5rem auto" }}
                 >
                     {t("close")}
