@@ -36,12 +36,11 @@
     --color-page: #f3ede6;
     --low-border-color: #666;
     --border-color: #333;
-    --on-map: #a0d4ffbb;
+    --on-map: #dff1ffbb;
     --disabled: #d3d3d3ee;
     --hover-bg: #d0e7ffcc;
     --selected-bg: #cfe2facc;
     --text-p: clamp(0.7rem, 1.5vw, 1rem);
-    --bg-legend: #caddf5cc;
     --valid-country: #87ceeb;
     --invalid-country: #d3d3d3;
 
@@ -55,6 +54,10 @@
     --color-special-8: #009b77;
     --color-special-9: #dd4124;
     --color-special-10: #45b8ac;
+
+    --map-bg-1: #145f8a;
+    --map-bg-2: #1a7ab5;
+    --map-bg-3: #2e94cc;
 }
 
 :root[data-theme="dark"] {
@@ -70,10 +73,13 @@
     --on-map: #141a1fbb;
     --hover-bg: #474c52cc;
     --selected-bg: #495563cc;
-    --bg-legend: #363c42cc;
     --valid-country: #116383;
     --invalid-country: #666;
     --color-special-1: #ff6f61;
+
+    --map-bg-1: #071b27;
+    --map-bg-2: #0c2c41;
+    --map-bg-3: #0e3950;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -90,10 +96,13 @@
         --on-map: #141a1fbb;
         --hover-bg: #474c52cc;
         --selected-bg: #495563cc;
-        --bg-legend: #363c42cc;
         --valid-country: #116383;
         --invalid-country: #666;
         --color-special-1: #ff6f61;
+
+        --map-bg-1: #071b27;
+        --map-bg-2: #0c2c41;
+        --map-bg-3: #0e3950;
     }
 }
 
@@ -235,6 +244,7 @@ main {
 }
 
 .btn.btn-select {
+    background-color: transparent;
     text-align: left;
     justify-content: space-between;
 }
@@ -329,6 +339,8 @@ main {
     border-radius: 8px;
     text-align: center;
     white-space: nowrap;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .h2-primary {
@@ -354,6 +366,8 @@ main {
     box-shadow: 0 4px 8px var(--color-mat);
     transition: right 0.3s ease-in-out;
     overflow: visible;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .config-bar-content {
@@ -424,7 +438,7 @@ main {
 }
 
 .select-months-options {
-    background-color: var(--on-map);
+    background-color: var(--bg);
 }
 
 .btn-close-config {
@@ -531,7 +545,20 @@ label {
     cursor: pointer;
     color: var(--color-special);
 }
-
+.root-svg {
+    background: linear-gradient(
+        45deg,
+        var(--map-bg-1),
+        var(--map-bg-2),
+        var(--map-bg-3),
+        var(--map-bg-2),
+        var(--map-bg-1)
+    );
+}
+.root-svg.globe {
+    background: var(--bg);
+    background-image: url("/visualization-wood/star.avif");
+}
 .Graphique {
     z-index: 2;
     position: absolute;
@@ -551,6 +578,7 @@ label {
     position: absolute;
     top: 2rem;
     right: 2rem;
+    background-color: var(--on-map);
 }
 .btn-info {
     z-index: 8;

@@ -20,6 +20,7 @@ interface SimpleDragProps {
         zoomScale: number,
         rotation: [number, number, number],
     ) => void;
+    correctionSize?: { width: number; height: number }; // Optional correction for centering the globe
 }
 
 /**
@@ -64,6 +65,7 @@ export function simpleDrag({
     scaleExtent = [0.5, 10],
     isStatic = false,
     onZoomChange,
+    correctionSize,
 }: SimpleDragProps) {
     // Capture the projection's original scale, before any zooming.
     // Apply initial rotation if provided
@@ -203,6 +205,10 @@ export function simpleDrag({
             .selectAll<SVGPathElement, any>(".arrow-head")
             .data();
         const maxValue = d3.max(allArrowData, (a) => a.value) || 1;
+
+        mapLayer
+            .selectAll(".globe-background")
+            .attr("r", projection.scale() * 1.01);
         // Update arrow-head positions
         mapLayer.selectAll<SVGPathElement, any>(".arrow-head").each(function (
             d: any,
@@ -276,6 +282,47 @@ export function simpleDrag({
             .call(zoom);
         // Redraw the map with the new scale
         projection.scale(initialScale);
+
+        mapLayer
+            .insert("circle", ":first-child")
+            .attr("class", "globe-background")
+            .attr("cx", correctionSize ? correctionSize.width : 0)
+            .attr("cy", correctionSize ? correctionSize.height : 0)
+            .attr("r", initialScale)
+            .attr("fill", "url(#globeGradient)")
+            .attr("stroke", "var(--border-color)")
+            .attr("stroke-width", 2);
+
+        // Ajoute le <defs> avec le gradient
+        const defs = mapLayer.append("defs").attr("id", "globe-gradient-defs");
+        const gradient = defs
+            .append("linearGradient")
+            .attr("id", "globeGradient")
+            .attr("x1", "0%")
+            .attr("y1", "0%")
+            .attr("x2", "100%")
+            .attr("y2", "100%");
+
+        gradient
+            .append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "var(--map-bg-1)");
+        gradient
+            .append("stop")
+            .attr("offset", "25%")
+            .attr("stop-color", "var(--map-bg-2)");
+        gradient
+            .append("stop")
+            .attr("offset", "50%")
+            .attr("stop-color", "var(--map-bg-3)");
+        gradient
+            .append("stop")
+            .attr("offset", "75%")
+            .attr("stop-color", "var(--map-bg-2)");
+        gradient
+            .append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "var(--map-bg-1)");
         mapLayer.selectAll(".country").attr("d", pathGenerator as any);
 
         // Initialize data points position

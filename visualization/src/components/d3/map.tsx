@@ -457,7 +457,8 @@ export function WorldMap({
 
                         currentTransformRef.current = event.transform;
                     });
-
+                currentMapLayer.selectAll(".globe-background").remove(); // Nettoie l'ancien cercle si besoin
+                currentMapLayer.select("defs#globe-gradient-defs").remove();
                 if (correctProjection.drag) {
                     // Convert geographic center to rotation for globe: rotation = [-lon, -lat, 0]
                     const initialRotation: [number, number, number] = [
@@ -506,6 +507,7 @@ export function WorldMap({
                                     });
                                 currentTransformRef.current = newTransform;
                             },
+                            correctionSize,
                         }),
                     );
                 } else {
@@ -973,7 +975,10 @@ export function WorldMap({
 
     return (
         <div className="world-map-container">
-            <svg ref={svgRef} />
+            <svg
+                ref={svgRef}
+                className={`root-svg ${projections.find((p) => p.name === geoProjection)?.drag ? "globe" : ""}`}
+            />
             <TooltipMap
                 countriesValues={lectureData}
                 position={{
@@ -1013,7 +1018,7 @@ function createLegend(
         .attr("width", config.legendWidth)
         .attr("height", config.legendHeight)
         .attr("rx", 8)
-        .attr("fill", "var(--bg-legend)")
+        .attr("fill", "var(--on-map)")
         .attr("stroke", "var(--border-color)")
         .attr("class", "legend-background");
 
