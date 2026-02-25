@@ -32,13 +32,6 @@ export function applyZoomOnElement({
     const effectiveZoom = isStatic ? (isGlobe ? 1 : zoomScale) : 1;
     const legendZoom = isStatic ? 1 : zoomScale;
 
-    console.log(
-        "Applying zoom with effectiveZoom:",
-        effectiveZoom,
-        "legendZoom:",
-        legendZoom,
-    );
-
     mapLayer
         .selectAll<SVGCircleElement, any>(".data-point")
         .attr("r", (d) => radiusScale(d.value) / effectiveZoom);

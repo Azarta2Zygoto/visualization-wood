@@ -14,7 +14,7 @@ import { InfoComponent } from "@/components/infoComponent";
 import IntroComponent from "@/components/introComponent";
 import Loading from "@/components/loading";
 import metadata_app from "@/data/metadata.json";
-import { type definitions } from "@/metadata/constants";
+import { SHOW_INTRO_STORAGE_KEY, type definitions } from "@/metadata/constants";
 import type { ColorName, ProjectionName } from "@/metadata/types";
 import { getAllChildren } from "@/utils/MODLecture";
 import Icon from "@/utils/icon";
@@ -49,7 +49,19 @@ export default function HomePage(): JSX.Element {
     const [paletteColor, setPaletteColor] = useState<ColorName>("orange");
     const [isDaltonian, setIsDaltonian] = useState<boolean>(false);
     const [isOpenInfo, setIsOpenInfo] = useState<boolean>(false);
-    const [isOpenIntro, setIsOpenIntro] = useState<boolean>(true);
+    const [isOpenIntro, setIsOpenIntro] = useState<boolean>(false);
+    const [isOpenIntroDefault, setIsOpenIntroDefault] = useState<boolean>(true);
+
+    useEffect(() => {
+        const storedOpenIntro = localStorage.getItem(SHOW_INTRO_STORAGE_KEY);
+
+        if (storedOpenIntro !== null) {
+            setIsOpenIntroDefault(storedOpenIntro === "true");
+            setIsOpenIntro(storedOpenIntro === "true");
+        } else {
+            setIsOpenIntro(true);
+        }
+    }, []);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -253,7 +265,9 @@ export default function HomePage(): JSX.Element {
             />
             <IntroComponent
                 isOpen={isOpenIntro}
+                isOpenDefault={isOpenIntroDefault}
                 onClose={() => setIsOpenIntro(false)}
+                setShowIntro={setIsOpenIntroDefault}
             />
         </Fragment>
     );

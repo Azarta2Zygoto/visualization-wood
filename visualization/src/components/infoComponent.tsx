@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useEffect } from "react";
 
-import { Linkedin, Website } from "@/metadata/svg";
+import { Github, Website } from "@/metadata/svg";
 
 interface InfoComponentProps {
     isOpen: boolean;
@@ -92,7 +92,7 @@ export function InfoComponent({
                             rel="noopener noreferrer"
                             className="link-primary"
                         >
-                            <Linkedin />
+                            <Github />
                             https://github.com/Azarta2Zygoto/visualization-wood
                         </a>
                     </div>

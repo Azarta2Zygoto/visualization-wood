@@ -1056,8 +1056,6 @@ function makeCircleProjection(
     // When isStatic, divide radius by zoom to keep constant visual size
     const legendZoom = isStatic ? 1 : zoom;
 
-    console.log("Max value for radius scaling:", maxValue, legendZoom);
-
     const effectiveRadius = (d: { value: number }) =>
         isStatic
             ? isGlobe
