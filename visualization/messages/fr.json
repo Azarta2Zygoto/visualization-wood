@@ -142,6 +142,14 @@
         "cadre": "<strong>Cadre</strong> : Cours de visualisation de données à Centrale Lyon",
         "data": "<strong>Données</strong> : les données proviennent du site d'Agreste du Ministère de l'agriculture.",
         "description": "Ce projet de visualisation interactive de données a pour thématique l'agriculture. Il consiste à la visualisation des données d'exportation et d'importation de bois de différents types entre la France et le reste du monde. Le but étant de rendre le tout interactif pour une exploration facile des données.",
-        "code": "Le code source du projet est disponible sur GitHub au lien suivant :"
+        "code": "Le code source du projet est disponible sur GitHub au lien suivant :",
+        "intro": "Revoir l'introduction",
+        "close": "Fermer"
+    },
+    "IntroComponent": {
+        "intro": "Introduction du site web",
+        "description": "Ce projet de visualisation interactive de données a pour thématique l'agriculture. Il consiste à la visualisation des données d'exportation et d'importation de bois de différents types entre la France et le reste du monde. Le but étant de rendre le tout interactif pour une exploration facile des données.",
+        "title": "Echanges internationaux de bois entre la France et le reste du monde",
+        "close": "Fermer"
     }
 }

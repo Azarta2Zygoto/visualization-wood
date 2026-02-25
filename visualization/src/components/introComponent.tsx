@@ -37,7 +37,7 @@ export default function IntroComponent({
                 role="dialog"
                 aria-modal="true"
                 aria-hidden={!isOpen}
-                aria-label={t("info")}
+                aria-label={t("intro")}
                 style={{
                     transform: isOpen
                         ? "translate(-50%, -50%) scale(1)"
@@ -45,7 +45,20 @@ export default function IntroComponent({
                     opacity: isOpen ? 1 : 0,
                     zIndex: isOpen ? 10 : -1,
                 }}
-            ></div>
+            >
+                <h1 className="h-secondary">{t("title")}</h1>
+                <section>
+                    <p>{t("description")}</p>
+                </section>
+                <button
+                    className="btn"
+                    onClick={onClose}
+                    type="button"
+                    style={{ width: "fit-content", margin: "0 auto" }}
+                >
+                    {t("close")}
+                </button>
+            </div>
         </Fragment>
     );
 }

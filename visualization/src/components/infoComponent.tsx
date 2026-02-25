@@ -8,11 +8,13 @@ import { Linkedin, Website } from "@/metadata/svg";
 interface InfoComponentProps {
     isOpen: boolean;
     onClose: () => void;
+    onOpenIntro?: () => void;
 }
 
 export function InfoComponent({
     isOpen,
     onClose,
+    onOpenIntro,
 }: InfoComponentProps): JSX.Element {
     const t = useTranslations("InfoComponent");
 
@@ -95,6 +97,22 @@ export function InfoComponent({
                         </a>
                     </div>
                 </section>
+                <button
+                    className="btn"
+                    onClick={onOpenIntro}
+                    type="button"
+                    style={{ width: "fit-content", margin: "0 auto" }}
+                >
+                    {t("intro")}
+                </button>
+                <button
+                    className="btn"
+                    onClick={onClose}
+                    type="button"
+                    style={{ width: "fit-content", margin: "0 auto" }}
+                >
+                    {t("close")}
+                </button>
             </div>
         </Fragment>
     );

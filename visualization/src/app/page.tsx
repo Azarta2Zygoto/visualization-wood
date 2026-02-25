@@ -11,6 +11,7 @@ import ConfigBar from "@/components/configBar";
 import Graphique from "@/components/d3/graphique";
 import { WorldMap } from "@/components/d3/map";
 import { InfoComponent } from "@/components/infoComponent";
+import IntroComponent from "@/components/introComponent";
 import Loading from "@/components/loading";
 import metadata_app from "@/data/metadata.json";
 import { type definitions } from "@/metadata/constants";
@@ -48,6 +49,7 @@ export default function HomePage(): JSX.Element {
     const [paletteColor, setPaletteColor] = useState<ColorName>("orange");
     const [isDaltonian, setIsDaltonian] = useState<boolean>(false);
     const [isOpenInfo, setIsOpenInfo] = useState<boolean>(false);
+    const [isOpenIntro, setIsOpenIntro] = useState<boolean>(true);
 
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
@@ -133,9 +135,10 @@ export default function HomePage(): JSX.Element {
         fetchData(AddAllYears ? metadata_app.bois.start_year : currentYear);
     }, [currentYear, AddAllYears]);
 
-    useEffect(() => {
-        console.log("Changement des années", AddAllYears);
-    }, [AddAllYears]);
+    function openIntro() {
+        setIsOpenIntro(true);
+        setIsOpenInfo(false);
+    }
 
     return (
         <Fragment>
@@ -246,6 +249,11 @@ export default function HomePage(): JSX.Element {
             <InfoComponent
                 isOpen={isOpenInfo}
                 onClose={() => setIsOpenInfo(false)}
+                onOpenIntro={openIntro}
+            />
+            <IntroComponent
+                isOpen={isOpenIntro}
+                onClose={() => setIsOpenIntro(false)}
             />
         </Fragment>
     );

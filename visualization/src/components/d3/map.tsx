@@ -1056,6 +1056,8 @@ function makeCircleProjection(
     // When isStatic, divide radius by zoom to keep constant visual size
     const legendZoom = isStatic ? 1 : zoom;
 
+    console.log("Max value for radius scaling:", maxValue, legendZoom);
+
     const effectiveRadius = (d: { value: number }) =>
         isStatic
             ? isGlobe
@@ -1084,7 +1086,7 @@ function makeCircleProjection(
         .attr("class", "legend-circle")
         .attr("cx", legendCircleX)
         .attr("cy", (d) => config.legendYposition - radiusScale(d) * legendZoom)
-        .attr("r", (d) => radiusScale(d) * zoom)
+        .attr("r", (d) => radiusScale(d) * legendZoom)
         .attr("opacity", 0.7)
         .attr("stroke-width", 1)
         .attr("fill", colors[palette].fill)
