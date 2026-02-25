@@ -300,12 +300,13 @@ export default function Graphique({
 
         return titleParts.join(" ");
     }, [countriesSelected, productsSelected, type]);
+    // Title animation is handled by the separate `GraphTitle` component
     return (
         <div className="graph-wrapper">
 
-            <h1 className="graph-middle-text">
-                {titre}
-            </h1>
+
+            <GraphTitle titre={titre} />
+
 
             <div
                 className="Graphique"
@@ -550,4 +551,34 @@ function withFrenchDeterminer(country: string): string {
 
     // Masculin par défaut
     return `le ${country}`;
+}
+
+function GraphTitle({ titre }: { titre: string }) {
+    const [show, setShow] = useState(true);
+    const [displayedTitle, setDisplayedTitle] = useState(titre);
+
+    useEffect(() => {
+        if (titre !== displayedTitle) {
+            setShow(false);
+            const timeout = setTimeout(() => {
+                setDisplayedTitle(titre);
+                setShow(true);
+            }, 300);
+            return () => clearTimeout(timeout);
+        }
+    }, [titre, displayedTitle]);
+
+    return (
+        <h1
+            className="graph-middle-text"
+
+            style={{
+                opacity: show ? 1 : 0,
+                transform: show ? "translateY(0)" : "translateY(-10px)",
+                transition: "opacity 0.3s ease, transform 0.3s ease",
+            }}
+        >
+            {displayedTitle}
+        </h1>
+    );
 }

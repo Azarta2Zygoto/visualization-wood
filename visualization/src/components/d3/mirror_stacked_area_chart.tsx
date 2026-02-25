@@ -241,6 +241,12 @@ export default function updateMirrorStackedAreaChart(
             .attr("class", "y-axis")
             .attr("transform", `translate(${marginLeft},0)`);
     }
+    let yAxisLabels = root.select<SVGGElement>(".y-axis-labels");
+    if (yAxisLabels.empty()) {
+        yAxisLabels = root.append("g")
+            .attr("class", "y-axis-labels")
+            .attr("transform", `translate(${marginLeft - 25},0)`);
+    }
 
     // Sélection ou création de l'axe X à l'intérieur de plotGroup pour avoir le clip
     let xAxis = plotGroup.select<SVGGElement>(".x-axis");
@@ -254,14 +260,36 @@ export default function updateMirrorStackedAreaChart(
         yAxis
             .transition()
             .duration(500)
-            .call(d3.axisLeft(y))
-            .call(g => g.select(".domain").remove());
+            .call(d3.axisLeft(y));
 
         xAxis
             .attr("transform", `translate(0,${y(0)})`)
             .transition()
             .duration(500)
             .call(d3.axisBottom(x).tickSizeOuter(0));
+        // EXPORT (haut)
+        yAxisLabels.selectAll(".label-export")
+            .data([null])
+            .join("text")
+            .attr("class", "label-export")
+            .attr("x", 0)
+            .attr("y", marginTop - 20)
+            .attr("text-anchor", "middle")
+            .style("font-weight", "600")
+            .style("fill", "#444")
+            .text("Export");
+
+        // IMPORT (bas)
+        yAxisLabels.selectAll(".label-import")
+            .data([null])
+            .join("text")
+            .attr("class", "label-import")
+            .attr("x", 0)
+            .attr("y", height - marginBottom + 30)
+            .attr("text-anchor", "middle")
+            .style("font-weight", "600")
+            .style("fill", "#444")
+            .text("Import");
     }
 
     updateAxes();
@@ -544,8 +572,7 @@ export default function updateMirrorStackedAreaChart(
             iconsGroup.selectAll(".event-icon")
                 .attr("x", (d: any) => zx(d.dateParsed) - iconSize / 2);
             yAxis
-                .call(d3.axisLeft(y))
-                .call(g => g.select(".domain").remove());
+                .call(d3.axisLeft(y));
 
             xAxis
                 .attr("transform", `translate(0,${y(0)})`)
