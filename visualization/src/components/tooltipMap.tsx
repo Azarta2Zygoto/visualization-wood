@@ -7,6 +7,7 @@ import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { hasFlag } from "country-flag-icons";
 
 import { useGlobal } from "@/components/globalProvider";
+import ClevellandDotChart from "@/components/d3/cleveland_dot_chart";
 import pays from "@/data/countries.json";
 import month_names from "@/data/months.json";
 import type { CountryType } from "@/metadata/types";
@@ -29,6 +30,9 @@ interface TooltipMapProps {
     month: number;
     country: CountryType;
     position: { x: number; y: number };
+    rawData?: { [key: string]: number[][] };
+    productsSelected?: number[];
+    countryNumberToName?: Map<number, string>;
 }
 
 export default function TooltipMap({
@@ -38,6 +42,9 @@ export default function TooltipMap({
     month,
     country,
     position: { x, y } = { x: 0, y: 0 },
+    rawData,
+    productsSelected = [],
+    countryNumberToName,
 }: TooltipMapProps): JSX.Element {
     const t = useTranslations("Tooltip");
     const { windowSize, locale } = useGlobal();
@@ -53,6 +60,70 @@ export default function TooltipMap({
         [countriesValues, country],
     );
 
+    // J'ai pas compris mais le chat a réussi à transformer correctement les données 
+    // Calculate Cleveland dot chart data
+    const chartData = useMemo(() => {
+        if (
+            !rawData ||
+            !rawData[year] ||
+            !countryNumberToName ||
+            productsSelected.length === 0
+        ) {
+            return [];
+        }
+
+        const yearData = rawData[year];
+        const countryName = pays[country].en;
+        const chartDataByProduct: Record<number, { export: number; import: number }> = {};
+
+        // Get country number from the map
+        let countryNumber: number | null = null;
+        for (const [num, name] of countryNumberToName.entries()) {
+            if (name === countryName) {
+                countryNumber = num;
+                break;
+            }
+        }
+
+        if (countryNumber === null) return [];
+
+        const productsSet = new Set(productsSelected);
+
+        // Aggregate data by product
+        for (let i = 0; i < yearData.length; i++) {
+            const entry = yearData[i];
+
+            // Check month and country match
+            if (entry[2] !== month || entry[0] !== countryNumber) continue;
+
+            // Check product match
+            const productIndex = entry[3];
+            if (!productsSet.has(productIndex)) continue;
+
+            const typeIndex = entry[1];
+            const value = entry[4] || 0;
+
+            if (!chartDataByProduct[productIndex]) {
+                chartDataByProduct[productIndex] = { export: 0, import: 0 };
+            }
+
+            // typeIndex: 0=export_tonnes, 1=import_tonnes, 2=export_euro, 3=import_euro
+            // On prend que les valeurs en euro
+            if (typeIndex === 2) {
+                chartDataByProduct[productIndex].export += value;
+            } else if (typeIndex === 3) {
+                chartDataByProduct[productIndex].import += value;
+            }
+        }
+
+        // Convert to chart format
+        return Object.entries(chartDataByProduct).map(([productIndex, values]) => ({
+            productIndex: parseInt(productIndex),
+            exportValue: values.export,
+            importValue: values.import,
+        }));
+    }, [rawData, year, month, country, productsSelected, countryNumberToName]);
+
     useLayoutEffect(() => {
         if (!tooltipRef.current) return;
 
@@ -65,8 +136,8 @@ export default function TooltipMap({
                 x + width + 10 > windowSize.width
                     ? windowSize.width - width / 2 - 10
                     : x < width / 2
-                      ? width / 2 + 10
-                      : x;
+                        ? width / 2 + 10
+                        : x;
 
             const top =
                 y + height + 10 > windowSize.height
@@ -115,7 +186,7 @@ export default function TooltipMap({
                         {pays[country][locale] + " - "}
                         {month !== 0 &&
                             month_names[
-                                month.toString() as keyof typeof month_names
+                            month.toString() as keyof typeof month_names
                             ] + " / "}
                         {year}
                     </h3>
@@ -124,27 +195,40 @@ export default function TooltipMap({
             {pays[country].fr === "France" ? (
                 <p className="france-tooltip">{t("france-tooltip")}</p>
             ) : values.export_euro +
-                  values.export_tonnes +
-                  values.import_euro +
-                  values.import_tonnes ===
-              4 * defaultNoData ? (
+                values.export_tonnes +
+                values.import_euro +
+                values.import_tonnes ===
+                4 * defaultNoData ? (
                 <p>{t("no-data")}</p>
             ) : (
-                <ul>
-                    {Object.keys(values).map((key) => {
-                        return (
-                            <li key={key}>
-                                <strong>
-                                    {t(key, {
-                                        value: values[
-                                            key as keyof typeof values
-                                        ],
-                                    })}
-                                </strong>
-                            </li>
-                        );
-                    })}
-                </ul>
+                <div className="tooltip-content">
+                    {chartData.length > 0 && (
+                        <div className="tooltip-chart">
+                            <ClevellandDotChart
+                                data={chartData}
+                                width={260}
+                                height={250}
+                            />
+                        </div>
+                    )}
+                    <div className="tooltip-text">
+                        <ul>
+                            {Object.keys(values).map((key) => {
+                                return (
+                                    <li key={key}>
+                                        <strong>
+                                            {t(key, {
+                                                value: values[
+                                                    key as keyof typeof values
+                                                ],
+                                            })}
+                                        </strong>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                </div>
             )}
         </div>
     );
