@@ -126,6 +126,29 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     }
     gY.transition().duration(800).call(d3.axisLeft(yScale));
 
+    // Ajouter le label de l'axe Y
+    let yLabel = g.select<SVGTextElement>("text.y-axis-label");
+    if (yLabel.empty()) {
+        yLabel = g
+            .append("text")
+            .attr("class", "y-axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left - 12)
+            .attr("x", 0 - plotHeight / 2)
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .style("font-size", "12px")
+            .style("fill", "currentColor");
+    }
+    // Déterminer le label en fonction du type de données
+    const firstSymbol = stocks.length > 0 ? stocks[0].symbol.toLowerCase() : "";
+    const yAxisLabel = firstSymbol.includes("valeur")
+        ? "Valeur (k€)"
+        : firstSymbol.includes("volume")
+            ? "Volume (Tonnes)"
+            : "Valeur";
+    yLabel.text(yAxisLabel);
+
     const clipId = "clip-mouse-rect"; // ou un nom unique
 
     // créer defs si inexistant
