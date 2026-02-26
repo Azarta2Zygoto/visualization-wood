@@ -249,11 +249,31 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             .attr("clip-path", `url(#${clipId})`);
     }
     iconsGroup
-        .selectAll("use.event-icon")
+        .selectAll("g.event-icon-group")
         .data(events, (d: any) => d.titre_court)
         .join(
-            (enter) =>
-                enter
+            (enter) => {
+                const g = enter
+                    .append("g")
+                    .attr("class", "event-icon-group")
+                    .style("opacity", 0);
+
+                // Rectangle invisible pour le hover
+                g
+                    .append("rect")
+                    .attr("class", "icon-hover-rect")
+                    .attr(
+                        "x",
+                        (d: any) => xScaleZoom(d.dateParsed) - iconSize / 2,
+                    )
+                    .attr("y", 0)
+                    .attr("width", iconSize)
+                    .attr("height", iconSize)
+                    .attr("fill", "none")
+                    .attr("pointer-events", "all");
+
+                // Icône (use element)
+                g
                     .append("use")
                     .attr("class", "event-icon")
                     .attr("xlink:href", (d: any) => `#${d.id}`)
@@ -264,33 +284,42 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .attr("y", 0)
                     .attr("width", iconSize)
                     .attr("height", iconSize)
-                    .style("opacity", 0) // départ invisible
-                    .call((enter) =>
-                        enter
-                            .transition()
-                            .duration(500)
-                            .style("opacity", 1) // apparition progressive
-                            .attr("y", 10),
-                    ), // glisse vers y = 10
+                    .style("pointer-events", "none");
+
+                return g.call((enter) =>
+                    enter
+                        .transition()
+                        .duration(500)
+                        .style("opacity", 1,)
+                        .selectAll("rect, use")
+                        .attr("y", 10),
+                );
+            },
             (update) =>
                 update
                     .transition()
                     .duration(500)
-                    .attr("xlink:href", (d: any) => `#${d.id}`)
+                    .style("opacity", 1)
+                    .selectAll("rect.icon-hover-rect, use.event-icon")
                     .attr(
                         "x",
                         (d: any) => xScaleZoom(d.dateParsed) - iconSize / 2,
                     )
                     .attr("y", 10)
-                    .style("opacity", 1), // s'assure que l'icône est visible
+                    .attr("width", iconSize)
+                    .attr("height", iconSize),
             (exit) =>
                 exit
                     .transition()
                     .duration(300)
-                    .attr("y", -20)
-                    .style("opacity", 0) // disparition progressive
+                    .style("opacity", 0)
                     .remove(),
         )
+        .each(function (d: any) {
+            d3.select(this)
+                .select("use.event-icon")
+                .attr("xlink:href", (d: any) => `#${d.id}`);
+        })
         .on("mouseover", function (event, d: any) {
             Tooltip.style("opacity", 1).html(`
             <strong>Titre :</strong> ${d.titre_court}<br>
@@ -565,6 +594,10 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .y((d: any) => yScaleZoom(y(d)))(d.values),
             );
             // Mettre à jour les icônes lors du zoom
+            iconsGroup
+                .selectAll(".icon-hover-rect")
+                .attr("x", (d: any) => xScaleZoom(d.dateParsed) - iconSize / 2);
+
             iconsGroup
                 .selectAll(".event-icon")
                 .attr("x", (d: any) => xScaleZoom(d.dateParsed) - iconSize / 2);

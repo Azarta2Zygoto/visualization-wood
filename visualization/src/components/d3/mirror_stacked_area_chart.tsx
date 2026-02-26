@@ -495,29 +495,60 @@ export default function updateMirrorStackedAreaChart(
     if (iconsGroup.empty()) {
         iconsGroup = plotGroup.append("g").attr("class", "icons");
     }
-    iconsGroup.selectAll("use.event-icon")
+    iconsGroup.selectAll("g.event-icon-group")
         .data(events, (d: any) => d.titre_court)
         .join(
-            enter => enter.append("use")
-                .attr("class", "event-icon")
-                .attr("xlink:href", d => `#${d.id}`)
-                .attr("x", d => x0(d.dateParsed) - iconSize / 2)
-                .attr("y", 0)
-                .attr("width", iconSize)
-                .attr("height", iconSize)
-                .style("opacity", 0)
-                .call((enter) =>
-                    enter.transition()
-                        .duration(500)
-                        .style("opacity", 1)
-                        .attr("y", marginTop)
-                ),
+            enter => {
+                const g = enter.append("g")
+                    .attr("class", "event-icon-group")
+                    .style("opacity", 0);
 
-            update => update.transition().duration(500)
-                .attr("x", d => x0(d.dateParsed) - iconSize / 2)
-                .style("opacity", 1),
+                // Rectangle invisible pour le hover
+                g.append("rect")
+                    .attr("class", "icon-hover-rect")
+                    .attr("x", (d: any) => x0(d.dateParsed) - iconSize / 2)
+                    .attr("y", 0)
+                    .attr("width", iconSize)
+                    .attr("height", iconSize)
+                    .attr("fill", "none")
+                    .attr("pointer-events", "all");
 
-            exit => exit.transition().duration(300).attr("y", -20)
+                // Icône (use element)
+                g.append("use")
+                    .attr("class", "event-icon")
+                    .attr("xlink:href", (d: any) => `#${d.id}`)
+                    .attr("x", (d: any) => x0(d.dateParsed) - iconSize / 2)
+                    .attr("y", 0)
+                    .attr("width", iconSize)
+                    .attr("height", iconSize)
+                    .style("pointer-events", "none");
+
+                // Animer l'opacité et le y
+                g.transition()
+                    .duration(500)
+                    .style("opacity", 1)
+                    .selectAll("rect, use")
+                    .attr("y", marginTop);
+
+                return g;
+            },
+
+            update => {
+                // Mettre à jour les positions et dimensions
+                update.selectAll("rect.icon-hover-rect, use.event-icon")
+                    .attr("x", (d: any) => x0(d.dateParsed) - iconSize / 2)
+                    .attr("y", marginTop)
+                    .attr("width", iconSize)
+                    .attr("height", iconSize);
+
+                update.select("use.event-icon")
+                    .attr("xlink:href", (d: any) => `#${d.id}`);
+
+                return update.transition().duration(500)
+                    .style("opacity", 1);
+            },
+
+            exit => exit.transition().duration(300)
                 .style("opacity", 0).remove()
         )
         .on("mouseover", (event, d: any) => {
@@ -569,6 +600,8 @@ export default function updateMirrorStackedAreaChart(
 
             gExport.selectAll("path").attr("d", areaExport as any);
             gImport.selectAll("path").attr("d", areaImport as any);
+            iconsGroup.selectAll(".icon-hover-rect")
+                .attr("x", (d: any) => zx(d.dateParsed) - iconSize / 2);
             iconsGroup.selectAll(".event-icon")
                 .attr("x", (d: any) => zx(d.dateParsed) - iconSize / 2);
             yAxis
