@@ -66,7 +66,7 @@ export default function HomePage(): JSX.Element {
     // 🔹 Charger le CSV une seule fois
     useEffect(() => {
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-        const url = `${basePath}/data/all_event_wood.csv`;
+        const url = `${basePath}/data/all_event_wood_bis.csv`;
 
         fetch(url)
             .then((res) => {
@@ -110,9 +110,9 @@ export default function HomePage(): JSX.Element {
                     AddAllYears &&
                     year < metadata_app.bois.end_year &&
                     Object.keys(allData).length !==
-                        metadata_app.bois.end_year -
-                            metadata_app.bois.start_year +
-                            1
+                    metadata_app.bois.end_year -
+                    metadata_app.bois.start_year +
+                    1
                 ) {
                     fetchData(year + 1);
                 }
@@ -224,8 +224,8 @@ export default function HomePage(): JSX.Element {
                 isAllDataLoaded={
                     Object.keys(allData).length ===
                     metadata_app.bois.end_year -
-                        metadata_app.bois.start_year +
-                        1
+                    metadata_app.bois.start_year +
+                    1
                 }
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
@@ -247,10 +247,10 @@ export default function HomePage(): JSX.Element {
                     productsSelected.length === 0
                         ? [0]
                         : productsSelected.length === 1
-                          ? getAllChildren(productsSelected[0]).length > 0
-                              ? getAllChildren(productsSelected[0])
-                              : productsSelected
-                          : productsSelected
+                            ? getAllChildren(productsSelected[0]).length > 0
+                                ? getAllChildren(productsSelected[0])
+                                : productsSelected
+                            : productsSelected
                 }
                 countriesSelected={
                     countriesSelected.length === 0 ? [21] : countriesSelected

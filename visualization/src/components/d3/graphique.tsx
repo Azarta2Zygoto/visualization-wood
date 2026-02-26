@@ -414,13 +414,13 @@ function filterevents(
     const parseDate1 = d3.timeParse("%Y-%m-%d"); // parsing date pour les icones
     const parseDate2 = d3.timeParse("%Y-%m");
     const paysMap: Record<string, any> = pays;
-
     // construire la liste des valeurs possibles depuis la sélection
-    const selectedValues = contrySelected.flatMap((id) => {
+    let selectedValues = contrySelected.flatMap((id) => {
         const v = paysMap[id];
         if (!v) return [];
         return [v.code, v.en, v.fr, v.event_name].filter(Boolean);
     });
+    selectedValues.push("France Bois"); // on ajoute la France 
     const eventsWithIcons = events
         .map((event) => {
             // parse de la date
@@ -435,7 +435,6 @@ function filterevents(
             // catégorie / icône
             let category = "";
             let icon = null;
-            let contry = null;
             if (event.categorie) {
                 const typeList = event.categorie.split("/");
                 category = typeList.find((t: any) => t in map_icons) || "";
