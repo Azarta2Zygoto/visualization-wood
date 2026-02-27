@@ -90,7 +90,19 @@
         "balance_euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "flag": "{country} flag",
         "no-data": "No data available",
-        "france-tooltip": "This is the reference country for this visualization. Trade flows are represented in relation to this country."
+        "france-tooltip": "This is the reference country for this visualization. Trade flows are represented in relation to this country.",
+        "Janvier": "January",
+        "Février": "February",
+        "Mars": "March",
+        "Avril": "April",
+        "Mai": "May",
+        "Juin": "June",
+        "Juillet": "July",
+        "Août": "August",
+        "Septembre": "September",
+        "Octobre": "October",
+        "Novembre": "November",
+        "Décembre": "December"
     },
     "WorldMap": {
         "error-data": "Error loading data",

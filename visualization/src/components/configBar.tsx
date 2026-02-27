@@ -11,7 +11,7 @@ import MODOpener from "@/components/MOD_opener";
 import { useGlobal } from "@/components/globalProvider";
 import Checkbox from "@/components/personal/checkbox";
 import MonthSelector from "@/components/personal/monthSelector";
-import SelectMenu from "@/components/personal/selectMenu";
+import NumberSelectMenu from "@/components/personal/numberSelectMenu";
 import { MultiSelect } from "@/components/ui/multi-select";
 import pays from "@/data/countries.json";
 import metadata from "@/data/metadata.json";
@@ -363,7 +363,7 @@ export default function ConfigBar({
                             {"<"}
                         </button>
 
-                        <SelectMenu
+                        <NumberSelectMenu
                             id="year-select"
                             style={{
                                 borderRadius: 0,
@@ -377,13 +377,10 @@ export default function ConfigBar({
                                         metadata.bois.start_year +
                                         1,
                                 },
-                                (_, i) =>
-                                    (metadata.bois.start_year + i).toString(),
+                                (_, i) => metadata.bois.start_year + i,
                             )}
-                            selectedOption={currentYear.toString()}
-                            onOptionSelect={(option: string) =>
-                                handleYearChange(parseInt(option, 10))
-                            }
+                            selectedOption={currentYear}
+                            onOptionSelect={handleYearChange}
                         />
                         <button
                             className="btn"

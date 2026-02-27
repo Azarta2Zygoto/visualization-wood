@@ -342,8 +342,8 @@ main {
     border-radius: 8px;
     text-align: center;
     white-space: nowrap;
-    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     transition: opacity 0.3s ease-in-out;
 }
 
@@ -370,8 +370,8 @@ main {
     box-shadow: 0 4px 8px var(--color-mat);
     transition: right 0.3s ease-in-out;
     overflow: visible;
-    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
 }
 
 .config-bar-content {
@@ -565,21 +565,29 @@ label {
         width: 100%;
     }
 }
-
-.btn-icon {
+.btn.btn-icon {
     background: none;
     border: none;
     padding: 0;
-    margin: 0;
-    color: var(--fg);
+    margin: 0 0.5rem;
+    color: var(--color-text-special);
     cursor: pointer;
+    border: none;
+    outline: none;
 }
-
-.btn-icon:hover {
+.btn.btn-icon:hover {
     cursor: pointer;
     color: var(--color-special);
+    box-shadow: none;
 }
-
+.btn.btn-icon:focus-visible {
+    outline: none;
+    border: none;
+    box-shadow: 0 0 0 3px var(--color-special);
+}
+.btn.btn-icon i {
+    font-size: 1.5rem;
+}
 .root-svg {
     background: linear-gradient(
         45deg,
@@ -627,6 +635,14 @@ label {
     margin: 0;
     border: none;
 }
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--fg);
+    cursor: pointer;
+}
 
 .link-primary {
     display: inline-flex;
@@ -654,6 +670,8 @@ label {
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
     border-radius: 16px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     transition: transform 0.3s ease-in-out;
 }
 
@@ -670,6 +688,8 @@ label {
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
     border-radius: 16px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     transition:
         transform 0.3s ease-in-out,
         opacity 0.3s ease-in-out;
@@ -701,6 +721,8 @@ ul {
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
     border-radius: 16px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     overflow-y: auto;
     overflow-x: hidden;
     transition:
@@ -856,13 +878,17 @@ ul {
     left: 50%;
     bottom: 5%;
     transform: translateX(-50%);
-    margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     width: 80%;
-    max-width: 1000px;
-    padding: 2rem;
+    max-width: min(65vw, 1000px);
+    padding: 1rem;
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
     border-radius: 16px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
 }
 
 /* Texte placé juste après la carte (qui fait 100vh) */

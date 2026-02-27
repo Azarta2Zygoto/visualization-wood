@@ -90,7 +90,19 @@
         "balance_euro": "Balance commerciale : {value, plural, =-1 {Aucune donnée} other {{value, number} k€}}",
         "flag": "Drapeau de {country}",
         "no-data": "Aucune donnée disponible",
-        "france-tooltip": "C'est le pays de référence pour cette visualisation. Les échanges commerciaux sont représentés par rapport à ce pays."
+        "france-tooltip": "C'est le pays de référence pour cette visualisation. Les échanges commerciaux sont représentés par rapport à ce pays.",
+        "Janvier": "Janvier",
+        "Février": "Février",
+        "Mars": "Mars",
+        "Avril": "Avril",
+        "Mai": "Mai",
+        "Juin": "Juin",
+        "Juillet": "Juillet",
+        "Août": "Août",
+        "Septembre": "Septembre",
+        "Octobre": "Octobre",
+        "Novembre": "Novembre",
+        "Décembre": "Décembre"
     },
     "WorldMap": {
         "error-data": "Erreur lors du chargement des données",
