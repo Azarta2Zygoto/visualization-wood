@@ -175,5 +175,21 @@
         "param-desc-color": "Options de colorimétrie : différentes palettes de couleurs",
         "param-desc-daltonian": "Mode daltonien : utilisation d'une palette de couleurs adaptée aux personnes daltoniennes.",
         "show-again": "Afficher cette introduction lors de votre prochaine visite"
+    },
+    "MonthSelector": {
+        "vision": "Vision annuelle",
+        "Janvier": "Janvier",
+        "Février": "Février",
+        "Mars": "Mars",
+        "Avril": "Avril",
+        "Mai": "Mai",
+        "Juin": "Juin",
+        "Juillet": "Juillet",
+        "Août": "Août",
+        "Septembre": "Septembre",
+        "Octobre": "Octobre",
+        "Novembre": "Novembre",
+        "Décembre": "Décembre",
+        "Total annuel": "Total annuel"
     }
 }

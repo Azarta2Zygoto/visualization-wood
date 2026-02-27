@@ -68,24 +68,26 @@ export default function Loading({ yearLoading }: LoadingProps): JSX.Element {
     return (
         <Fragment>
             {Array.from(yearLoading)
-                .sort((a, b) => a - b)
+                .sort((a, b) => b - a)
+                .slice(-4, -1)
                 .map((year, index) => (
                     <div
                         key={year}
                         className="loading-container load"
-                        style={{ top: `${2 + index * 3}rem` }}
+                        style={{ top: `${1.5 + index * 3}rem` }}
                     >
                         <p>{t("loading", { year: year })}</p>
                     </div>
                 ))}
             {Array.from(validateYears)
-                .sort((a, b) => a - b)
+                .sort((a, b) => b - a)
+                .slice(-4, -1)
                 .map((validatedYear, index) => (
                     <div
                         key={validatedYear}
                         className="loading-container underline"
                         style={{
-                            top: `${2 + (yearLoading.size > 0 ? 3 : 0) + index * 3}rem`,
+                            top: `${1.5 + 3 * Math.max(yearLoading.size, 3) + index * 3}rem`,
                         }}
                     >
                         <p>{t("loaded", { year: validatedYear })}</p>

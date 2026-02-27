@@ -999,9 +999,9 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                                 screenSize ===
                                                                     "mobile" &&
                                                                     "truncate",
+                                                                "flex items-center gap-1",
                                                             )}
                                                         >
-                                                            {option.label}
                                                             {id === "icon" && (
                                                                 <MakeIcon
                                                                     name={
@@ -1011,6 +1011,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                                     height={15}
                                                                 />
                                                             )}
+                                                            {option.label}
                                                         </span>
                                                         <div
                                                             role="button"

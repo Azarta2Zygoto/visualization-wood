@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { type JSX, useState } from "react";
 
 import {
@@ -19,6 +20,7 @@ export default function MonthSelector({
     currentMonth,
     setCurrentMonth,
 }: MonthSelectorProps): JSX.Element {
+    const t = useTranslations("MonthSelector");
     const [isOpen, setIsOpen] = useState(false);
     return (
         <Popover
@@ -37,7 +39,11 @@ export default function MonthSelector({
                     justifyContent: "center",
                 }}
             >
-                {month_list[currentMonth.toString() as keyof typeof month_list]}
+                {t(
+                    month_list[
+                        currentMonth.toString() as keyof typeof month_list
+                    ],
+                )}
             </PopoverTrigger>
             <PopoverContent className="select-months-options">
                 {
@@ -50,7 +56,7 @@ export default function MonthSelector({
                         }}
                         style={{ width: "100%", justifyContent: "center" }}
                     >
-                        Vision annuelle
+                        {t("vision")}
                     </button>
                 }
                 <div
@@ -78,7 +84,7 @@ export default function MonthSelector({
                                 }}
                                 style={{ justifyContent: "center" }}
                             >
-                                {month}
+                                {t(month)}
                             </button>
                         );
                     })}

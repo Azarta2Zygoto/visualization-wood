@@ -86,7 +86,7 @@
         "export_euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "import_euro": "Import: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "export_tonnes": "Export: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
-        "import_tonne": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
+        "import_tonnes": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
         "balance_euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "flag": "{country} flag",
         "no-data": "No data available",
@@ -173,6 +173,23 @@
         "param-desc-projection": "The map projection: different ways to project the world map.",
         "param-desc-static": "Static map: make point sizes and legend insensitive to zoom for a more readable map at different scales.",
         "param-desc-color": "Colorimetry options: choose between different color palettes for the map.",
-        "param-desc-daltonian": "Daltonian mode: use a color palette suitable for colorblind people."
+        "param-desc-daltonian": "Daltonian mode: use a color palette suitable for colorblind people.",
+        "show-again": "Show this introduction at the next visit"
+    },
+    "MonthSelector": {
+        "vision": "Annual View",
+        "Janvier": "January",
+        "Février": "February",
+        "Mars": "March",
+        "Avril": "April",
+        "Mai": "May",
+        "Juin": "June",
+        "Juillet": "July",
+        "Août": "August",
+        "Septembre": "September",
+        "Octobre": "October",
+        "Novembre": "November",
+        "Décembre": "December",
+        "Total annuel": "Annual total"
     }
 }

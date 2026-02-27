@@ -13,18 +13,29 @@ const numberOfYears = metadata.bois.end_year - metadata.bois.start_year + 1;
 interface SlidingYearsProps {
     currentMonth: number;
     currentYear: number;
+    isYearMode?: boolean;
     onChange: (currentMonth: number, currentYear: number) => void;
 }
 
 export default function SlidingYears({
     currentMonth,
     currentYear,
+    isYearMode = false,
     onChange,
 }: SlidingYearsProps): JSX.Element {
     useHotkeys(
         "ArrowRight",
         (event) => {
             event.preventDefault();
+            if (isYearMode) {
+                let newYear = currentYear + 1;
+                if (newYear > metadata.bois.end_year) {
+                    newYear = metadata.bois.start_year;
+                }
+                onChange(0, newYear);
+                return;
+            }
+
             let theMonth =
                 currentMonth === 0
                     ? 0
@@ -52,6 +63,15 @@ export default function SlidingYears({
         "ArrowLeft",
         (event) => {
             event.preventDefault();
+            if (isYearMode) {
+                let newYear = currentYear - 1;
+                if (newYear < metadata.bois.start_year) {
+                    newYear = metadata.bois.end_year;
+                }
+                onChange(0, newYear);
+                return;
+            }
+
             let theMonth =
                 currentMonth === 0
                     ? 0
@@ -87,22 +107,37 @@ export default function SlidingYears({
         return [currentYear * 12 + monthIndex];
     }, [currentMonth, currentYear]);
 
-    const handleSliderChange = (value: number[]) => {
+    function handleMonthSliderChange(value: number[]) {
         const monthValue = value[0] % 12;
         const yearValue = Math.floor(value[0] / 12);
         const month = months_order[monthValue] as (typeof months_order)[number];
         onChange(month, yearValue);
-    };
+    }
+
+    function handleYearSliderChange(value: number[]) {
+        const yearValue = value[0];
+        onChange(0, yearValue);
+    }
 
     return (
         <div className="slider-bar">
-            <Slider
-                min={metadata.bois.start_year * 12}
-                max={metadata.bois.start_year * 12 + numberOfYears * 12 - 1} // 100 years * 12 months
-                step={1}
-                value={correctNumber}
-                onValueChange={handleSliderChange}
-            />
+            {isYearMode ? (
+                <Slider
+                    min={metadata.bois.start_year}
+                    max={metadata.bois.end_year}
+                    step={1}
+                    value={[currentYear]}
+                    onValueChange={handleYearSliderChange}
+                />
+            ) : (
+                <Slider
+                    min={metadata.bois.start_year * 12}
+                    max={metadata.bois.start_year * 12 + numberOfYears * 12 - 1} // 100 years * 12 months
+                    step={1}
+                    value={correctNumber}
+                    onValueChange={handleMonthSliderChange}
+                />
+            )}
         </div>
     );
 }

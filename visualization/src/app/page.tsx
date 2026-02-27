@@ -112,9 +112,9 @@ export default function HomePage(): JSX.Element {
                     AddAllYears &&
                     year < metadata_app.bois.end_year &&
                     Object.keys(allData).length !==
-                    metadata_app.bois.end_year -
-                    metadata_app.bois.start_year +
-                    1
+                        metadata_app.bois.end_year -
+                            metadata_app.bois.start_year +
+                            1
                 ) {
                     fetchData(year + 1);
                 }
@@ -156,7 +156,15 @@ export default function HomePage(): JSX.Element {
 
     return (
         <Fragment>
-            <h1 className="title">{t("title")}</h1>
+            <h1
+                className="title"
+                style={{
+                    opacity:
+                        isOpenIntro || isOpenInfo || isOpenParamBar ? 0 : 1,
+                }}
+            >
+                {t("title")}
+            </h1>
             <button
                 className="btn btn-param"
                 type="button"
@@ -227,8 +235,8 @@ export default function HomePage(): JSX.Element {
                 isAllDataLoaded={
                     Object.keys(allData).length ===
                     metadata_app.bois.end_year -
-                    metadata_app.bois.start_year +
-                    1
+                        metadata_app.bois.start_year +
+                        1
                 }
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
@@ -250,10 +258,10 @@ export default function HomePage(): JSX.Element {
                     productsSelected.length === 0
                         ? [0]
                         : productsSelected.length === 1
-                            ? getAllChildren(productsSelected[0]).length > 0
-                                ? getAllChildren(productsSelected[0])
-                                : productsSelected
-                            : productsSelected
+                          ? getAllChildren(productsSelected[0]).length > 0
+                              ? getAllChildren(productsSelected[0])
+                              : productsSelected
+                          : productsSelected
                 }
                 countriesSelected={
                     countriesSelected.length === 0 ? [21] : countriesSelected

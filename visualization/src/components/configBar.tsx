@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { type JSX, useState } from "react";
 
+import NumberFlow from "@number-flow/react";
 import { hasFlag } from "country-flag-icons";
 
 import MODOpener from "@/components/MOD_opener";
@@ -417,8 +418,12 @@ export default function ConfigBar({
                     <p>{t("product-choose")}</p>
 
                     <p title={t("nb-product")}>
-                        {calculateNBSingleElementSelected(productsSelected)} /{" "}
-                        {NBMaxElement}
+                        <NumberFlow
+                            value={calculateNBSingleElementSelected(
+                                productsSelected,
+                            )}
+                        />{" "}
+                        / {NBMaxElement}
                     </p>
                 </div>
                 <button
@@ -439,7 +444,8 @@ export default function ConfigBar({
                             : t("continent-choose")}
                     </p>
                     <p title={t("nb-country")}>
-                        {countriesSelected.length} / {NBCountryWithData}
+                        <NumberFlow value={countriesSelected.length} /> /
+                        {" " + NBCountryWithData}
                     </p>
                 </div>
                 <div

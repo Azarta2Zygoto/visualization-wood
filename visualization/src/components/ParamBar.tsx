@@ -152,8 +152,8 @@ export default function ParamBar({
                 aria-label={t("settings")}
                 style={{
                     transform: isOpen
-                        ? "translateX(-50%)"
-                        : "translateX(-50%) translateY(-200%)",
+                        ? "translate(-50%, -50%)"
+                        : "translate(-50%, -200%)",
                 }}
             >
                 <div className="rows">

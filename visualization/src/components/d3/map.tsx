@@ -250,7 +250,7 @@ export function WorldMap({
                         return isKnownCountry(d.properties.name, isCountryMode)
                             ? 1.5 / currentTransformRef.current.k ** 0.5
                             : config.mapStrokeWidth /
-                            currentTransformRef.current.k ** 0.25;
+                                  currentTransformRef.current.k ** 0.25;
                     })
                     .attr("opacity", (d: any) => {
                         return isKnownCountry(d.properties.name, isCountryMode)
@@ -288,7 +288,7 @@ export function WorldMap({
                 .attr(
                     "stroke-width",
                     config.mapStrokeWidth /
-                    currentTransformRef.current.k ** 0.25,
+                        currentTransformRef.current.k ** 0.25,
                 )
                 .attr("opacity", 1);
         setTooltipData((prev) => ({ ...prev, appear: false }));
@@ -537,8 +537,8 @@ export function WorldMap({
                         return d.properties.name === "France"
                             ? "#ff6b6b"
                             : isKnownCountry(d.properties.name, isCountryMode)
-                                ? config[theme].validCountry
-                                : config[theme].invalidCountry;
+                              ? config[theme].validCountry
+                              : config[theme].invalidCountry;
                     })
                     .attr("stroke", "var(--low-border-color)")
                     .attr("stroke-width", config.mapStrokeWidth)
@@ -575,12 +575,12 @@ export function WorldMap({
                         };
                     })
                     .filter(Boolean) as Array<{
-                        countryName: string;
-                        lon: number;
-                        lat: number;
-                        x: number;
-                        y: number;
-                    }>;
+                    countryName: string;
+                    lon: number;
+                    lat: number;
+                    x: number;
+                    y: number;
+                }>;
                 setDataPointOnMap(pointData);
             } catch (error) {
                 // Ignore abort errors (expected on cleanup)
@@ -631,8 +631,8 @@ export function WorldMap({
                     countryNumberCode,
                 )
                     ? countriesSelected.filter(
-                        (code: number) => code !== countryNumberCode,
-                    )
+                          (code: number) => code !== countryNumberCode,
+                      )
                     : [...countriesSelected, countryNumberCode];
                 setCountriesSelected(newSelection);
             } else {
@@ -754,7 +754,7 @@ export function WorldMap({
             height: correctionSize.height * config.legendHeightRatio,
             ticks: 10,
             title: t("balance"),
-            marginTop: 60,
+            marginTop: 90,
             marginLeft: 25,
         });
         d3.select(svg).selectAll(".color-legend").remove();
@@ -835,13 +835,13 @@ export function WorldMap({
                     };
                 })
                 .filter(Boolean) as Array<{
-                    countryName: string;
-                    value: number;
-                    x: number;
-                    y: number;
-                    lon: number;
-                    lat: number;
-                }>;
+                countryName: string;
+                value: number;
+                x: number;
+                y: number;
+                lon: number;
+                lat: number;
+            }>;
             setNBCountryWithData(newNBCountryWithData);
 
             countries
@@ -854,10 +854,10 @@ export function WorldMap({
                     return d.properties.name === "France"
                         ? "#ff6b6b"
                         : isKnownCountry(d.properties.name, isCountryMode)
-                            ? isData !== undefined
-                                ? config[theme].validCountry
-                                : config[theme].nullCountry
-                            : config[theme].invalidCountry;
+                          ? isData !== undefined
+                              ? config[theme].validCountry
+                              : config[theme].nullCountry
+                          : config[theme].invalidCountry;
                 });
 
             // Find max value for scaling
@@ -890,7 +890,7 @@ export function WorldMap({
 
                     const value =
                         lectureData[countryName]?.[
-                        type.toString() as keyof typeof type_data
+                            type.toString() as keyof typeof type_data
                         ];
                     newNBCountryWithData++;
                     if (!value) return null;
@@ -911,13 +911,13 @@ export function WorldMap({
                     };
                 })
                 .filter(Boolean) as Array<{
-                    countryName: string;
-                    value: number;
-                    x: number;
-                    y: number;
-                    lon: number;
-                    lat: number;
-                }>;
+                countryName: string;
+                value: number;
+                x: number;
+                y: number;
+                lon: number;
+                lat: number;
+            }>;
             setNBCountryWithData(newNBCountryWithData);
 
             countries
@@ -1070,8 +1070,8 @@ function makeCircleProjection(
                 ? radiusScale(d.value)
                 : radiusScale(d.value) / zoom
             : isGlobe
-                ? radiusScale(d.value) * zoom
-                : radiusScale(d.value);
+              ? radiusScale(d.value) * zoom
+              : radiusScale(d.value);
 
     legendLayer
         .selectAll(".legend-circle, .legend-label, .legend-tick")
@@ -1081,7 +1081,7 @@ function makeCircleProjection(
 
     const legendCircleX = Math.max(
         config.legendCircleBaseX +
-        config.legendCircleXFactor * (legendZoom - 1),
+            config.legendCircleXFactor * (legendZoom - 1),
         config.legendCircleBaseX,
     );
     legendLayer
@@ -1211,8 +1211,8 @@ function makeArrowProjection(
                 ? strokeScale(d)
                 : strokeScale(d) / zoom
             : isGlobe
-                ? strokeScale(d) * zoom
-                : strokeScale(d);
+              ? strokeScale(d) * zoom
+              : strokeScale(d);
 
     // Build arcs and associated data for each continent
     const arcsData = continents
@@ -1452,8 +1452,8 @@ function MakeHuexBalanceProjection(
             return point
                 ? colorScale(point.value)
                 : isCountry
-                    ? config[theme].nullCountry
-                    : config[theme].invalidCountry;
+                  ? config[theme].nullCountry
+                  : config[theme].invalidCountry;
         });
     return colorScale;
 }

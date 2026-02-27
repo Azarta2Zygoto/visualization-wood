@@ -344,6 +344,7 @@ main {
     white-space: nowrap;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    transition: opacity 0.3s ease-in-out;
 }
 
 .h2-primary {
@@ -507,8 +508,7 @@ label {
 
 .loading-container {
     position: fixed;
-    top: 2rem;
-    left: 2rem;
+    left: 4rem;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -521,6 +521,7 @@ label {
     border-radius: 8px;
     text-align: center;
     text-decoration: none;
+    transition: transform 0.3s ease-in-out;
 }
 
 .loading-container.load::after {
@@ -580,12 +581,14 @@ label {
 }
 
 .root-svg {
-    background: linear-gradient(45deg,
-            var(--map-bg-1),
-            var(--map-bg-2),
-            var(--map-bg-3),
-            var(--map-bg-2),
-            var(--map-bg-1));
+    background: linear-gradient(
+        45deg,
+        var(--map-bg-1),
+        var(--map-bg-2),
+        var(--map-bg-3),
+        var(--map-bg-2),
+        var(--map-bg-1)
+    );
 }
 
 .root-svg.globe {
@@ -608,7 +611,7 @@ label {
 }
 
 .btn-param {
-    z-index: 8;
+    z-index: 5;
     position: absolute;
     top: 2rem;
     right: 2rem;
@@ -641,8 +644,9 @@ label {
 .param-bar {
     z-index: 10;
     position: fixed;
-    top: 10%;
+    top: 50%;
     left: 50%;
+    transform: translate(-50%, 50%);
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -824,6 +828,7 @@ ul {
     flex-wrap: wrap;
     max-width: clamp(180px, 30vw, 360px);
     max-height: 125px;
+    min-height: 30px;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -846,7 +851,7 @@ ul {
 
 .slider-bar {
     position: absolute;
-    z-index: 5;
+    z-index: 2;
     left: 50%;
     bottom: 5%;
     transform: translateX(-50%);

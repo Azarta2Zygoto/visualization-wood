@@ -24,7 +24,7 @@ export function Legend(
         tickSize = 6,
         width = 320 + tickSize,
         height = 44,
-        marginTop = 18,
+        marginTop = 36,
         marginRight = 0 + tickSize,
         marginBottom = 16,
         marginLeft = 0,
