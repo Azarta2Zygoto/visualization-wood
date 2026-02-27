@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useRef } from "react";
+
 import * as d3 from "d3";
+
 import products from "@/data/products.json";
 
 interface ClevellandDotChartData {
@@ -30,7 +33,7 @@ export default function ClevellandDotChart({
         // Initialize SVG structure once
         if (!initRef.current) {
             const svg = d3.select(svgRef.current);
-            svg.append("g").attr("class", "main");
+            svg.append("g").attr("class", "main-cleveland");
             initRef.current = true;
         }
 
@@ -63,26 +66,33 @@ export default function ClevellandDotChart({
         const legend_height = 10;
 
         // fonction pour optimiser la margin.left en fonction de la largeur des labels, pour éviter d'avoir une margin trop grande si les labels sont courts
-        const optimizeMarginLeft = (): { top: number; right: number; bottom: number; left: number } => {
+        const optimizeMarginLeft = (): {
+            top: number;
+            right: number;
+            bottom: number;
+            left: number;
+        } => {
             const svg = d3.select(svgRef.current);
             const tempG = svg.append("g");
 
             // Créer les labels temporaires
             const tempLabels = tempG
-                .selectAll("text.temp-label")
+                .selectAll("text.cleveland-label")
                 .data(chartData)
                 .enter()
                 .append("text")
                 .attr("x", 0)
                 .attr("y", 0)
                 .attr("font-size", "8px")
-                .text(d => d.productName);
+                .text((d) => d.productName);
 
             // Appliquer le wrap avec la marge courante
             wrapText(tempLabels, margin.left - 10);
 
             // Mesurer la largeur réelle de chaque label
-            const labelWidths = tempLabels.nodes().map(node => node.getBBox().width);
+            const labelWidths = tempLabels
+                .nodes()
+                .map((node) => node.getBBox().width);
             const maxLabelWidth = Math.max(...labelWidths);
 
             // Supprimer le groupe temporaire
@@ -107,37 +117,40 @@ export default function ClevellandDotChart({
 
         // Créer les labels temporaires
         const tempLabels = tempG
-            .selectAll("text.temp-label")
+            .selectAll("text.cleveland-label")
             .data(chartData)
             .enter()
             .append("text")
             .attr("x", 0)
             .attr("y", 0)
             .attr("font-size", "8px")
-            .text(d => d.productName);
+            .text((d) => d.productName);
 
         // Appliquer le wrap avec la margin.left optimisée
         wrapText(tempLabels, margin.left - 10);
 
         // Calculer la hauteur réelle de chaque label
-        const labelHeights = tempLabels.nodes().map(node => node.getBBox().height + 4);
+        const labelHeights = tempLabels
+            .nodes()
+            .map((node) => node.getBBox().height + 4);
 
         // Supprimer le groupe temporaire
         tempG.remove();
         const yPositions: number[] = [];
         let cumulative = 0;
-        for (let h of labelHeights) {
+        for (const h of labelHeights) {
             yPositions.push(cumulative);
             cumulative += h;
         }
         const chartHeight = cumulative;
-        const dynamicHeight = chartHeight + margin.top + margin.bottom + legend_height;
+        const dynamicHeight =
+            chartHeight + margin.top + margin.bottom + legend_height;
 
         // Update SVG dimensions
         svg.attr("width", width).attr("height", dynamicHeight);
 
         const g = svg
-            .select("g.main")
+            .select("g.main-cleveland")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
         // On nettoie tout avant de redessiner, on pourrait faire une transition mais flemme pour le moment
@@ -175,8 +188,8 @@ export default function ClevellandDotChart({
                         .append("line")
                         .attr("x1", (d) => x(d.exportValue))
                         .attr("x2", (d) => x(d.importValue))
-                        .attr("y1", (d, i) => getY(i))
-                        .attr("y2", (d, i) => getY(i))
+                        .attr("y1", (_, i) => getY(i))
+                        .attr("y2", (_, i) => getY(i))
                         .attr("stroke", "#999")
                         .attr("stroke-width", 1)
                         .attr("opacity", 0.8),
@@ -188,7 +201,7 @@ export default function ClevellandDotChart({
                         .attr("x2", (d) => x(d.importValue))
                         .attr("y1", (d, i) => getY(i))
                         .attr("y2", (d, i) => getY(i)),
-                (exit) => exit.remove()
+                (exit) => exit.remove(),
             );
 
         // Export circles
@@ -200,7 +213,7 @@ export default function ClevellandDotChart({
                         .append("circle")
                         .attr("class", "export")
                         .attr("cx", (d) => x(d.exportValue))
-                        .attr("cy", (d, i) => getY(i))
+                        .attr("cy", (_, i) => getY(i))
                         .attr("r", 4)
                         .attr("fill", "#e74c3c")
                         .attr("opacity", 0.8),
@@ -209,7 +222,7 @@ export default function ClevellandDotChart({
                         .transition()
                         .duration(600)
                         .attr("cx", (d) => x(d.exportValue))
-                        .attr("cy", (d, i) => getY(i)),
+                        .attr("cy", (_, i) => getY(i)),
                 (exit) => exit.remove(),
             );
 
@@ -222,7 +235,7 @@ export default function ClevellandDotChart({
                         .append("circle")
                         .attr("class", "import")
                         .attr("cx", (d) => x(d.importValue))
-                        .attr("cy", (d, i) => getY(i))
+                        .attr("cy", (_, i) => getY(i))
                         .attr("r", 4)
                         .attr("fill", "#3498db")
                         .attr("opacity", 0.8), //on peut pas animer car ya des rappel sur l'update ce qui cut le transition
@@ -231,7 +244,7 @@ export default function ClevellandDotChart({
                         .transition()
                         .duration(600)
                         .attr("cx", (d) => x(d.importValue))
-                        .attr("cy", (d, i) => getY(i)),
+                        .attr("cy", (_, i) => getY(i)),
                 (exit) => exit.remove(),
             );
 
@@ -239,14 +252,15 @@ export default function ClevellandDotChart({
             .attr("class", "grid")
             .attr("transform", `translate(0,${chartHeight})`)
             .call(
-                d3.axisBottom(x)
+                d3
+                    .axisBottom(x)
                     .ticks(3)
                     .tickSize(-chartHeight)
-                    .tickFormat(() => "")
+                    .tickFormat(() => ""),
             )
-            .call(g => g.select(".domain").remove())   // enlève la ligne pleine
+            .call((g) => g.select(".domain").remove()) // enlève la ligne pleine
             .selectAll(".tick line")
-            .attr("stroke", "#000000")
+            .attr("stroke", "var(--fg")
             .attr("stroke-dasharray", "3,3");
         // X-axis
         const xAxisGroup = g
@@ -258,9 +272,11 @@ export default function ClevellandDotChart({
                     .axisBottom(x)
                     .ticks(3)
                     .tickFormat((d) => {
-                        const val = d as number * 1000;
-                        if (val >= 1000000000) return `${(val / 1000000000).toFixed(0)} Md€`;
-                        if (val >= 1000000) return `${(val / 1000000).toFixed(0)} M€`;
+                        const val = (d as number) * 1000;
+                        if (val >= 1000000000)
+                            return `${(val / 1000000000).toFixed(0)} Md€`;
+                        if (val >= 1000000)
+                            return `${(val / 1000000).toFixed(0)} M€`;
                         if (val >= 1000) return `${(val / 1000).toFixed(0)} K€`;
                         return val.toFixed(0);
                     }),
@@ -293,7 +309,7 @@ export default function ClevellandDotChart({
             })
             .attr("text-anchor", "end")
             .attr("font-size", "8px")
-            .attr("fill", "#333")
+            .attr("fill", "var(--fg)")
             .attr("opacity", 0.8)
             .text((d) => d.productName);
 
@@ -318,7 +334,7 @@ export default function ClevellandDotChart({
             .attr("x", 8)
             .attr("y", legendY + 3)
             .attr("font-size", "9px")
-            .attr("fill", "#333")
+            .attr("fill", "var(--fg)")
             .text("Export");
 
         legendGroup
@@ -332,13 +348,16 @@ export default function ClevellandDotChart({
             .attr("x", 88)
             .attr("y", legendY + 3)
             .attr("font-size", "9px")
-            .attr("fill", "#333")
+            .attr("fill", "var(--fg)")
             .text("Import");
     }, [data, width, height]);
 
     return (
         <div className="cleveland-chart-wrapper">
-            <svg ref={svgRef} style={{ display: "block" }} />
+            <svg
+                ref={svgRef}
+                style={{ display: "block" }}
+            />
         </div>
     );
 }
@@ -346,7 +365,7 @@ export default function ClevellandDotChart({
 function wrapText(
     // on met le texte sur plusieurs lignes si il dépasse une certaine largeur
     textSelection: any,
-    width: number
+    width: number,
 ) {
     textSelection.each(function (this: SVGTextElement) {
         const text = d3.select(this);
@@ -380,6 +399,5 @@ function wrapText(
                     .text(word);
             }
         }
-        console.log(`Wrapped text: ${text.text()} into ${lineNumber + 1} lines`); // Debug log
     });
 }

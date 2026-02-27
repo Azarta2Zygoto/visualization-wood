@@ -653,7 +653,7 @@ label {
     padding: 0.5rem 1rem;
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 16px;
     transition: transform 0.3s ease-in-out;
 }
 
@@ -669,7 +669,7 @@ label {
     max-width: 500px;
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 16px;
     transition:
         transform 0.3s ease-in-out,
         opacity 0.3s ease-in-out;
@@ -700,7 +700,7 @@ ul {
     max-height: 90vh;
     background-color: var(--on-map);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 16px;
     overflow-y: auto;
     overflow-x: hidden;
     transition:
@@ -828,11 +828,12 @@ ul {
     flex-wrap: wrap;
     max-width: clamp(180px, 30vw, 360px);
     max-height: 125px;
-    min-height: 30px;
     overflow-y: auto;
     overflow-x: hidden;
 }
-
+.infinite-element:has(*) {
+    min-height: 30px;
+}
 .checkbox-product {
     max-width: 400px !important;
     width: 400px !important;
