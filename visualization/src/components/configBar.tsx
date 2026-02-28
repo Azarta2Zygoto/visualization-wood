@@ -143,6 +143,13 @@ export default function ConfigBar({
             </button>
 
             <div className="config-bar-content">
+                <p>{t("visu")}</p>
+                <Checkbox
+                    id="global-view-checkbox"
+                    label={t("global-view")}
+                    checked={isGlobalView}
+                    onChange={(e) => setIsGlobalView(e.target.checked)}
+                />
                 <p>{t("study-scale")}</p>
                 <div
                     className="rows"
@@ -410,12 +417,6 @@ export default function ConfigBar({
                         currentMonth={currentMonth}
                         setCurrentMonth={setCurrentMonth}
                     />
-                    <Checkbox
-                        id="global-view-checkbox"
-                        label={t("global-view")}
-                        checked={isGlobalView}
-                        onChange={(e) => setIsGlobalView(e.target.checked)}
-                    />
                 </div>
 
                 <div
@@ -465,7 +466,7 @@ export default function ConfigBar({
                     {countriesSelected.map((countryNumberCode) => {
                         const country =
                             pays[
-                            String(countryNumberCode) as keyof typeof pays
+                                String(countryNumberCode) as keyof typeof pays
                             ];
                         if (!country) return null;
                         if (hasFlag(country.code))

@@ -546,11 +546,6 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             const parts = closestStock.symbol
                 .split(" - ")
                 .map((p: any) => p.trim());
-            const unit = symbol.includes("valeur")
-                ? "k€"
-                : symbol.includes("volume")
-                  ? "Tonnes"
-                  : "";
             const country = parts[0];
             const product = parts[1];
 
@@ -561,28 +556,28 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             // Récupération de la valeur numérique
             const numericValue = y(closestValue!);
 
+            const unit = symbol.includes("valeur")
+                ? t("euro-unit")
+                : symbol.includes("volume")
+                  ? t("ton-unit-count", { count: numericValue })
+                  : "";
             // Formattage de la valeur
             const formattedValue = d3
                 .format(",.0f")(numericValue)
                 .replace(/,/g, " ");
 
-            // Détermination de l’unité correcte
-            let displayUnit = unit;
-            if (unit === "Tonnes" && numericValue <= 1) {
-                displayUnit = "Tonne"; // singulier pour petites valeurs
-            }
-
             // Construction du tooltip
             Tooltip.style("opacity", 0.8)
                 .html(
                     `
-        <strong>${title}</strong><br>
-        Valeur : ${formattedValue} ${displayUnit}<br>
-        Date : ${d3.timeFormat("%Y-%m-%d")(x(closestValue!) as Date)}
-    `,
+                    <strong>${title}</strong><br>
+                    ${t("value")} ${formattedValue} ${unit}<br>
+                    ${t("date")} ${d3.timeFormat("%Y-%m-%d")(x(closestValue!) as Date)}
+                    `,
                 )
                 .style("left", `${screenPoint.x + 10}px`)
                 .style("top", `${screenPoint.y + 600}px`);
+
             // Afficher le focus
             focus.style("display", null);
 
