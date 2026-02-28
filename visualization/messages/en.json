@@ -91,7 +91,19 @@
         "balance_euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "flag": "{country} flag",
         "no-data": "No data available",
-        "france-tooltip": "This is the reference country for this visualization. Trade flows are represented in relation to this country."
+        "france-tooltip": "This is the reference country for this visualization. Trade flows are represented in relation to this country.",
+        "Janvier": "January",
+        "Février": "February",
+        "Mars": "March",
+        "Avril": "April",
+        "Mai": "May",
+        "Juin": "June",
+        "Juillet": "July",
+        "Août": "August",
+        "Septembre": "September",
+        "Octobre": "October",
+        "Novembre": "November",
+        "Décembre": "December"
     },
     "WorldMap": {
         "error-data": "Error loading data",
@@ -192,5 +204,24 @@
         "Novembre": "November",
         "Décembre": "December",
         "Total annuel": "Annual total"
+    },
+    "Graphique": {
+        "euro-unit": "k€",
+        "ton-unit": "Tonnes",
+        "towards": "towards",
+        "from": "from",
+        "between": "between",
+        "and": " and ",
+        "produit": "of {product}",
+        "products": "of many products",
+        "french": "{element} and France",
+        "countries": "{element} several countries",
+        "countries-french": "{element} France and several countries",
+        "euro-value": "Value (k€)",
+        "ton-value": "Volume (tonnes)",
+        "default-value": "Value",
+        "title": "Title :",
+        "description": "Description :",
+        "date": "Date :"
     }
 }

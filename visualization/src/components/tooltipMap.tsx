@@ -6,8 +6,8 @@ import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
-import { useGlobal } from "@/components/globalProvider";
 import ClevellandDotChart from "@/components/d3/cleveland_dot_chart";
+import { useGlobal } from "@/components/globalProvider";
 import pays from "@/data/countries.json";
 import month_names from "@/data/months.json";
 import type { CountryType } from "@/metadata/types";
@@ -60,7 +60,7 @@ export default function TooltipMap({
         [countriesValues, country],
     );
 
-    // J'ai pas compris mais le chat a réussi à transformer correctement les données 
+    // J'ai pas compris mais le chat a réussi à transformer correctement les données
     // Calculate Cleveland dot chart data
     const chartData = useMemo(() => {
         if (
@@ -74,7 +74,10 @@ export default function TooltipMap({
 
         const yearData = rawData[year];
         const countryName = pays[country].en;
-        const chartDataByProduct: Record<number, { export: number; import: number }> = {};
+        const chartDataByProduct: Record<
+            number,
+            { export: number; import: number }
+        > = {};
 
         // Get country number from the map
         let countryNumber: number | null = null;
@@ -117,11 +120,13 @@ export default function TooltipMap({
         }
 
         // Convert to chart format
-        return Object.entries(chartDataByProduct).map(([productIndex, values]) => ({
-            productIndex: parseInt(productIndex),
-            exportValue: values.export,
-            importValue: values.import,
-        }));
+        return Object.entries(chartDataByProduct).map(
+            ([productIndex, values]) => ({
+                productIndex: parseInt(productIndex),
+                exportValue: values.export,
+                importValue: values.import,
+            }),
+        );
     }, [rawData, year, month, country, productsSelected, countryNumberToName]);
 
     useLayoutEffect(() => {
@@ -136,8 +141,8 @@ export default function TooltipMap({
                 x + width + 10 > windowSize.width
                     ? windowSize.width - width / 2 - 10
                     : x < width / 2
-                        ? width / 2 + 10
-                        : x;
+                      ? width / 2 + 10
+                      : x;
 
             const top =
                 y + height + 10 > windowSize.height
@@ -185,9 +190,11 @@ export default function TooltipMap({
                     <h3>
                         {pays[country][locale] + " - "}
                         {month !== 0 &&
-                            month_names[
-                            month.toString() as keyof typeof month_names
-                            ] + " / "}
+                            t(
+                                month_names[
+                                    month.toString() as keyof typeof month_names
+                                ],
+                            ) + " / "}
                         {year}
                     </h3>
                 )}
@@ -195,10 +202,10 @@ export default function TooltipMap({
             {pays[country].fr === "France" ? (
                 <p className="france-tooltip">{t("france-tooltip")}</p>
             ) : values.export_euro +
-                values.export_tonnes +
-                values.import_euro +
-                values.import_tonnes ===
-                4 * defaultNoData ? (
+                  values.export_tonnes +
+                  values.import_euro +
+                  values.import_tonnes ===
+              4 * defaultNoData ? (
                 <p>{t("no-data")}</p>
             ) : (
                 <div className="tooltip-content">

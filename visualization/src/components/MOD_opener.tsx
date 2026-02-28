@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import { Fragment, type JSX, useCallback, useEffect, useState } from "react";
 
+import { createPortal } from "react-dom";
+
 import AttentionInner from "@/components/attentionInner";
 import Accordeon from "@/components/personal/accordeon";
 import Checkbox from "@/components/personal/checkbox";
@@ -44,7 +46,7 @@ export default function MODOpener({
     productsSelected,
     onOpen,
     setProductsSelected,
-}: MODOpenerProps): JSX.Element {
+}: MODOpenerProps): JSX.Element | null {
     const t = useTranslations("MODOpener");
 
     const [firstAttentionShown, setFirstAttentionShown] =
@@ -53,6 +55,11 @@ export default function MODOpener({
         open: boolean;
         version: number;
     }>({ open: false, version: 0 });
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -63,7 +70,7 @@ export default function MODOpener({
         return () => document.removeEventListener("keydown", handleEscape);
     }, [isOpen, onOpen]);
 
-    return (
+    const content = (
         <Fragment>
             <div
                 className="overlay"
@@ -159,6 +166,9 @@ export default function MODOpener({
             </div>
         </Fragment>
     );
+    // Render into document.body so position:fixed is relative to viewport
+    if (!mounted) return null;
+    return createPortal(content, document.body);
 }
 interface MODRecursifProps {
     data: typeof MOD;
