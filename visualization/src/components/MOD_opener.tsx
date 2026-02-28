@@ -58,6 +58,7 @@ export default function MODOpener({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);
 
@@ -189,6 +190,8 @@ function MODRecursif({
     openDefault = false,
     openVersion = 0,
 }: MODRecursifProps): JSX.Element {
+    const productTrads = useTranslations("Produits");
+
     const name = data.name;
     const code = data.code;
     const children = Object.keys(data).filter(
@@ -281,7 +284,7 @@ function MODRecursif({
         return (
             <Checkbox
                 id={`checkbox-${code}`}
-                label={name}
+                label={productTrads(name)}
                 className="checkbox-product"
                 checked={isChecked || IsParentSelected(code, selectedProducts)}
                 onChange={handleCheckboxChange}
@@ -297,8 +300,8 @@ function MODRecursif({
                     title: (
                         <Checkbox
                             id={`checkbox-${code}`}
-                            label={name}
-                            title={`Select all in ${name}`}
+                            label={productTrads(name)}
+                            title={`Select all in ${productTrads(name)}`}
                             className="checkbox-product"
                             checked={
                                 isChecked ||

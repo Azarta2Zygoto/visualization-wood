@@ -29,7 +29,7 @@
     width: 20px;
     transform: translateY(-50%);
     background-color: transparent;
-    border: 2px solid var(--color-special, #00aaff);
+    border: 2px solid var(--color-text-special, #00aaff);
     border-radius: 5px;
     box-shadow: 0 2px 8px #1167b10f;
 
@@ -65,7 +65,7 @@
     transform: rotate(45deg);
 }
 .checkbox-container input[type="checkbox"]:checked ~ .checkbox-checkmark {
-    background-color: var(--color-special, #00aaff);
+    background-color: var(--color-text-special, #00aaff);
 }
 .checkbox-container input[type="checkbox"]:checked ~ .checkbox-checkmark:after {
     display: block;

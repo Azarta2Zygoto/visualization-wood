@@ -8,12 +8,12 @@ import { type VariantProps, cva } from "class-variance-authority";
 import {
     CheckIcon,
     ChevronDown,
-    IdCard,
     WandSparkles,
     XCircle,
     XIcon,
 } from "lucide-react";
 
+import MakeIcon from "@/components/personal/makeIcon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +32,6 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-
-import MakeIcon from "../personal/makeIcon";
 
 /**
  * Animation types and configurations
@@ -1005,7 +1003,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                             {id === "icon" && (
                                                                 <MakeIcon
                                                                     name={
-                                                                        option.label
+                                                                        option.value
                                                                     }
                                                                     width={15}
                                                                     height={15}
@@ -1309,7 +1307,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                         {id === "icon" && (
                                                             <MakeIcon
                                                                 name={
-                                                                    option.label
+                                                                    option.value
                                                                 }
                                                                 width={15}
                                                                 height={15}
@@ -1374,7 +1372,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                                                     {option.label}
                                                     {id === "icon" && (
                                                         <MakeIcon
-                                                            name={option.label}
+                                                            name={option.value}
                                                             width={15}
                                                             height={15}
                                                         />

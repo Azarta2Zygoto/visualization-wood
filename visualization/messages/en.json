@@ -82,7 +82,20 @@
         "nb-product": "Number of products selected",
         "flag": "{country} flag",
         "load-all-data": "Load all",
-        "load-all-data-desc": "Load all data for each year."
+        "load-all-data-desc": "Load all data for each year.",
+        "historic-events": {
+            "Économie": "Economic",
+            "Politique": "Political",
+            "Géopolitique": "Geopolitical",
+            "Social": "Social",
+            "Juridique": "Legal",
+            "Environnemental": "Environmental",
+            "Sanitaire": "Sanitary",
+            "Logistique": "Logistical",
+            "Technologique": "Technological",
+            "Global": "Global",
+            "Autre": "Other"
+        }
     },
     "Tooltip": {
         "export_euro": "Export: {value, plural, =-1 {No data} other {{value, number} k€}}",

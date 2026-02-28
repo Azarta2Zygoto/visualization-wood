@@ -527,7 +527,7 @@ export default function ConfigBar({
                 <MultiSelect
                     id="icon"
                     options={Object.keys(icon_symbol).map((key) => ({
-                        label: key,
+                        label: t("historic-events." + key),
                         value: key,
                     }))}
                     onValueChange={handleNewIconSelected}
