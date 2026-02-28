@@ -11,7 +11,7 @@ function getScrollState() {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const maxScrollTop =
         document.documentElement.scrollHeight - window.innerHeight;
-    const threshold = 10; // Threshold in pixels to consider as "can scroll"
+    const threshold = 1; // Threshold in pixels to consider as "can scroll"
 
     return {
         canScrollUp: scrollTop > threshold,
@@ -20,7 +20,7 @@ function getScrollState() {
 }
 
 function getScrollDelta() {
-    return Math.floor(window.innerHeight);
+    return Math.floor(window.innerHeight + 5); // Scroll by one viewport height plus a small buffer
 }
 
 export default function ArrowUpDown(): JSX.Element {

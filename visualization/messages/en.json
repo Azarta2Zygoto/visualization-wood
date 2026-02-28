@@ -203,5 +203,24 @@
         "Novembre": "November",
         "Décembre": "December",
         "Total annuel": "Annual total"
+    },
+    "Graphique": {
+        "euro-unit": "k€",
+        "ton-unit": "Tonnes",
+        "towards": "towards",
+        "from": "from",
+        "between": "between",
+        "and": " and ",
+        "produit": "of {product}",
+        "products": "of many products",
+        "french": "{element} and France",
+        "countries": "{element} several countries",
+        "countries-french": "{element} France and several countries",
+        "euro-value": "Value (k€)",
+        "ton-value": "Volume (tonnes)",
+        "default-value": "Value",
+        "title": "Title :",
+        "description": "Description :",
+        "date": "Date :"
     }
 }

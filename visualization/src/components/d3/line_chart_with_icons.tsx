@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as d3 from "d3";
@@ -27,6 +28,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
         | d3.ValueFn<d3.BaseType, unknown, unknown[] | Iterable<unknown>>, //la liste des évènement qui a été filtré, on a ajouté la date parsé, la catégorie, et l'iconid associé
 
     { x = (d: DataPoint) => d.date, y = (d: DataPoint) => d.value } = {},
+    t?: any,
 ) {
     const width = 1200;
     const height = 500;
@@ -35,7 +37,10 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
     // Constante pour le wrapping du texte de la légende basée sur la largeur du conteneur
-    const LEGEND_MAX_CHARS_PER_LINE = Math.max(10, Math.floor((margin.right) / 2));
+    const LEGEND_MAX_CHARS_PER_LINE = Math.max(
+        10,
+        Math.floor(margin.right / 2),
+    );
 
     // créer le groupe plot principal si inexistant
     let g = svg_animated.select<SVGGElement>("g.plot");
@@ -50,7 +55,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     const palette = d3.schemeTableau10;
 
     // registry persistante (par exemple sur le svg)
-    let colorRegistry: Map<string, string> =
+    const colorRegistry: Map<string, string> =
         svg_animated.property("__colorRegistry") ?? new Map();
 
     svg_animated.property("__colorRegistry", colorRegistry);
@@ -143,10 +148,10 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     // Déterminer le label en fonction du type de données
     const firstSymbol = stocks.length > 0 ? stocks[0].symbol.toLowerCase() : "";
     const yAxisLabel = firstSymbol.includes("valeur")
-        ? "Valeur (k€)"
+        ? t("euro-value")
         : firstSymbol.includes("volume")
-            ? "Volume (Tonnes)"
-            : "Valeur";
+          ? t("ton-value")
+          : t("default-value");
     yLabel.text(yAxisLabel);
 
     const clipId = "clip-mouse-rect"; // ou un nom unique
@@ -200,7 +205,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     }
 
     // générateur de ligne
-    let lineGen = d3
+    const lineGen = d3
         .line<any>()
         .x((d) => xScaleZoom(x(d)))
         .y((d) => yScaleZoom(y(d)));
@@ -216,24 +221,12 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             .select("body")
             .append("div")
             .attr("class", "line-chart-tooltip")
-            .style("position", "absolute")
-            .style("background", "var(--bg)")
-            .style("padding", "8px")
-            .style("border", "1px solid #999")
-            .style("border-radius", "6px")
-            .style("font-size", "12px")
-            .style("box-shadow", "0 2px 6px rgba(0,0,0,0.15)")
-            .style("pointer-events", "none")
-            .style("opacity", 0)
-            .style("z-index", 5)
-            .style("max-width", "250px") // largeur max
-            .style("white-space", "normal") // permet le retour à la ligne
-            .style("overflow-wrap", "break-word"); // coupe les mots trop longs
+            .style("opacity", 0);
     }
 
     // -------------------------------
     // JOIN des lignes avec clé symbol
-    const t = plotArea
+    plotArea
         .selectAll(".line")
         .data(stocks, (d: any) => d.symbol)
         .join(
@@ -282,8 +275,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .style("opacity", 0);
 
                 // Rectangle invisible pour le hover
-                g
-                    .append("rect")
+                g.append("rect")
                     .attr("class", "icon-hover-rect")
                     .attr(
                         "x",
@@ -296,8 +288,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .attr("pointer-events", "all");
 
                 // Icône (use element)
-                g
-                    .append("use")
+                g.append("use")
                     .attr("class", "event-icon")
                     .attr("xlink:href", (d: any) => `#${d.id}`)
                     .attr(
@@ -313,7 +304,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     enter
                         .transition()
                         .duration(500)
-                        .style("opacity", 1,)
+                        .style("opacity", 1)
                         .selectAll("rect, use")
                         .attr("y", 10),
                 );
@@ -332,22 +323,18 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .attr("width", iconSize)
                     .attr("height", iconSize),
             (exit) =>
-                exit
-                    .transition()
-                    .duration(300)
-                    .style("opacity", 0)
-                    .remove(),
+                exit.transition().duration(300).style("opacity", 0).remove(),
         )
-        .each(function (d: any) {
+        .each(function () {
             d3.select(this)
                 .select("use.event-icon")
                 .attr("xlink:href", (d: any) => `#${d.id}`);
         })
-        .on("mouseover", function (event, d: any) {
+        .on("mouseover", function (_, d: any) {
             Tooltip.style("opacity", 1).html(`
-            <strong>Titre :</strong> ${d.titre_court}<br>
-            <strong>Description : </strong>${d.description_rapide}<br>
-            <strong>Date :</strong> ${d3.timeFormat("%Y-%m-%d")(d.dateParsed)}
+            <strong>${t("title")}</strong> ${d.titre_court}<br>
+            <strong>${t("description")}</strong> ${d.description_rapide}<br>
+            <strong>${t("date")}</strong> ${d3.timeFormat("%Y-%m-%d")(d.dateParsed)}
         `);
         })
         .on("mousemove", function (event) {
@@ -377,16 +364,17 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
         .data(stocks, (d: any) => d.symbol)
         .join(
             (enter) => {
-                const gEnter = enter
-                    .append("g")
-                    .attr("transform", (d, i) => {
-                        let yOffset = 0;
-                        for (let j = 0; j < i; j++) {
-                            const lineCount = wrapText(stocks[j].symbol, LEGEND_MAX_CHARS_PER_LINE).length;
-                            yOffset += Math.max(lineCount * 16 + 8, 25);
-                        }
-                        return `translate(0,${yOffset})`;
-                    });
+                const gEnter = enter.append("g").attr("transform", (d, i) => {
+                    let yOffset = 0;
+                    for (let j = 0; j < i; j++) {
+                        const lineCount = wrapText(
+                            stocks[j].symbol,
+                            LEGEND_MAX_CHARS_PER_LINE,
+                        ).length;
+                        yOffset += Math.max(lineCount * 16 + 8, 25);
+                    }
+                    return `translate(0,${yOffset})`;
+                });
 
                 // Créer le texte et calculer sa hauteur
                 const textElement = gEnter
@@ -394,16 +382,19 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     .attr("x", 20)
                     .attr("y", 0)
                     .style("font-size", "12px")
-                    .style("line-height", "16px");
+                    .style("line-height", "16px")
+                    .style("fill", "var(--fg)");
 
                 textElement.selectAll("tspan").remove();
                 textElement
                     .selectAll("tspan")
-                    .data((d: any) => wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE))
+                    .data((d: any) =>
+                        wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE),
+                    )
                     .enter()
                     .append("tspan")
                     .attr("x", 20)
-                    .attr("dy", (d, i) => i === 0 ? 0 : "16px")
+                    .attr("dy", (_, i) => (i === 0 ? 0 : "16px"))
                     .text((d: string) => d);
 
                 // Ajouter le rectangle après le texte
@@ -415,8 +406,12 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
 
                 // Positionner le rect au centre vertically
                 rect.attr("y", (d: any) => {
-                    const lineCount = wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE).length;
-                    const textHeight = lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
+                    const lineCount = wrapText(
+                        d.symbol,
+                        LEGEND_MAX_CHARS_PER_LINE,
+                    ).length;
+                    const textHeight =
+                        lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
                     return textHeight;
                 });
 
@@ -430,7 +425,10 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                         .attr("transform", (d, i) => {
                             let yOffset = 0;
                             for (let j = 0; j < i; j++) {
-                                const lineCount = wrapText(stocks[j].symbol, LEGEND_MAX_CHARS_PER_LINE).length;
+                                const lineCount = wrapText(
+                                    stocks[j].symbol,
+                                    LEGEND_MAX_CHARS_PER_LINE,
+                                ).length;
                                 yOffset += Math.max(lineCount * 16 + 8, 25);
                             }
                             return `translate(0,${yOffset})`;
@@ -441,21 +439,25 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                     update
                         .select("text")
                         .selectAll("tspan")
-                        .data((d: any) => wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE))
+                        .data((d: any) =>
+                            wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE),
+                        )
                         .enter()
                         .append("tspan")
                         .attr("x", 20)
-                        .attr("dy", (d, i) => i === 0 ? 0 : "16px")
+                        .attr("dy", (_, i) => (i === 0 ? 0 : "16px"))
                         .text((d: string) => d);
 
                     // Mettre à jour le rect
-                    update
-                        .select("rect")
-                        .attr("y", (d: any) => {
-                            const lineCount = wrapText(d.symbol, LEGEND_MAX_CHARS_PER_LINE).length;
-                            const textHeight = lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
-                            return textHeight;
-                        });
+                    update.select("rect").attr("y", (d: any) => {
+                        const lineCount = wrapText(
+                            d.symbol,
+                            LEGEND_MAX_CHARS_PER_LINE,
+                        ).length;
+                        const textHeight =
+                            lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
+                        return textHeight;
+                    });
                 }),
             (exit) =>
                 exit.call((exit) =>
@@ -547,8 +549,8 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             const unit = symbol.includes("valeur")
                 ? "k€"
                 : symbol.includes("volume")
-                    ? "Tonnes"
-                    : "";
+                  ? "Tonnes"
+                  : "";
             const country = parts[0];
             const product = parts[1];
 
@@ -560,7 +562,9 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             const numericValue = y(closestValue!);
 
             // Formattage de la valeur
-            const formattedValue = d3.format(",.0f")(numericValue).replace(/,/g, " ");
+            const formattedValue = d3
+                .format(",.0f")(numericValue)
+                .replace(/,/g, " ");
 
             // Détermination de l’unité correcte
             let displayUnit = unit;
@@ -570,11 +574,13 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
 
             // Construction du tooltip
             Tooltip.style("opacity", 0.8)
-                .html(`
+                .html(
+                    `
         <strong>${title}</strong><br>
         Valeur : ${formattedValue} ${displayUnit}<br>
         Date : ${d3.timeFormat("%Y-%m-%d")(x(closestValue!) as Date)}
-    `)
+    `,
+                )
                 .style("left", `${screenPoint.x + 10}px`)
                 .style("top", `${screenPoint.y + 600}px`);
             // Afficher le focus

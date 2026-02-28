@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
     type JSX,
     RefObject,
@@ -77,6 +79,8 @@ export default function Graphique({
     allEvents,
 }: GraphiqueProps): JSX.Element {
     const { windowSize } = useGlobal();
+    const t = useTranslations("Graphique");
+
     if (type.length == 1 && type[0] == 4) {
         type = [2, 3]; //Si on est en balance, on charge les infos d'import et d'export en €
     }
@@ -94,7 +98,7 @@ export default function Graphique({
     const processedYears = useRef<Set<string>>(new Set()); // années déjà calculées
     const [dataVersion, setDataVersion] = useState(0); //cette variable sert a trigger le nouveau graphique quand les données changent
     //countriesSelected = [34]; //on fixe un pays pour le débug, sinon il prend tt les pays si rien n'est indiqué
-    const current_graph = useRef<Number>(0);
+    const current_graph = useRef<number>(0);
     // ajouter toutes les nouvelles années dans la map
     useEffect(() => {
         let updated = false;
@@ -182,12 +186,13 @@ export default function Graphique({
                 .append("svg")
                 .attr(
                     "viewBox",
-                    `0 0 ${windowSize.width - 20} ${windowSize.height}`,
+                    `0 0 ${windowSize.width * 0.95} ${windowSize.height * 0.95 - 100}`,
                 )
-                .attr("width", "95%")
-                .attr("height", "95%");
+                .attr("width", windowSize.width * 0.95)
+                .attr("height", windowSize.height * 0.95 - 100);
         }
     }, [windowSize]);
+
     // --- Mise à jour du graphique quand les données changent
     useEffect(() => {
         if (!svgRef.current || flatten_data_plot.length === 0) return;
@@ -210,6 +215,7 @@ export default function Graphique({
                     map_icons,
                     events_filtered,
                     { x: (d) => d.date, y: (d) => d.value },
+                    t,
                 );
             }
         } else {
@@ -221,6 +227,7 @@ export default function Graphique({
                 map_icons,
                 events_filtered,
                 { x: (d) => d.date, y: (d) => d.value },
+                t,
             );
         }
     }, [flatten_data_plot, map_icons, events_filtered]);
@@ -228,7 +235,8 @@ export default function Graphique({
     //On retourne le container
     const countryMap = new Map<string, Country>(Object.entries(pays));
     const typeMap: Record<string, string> = type_data;
-    const produitMap: Record<string, { name: string; code: string }> = list_products;
+    const produitMap: Record<string, { name: string; code: string }> =
+        list_products;
     const titre = useMemo(() => {
         const countryNames = countriesSelected
             .map((id) => countryMap.get(String(id))?.fr)
@@ -238,63 +246,70 @@ export default function Graphique({
             .map((id) => produitMap[String(id)]?.name)
             .filter(Boolean);
 
-        const typeNames = type
-            .map((id) => typeMap[String(id)])
-            .filter(Boolean);
+        const typeNames = type.map((id) => typeMap[String(id)]).filter(Boolean);
 
-        let titleParts: string[] = [];
+        const titleParts: string[] = [];
 
         // Type (Import / Export / Balance)
         let unit = "";
         let mot = "";
         if (typeNames.length >= 1) {
             // Détection unité directement avec includes
-            const lowerTypes = typeNames.map(t => t.toLowerCase());
+            const lowerTypes = typeNames.map((t) => t.toLowerCase());
 
-            if (lowerTypes.some(t => t.includes("valeur"))) {
-                unit = "k€";
-            } else if (lowerTypes.some(t => t.includes("volume"))) {
-                unit = "Tonnes";
+            if (lowerTypes.some((t) => t.includes("valeur"))) {
+                unit = t("euro-unit");
+            } else if (lowerTypes.some((t) => t.includes("volume"))) {
+                unit = t("ton-unit");
             }
 
             // Nettoyage des parenthèses
-            const cleanedTypes = typeNames.map(t =>
-                t.replace(/\(.*?\)/g, "").trim()
+            const cleanedTypes = typeNames.map((t) =>
+                t.replace(/\(.*?\)/g, "").trim(),
             );
 
             if (cleanedTypes.length === 1) {
                 if (cleanedTypes[0].includes("Exportation")) {
-                    mot = "vers";
-                }
-                else {
-                    mot = "depuis";
+                    mot = t("towards");
+                } else {
+                    mot = t("from");
                 }
                 titleParts.push(`${cleanedTypes[0]} (${unit})`);
             } else {
-                mot = "entre";
-                titleParts.push(`${cleanedTypes.join(" et ")} (${unit})`);
-
+                mot = t("between");
+                titleParts.push(`${cleanedTypes.join(t("and"))} (${unit})`);
             }
         }
         // Produit
         if (productNames.length === 1) {
-            titleParts.push(`de ${productNames[0].toLowerCase()}`);
+            titleParts.push(
+                t("produit", { product: productNames[0].toLowerCase() }),
+            );
         } else if (productNames.length > 1) {
-            titleParts.push("de plusieurs produits");
+            titleParts.push(t("products"));
         }
 
         // Pays
-        if (mot === "entre") {
+        if (mot === t("between")) {
             if (countryNames.length === 1) {
-                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0] as string)} et la France`);
+                titleParts.push(
+                    t("french", {
+                        element:
+                            mot +
+                            " " +
+                            withFrenchDeterminer(countryNames[0] as string),
+                    }),
+                );
             } else if (countryNames.length > 1) {
-                titleParts.push(`${mot} plusieurs pays et la France`);
+                titleParts.push(t("countries-french", { element: mot }));
             }
         } else {
             if (countryNames.length === 1) {
-                titleParts.push(`${mot} ${withFrenchDeterminer(countryNames[0] as string)}`);
+                titleParts.push(
+                    `${mot} ${withFrenchDeterminer(countryNames[0] as string)}`,
+                );
             } else if (countryNames.length > 1) {
-                titleParts.push(`${mot} plusieurs pays`);
+                titleParts.push(t("countries", { element: mot }));
             }
         }
 
@@ -303,13 +318,10 @@ export default function Graphique({
     // Title animation is handled by the separate `GraphTitle` component
     return (
         <div className="graph-wrapper">
-
-
             <GraphTitle titre={titre} />
 
-
             <div
-                className="Graphique"
+                className="graphique"
                 ref={containerRef}
             />
         </div>
@@ -415,12 +427,12 @@ function filterevents(
     const parseDate2 = d3.timeParse("%Y-%m");
     const paysMap: Record<string, any> = pays;
     // construire la liste des valeurs possibles depuis la sélection
-    let selectedValues = contrySelected.flatMap((id) => {
+    const selectedValues = contrySelected.flatMap((id) => {
         const v = paysMap[id];
         if (!v) return [];
         return [v.code, v.en, v.fr, v.event_name].filter(Boolean);
     });
-    selectedValues.push("France Bois"); // on ajoute la France 
+    selectedValues.push("France Bois"); // on ajoute la France
     const eventsWithIcons = events
         .map((event) => {
             // parse de la date
@@ -428,8 +440,8 @@ function filterevents(
             const dateParsed = parseDate1(event.date_debut)
                 ? parseDate1(event.date_debut)
                 : parseDate2(event.date_debut)
-                    ? parseDate2(event.date_debut)
-                    : null;
+                  ? parseDate2(event.date_debut)
+                  : null;
             if (!dateParsed) return null;
 
             // catégorie / icône
@@ -490,10 +502,6 @@ function flattenGroupedData3(groupedData: any[]) {
     return flattened;
 }
 
-function cssSafe(str: string) {
-    return str.replace(/[^a-zA-Z0-9_-]/g, "_");
-}
-
 function format_stacked_area_from_flatten(flatten: any[]) {
     return flatten.flatMap((stock) =>
         stock.values.map((d: any) => ({
@@ -508,7 +516,7 @@ function format_stacked_area_from_flatten(flatten: any[]) {
 }
 
 function update_current_graphique(
-    current_graph: RefObject<Number>,
+    current_graph: RefObject<number>,
     new_num: number,
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
 ) {
@@ -527,7 +535,6 @@ function withFrenchDeterminer(country: string): string {
     if (lower === "communauté des états indépendants") {
         return `la ${country}`;
     }
-
 
     // Cas pluriels connus
     if (
@@ -557,24 +564,22 @@ function GraphTitle({ titre }: { titre: string }) {
     const [displayedTitle, setDisplayedTitle] = useState(titre);
 
     useEffect(() => {
-        if (titre !== displayedTitle) {
-            setShow(false);
-            const timeout = setTimeout(() => {
-                setDisplayedTitle(titre);
-                setShow(true);
-            }, 300);
-            return () => clearTimeout(timeout);
-        }
+        if (titre === displayedTitle) return;
+
+        setShow(false);
+        const timeout = setTimeout(() => {
+            setDisplayedTitle(titre);
+            setShow(true);
+        }, 300);
+        return () => clearTimeout(timeout);
     }, [titre, displayedTitle]);
 
     return (
         <h1
             className="graph-middle-text"
-
             style={{
                 opacity: show ? 1 : 0,
                 transform: show ? "translateY(0)" : "translateY(-10px)",
-                transition: "opacity 0.3s ease, transform 0.3s ease",
             }}
         >
             {displayedTitle}
