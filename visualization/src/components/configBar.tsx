@@ -26,6 +26,7 @@ interface ConfigBarProps {
     currentYear: number;
     currentMonth: number;
     isMultipleMode: boolean;
+    isGlobalView: boolean;
     isCountryMode: boolean;
     isAbsolute: boolean;
     productsSelected: number[];
@@ -38,6 +39,7 @@ interface ConfigBarProps {
     setProductsSelected: (products: number[]) => void;
     setCountriesSelected: (countries: number[]) => void;
     setIsMultipleMode: (isMultiple: boolean) => void;
+    setIsGlobalView: (isGlobalView: boolean) => void;
     setIsCountryMode: (isCountryMode: boolean) => void;
     setIconSelected: (icons: string[]) => void;
     setIsAbsolute: (isAbsolute: boolean) => void;
@@ -49,6 +51,7 @@ export default function ConfigBar({
     currentYear,
     currentMonth,
     isMultipleMode,
+    isGlobalView,
     isCountryMode,
     isAbsolute,
     productsSelected,
@@ -61,6 +64,7 @@ export default function ConfigBar({
     setProductsSelected,
     setCountriesSelected,
     setIsMultipleMode,
+    setIsGlobalView,
     setIsCountryMode,
     setIconSelected,
     setIsAbsolute,
@@ -409,6 +413,12 @@ export default function ConfigBar({
                         currentMonth={currentMonth}
                         setCurrentMonth={setCurrentMonth}
                     />
+                    <Checkbox
+                        id="global-view-checkbox"
+                        label={t("global-view")}
+                        checked={isGlobalView}
+                        onChange={(e) => setIsGlobalView(e.target.checked)}
+                    />
                 </div>
 
                 <div
@@ -458,7 +468,7 @@ export default function ConfigBar({
                     {countriesSelected.map((countryNumberCode) => {
                         const country =
                             pays[
-                                String(countryNumberCode) as keyof typeof pays
+                            String(countryNumberCode) as keyof typeof pays
                             ];
                         if (!country) return null;
                         if (hasFlag(country.code))

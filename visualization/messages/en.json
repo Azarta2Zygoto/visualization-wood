@@ -65,6 +65,7 @@
         "country-choose": "Country choice:",
         "continent-choose": "Continent choice:",
         "multiple-selection": "Multiple selection mode",
+        "global-view": "Global view (Treemap)",
         "historic": "Historical events:",
         "value-absolute": "Absolute",
         "value-relative": "Relative",

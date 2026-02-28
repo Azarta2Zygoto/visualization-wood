@@ -110,3 +110,38 @@ export function calculateNBSingleElementSelected(
 }
 
 export const NBMaxElement = calculateNBSingleElementSelected([0]);
+
+export function getAllDescendants(productNumberCode: number): number[] {
+    const descendants: number[] = [];
+    const stack = [...getAllChildren(productNumberCode)];
+
+    while (stack.length > 0) {
+        const current = stack.pop()!;
+        descendants.push(current);
+        const children = getAllChildren(current);
+        if (children.length > 0) {
+            stack.push(...children);
+        }
+    }
+
+    return descendants;
+}
+
+export function selectNodeWithDescendants(productNumberCode: number): number[] {
+    return [productNumberCode, ...getAllDescendants(productNumberCode)];
+}
+
+export function expandSelectionWithDescendants(
+    productsSelected: number[],
+): number[] {
+    const expanded = new Set<number>();
+
+    productsSelected.forEach((productNumberCode) => {
+        expanded.add(productNumberCode);
+        getAllDescendants(productNumberCode).forEach((descendant) => {
+            expanded.add(descendant);
+        });
+    });
+
+    return Array.from(expanded);
+}

@@ -19,6 +19,7 @@ import all_icons from "@/data/symboles.json";
 
 import updateMultiLines_with_icons from "./line_chart_with_icons";
 import updateMirrorStackedAreaChart from "./mirror_stacked_area_chart";
+import updateTreemap from "./treemap";
 
 const MONTH_TO_JS_MONTH: Record<number, number> = {
     6: 0,
@@ -38,8 +39,11 @@ const MONTH_TO_JS_MONTH: Record<number, number> = {
 interface GraphiqueProps {
     allData: { [key: string]: number[][] };
     type: number[];
+    currentYear: number;
+    currentMonth: number;
     productsSelected: number[];
     countriesSelected: number[];
+    isGlobalView: boolean;
     iconSelected: string[];
     allEvents: any;
 }
@@ -55,6 +59,8 @@ interface DataPoint {
     produit?: string;
     type?: string;
     value: number;
+    monthId?: number;
+    year?: number;
 }
 
 type NestedMap3 = Map<
@@ -63,7 +69,7 @@ type NestedMap3 = Map<
         number, // productId
         Map<
             number, // typeId
-            { date: Date; value: number }[]
+            { date: Date; value: number; monthId: number; year: number }[]
         >
     >
 >;
@@ -71,12 +77,21 @@ type NestedMap3 = Map<
 export default function Graphique({
     allData,
     type,
+    currentYear,
+    currentMonth,
     productsSelected,
     countriesSelected,
+    isGlobalView,
     iconSelected,
     allEvents,
 }: GraphiqueProps): JSX.Element {
     const { windowSize } = useGlobal();
+    const selectedType = type[0];
+    const isBalanceMode = type.length == 1 && type[0] == 4;
+    const unitLabel =
+        isBalanceMode || (selectedType !== undefined && selectedType >= 2)
+            ? "k€"
+            : "Tonnes";
     if (type.length == 1 && type[0] == 4) {
         type = [2, 3]; //Si on est en balance, on charge les infos d'import et d'export en €
     }
@@ -191,6 +206,22 @@ export default function Graphique({
     // --- Mise à jour du graphique quand les données changent
     useEffect(() => {
         if (!svgRef.current || flatten_data_plot.length === 0) return;
+        const selectedCountryName = countryMap.get(String(countriesSelected[0]))?.fr;
+
+        if (isGlobalView) {
+            update_current_graphique(current_graph, 2, svgRef.current);
+            updateTreemap(
+                flatten_data_plot,
+                svgRef.current,
+                selectedCountryName,
+                currentYear,
+                currentMonth,
+                isBalanceMode,
+                unitLabel,
+            );
+            return;
+        }
+
         if (countriesSelected.length == 1 && type.length == 2) {
             if (productsSelected.length > 1) {
                 update_current_graphique(current_graph, 1, svgRef.current);
@@ -223,7 +254,13 @@ export default function Graphique({
                 { x: (d) => d.date, y: (d) => d.value },
             );
         }
-    }, [flatten_data_plot, map_icons, events_filtered]);
+    }, [
+        flatten_data_plot,
+        map_icons,
+        events_filtered,
+        countriesSelected,
+        isGlobalView,
+    ]);
 
     //On retourne le container
     const countryMap = new Map<string, Country>(Object.entries(pays));
@@ -302,10 +339,10 @@ export default function Graphique({
     }, [countriesSelected, productsSelected, type]);
     // Title animation is handled by the separate `GraphTitle` component
     return (
-        <div className="graph-wrapper">
+        <div className={`graph-wrapper ${isGlobalView ? "global-view" : ""}`}>
 
 
-            <GraphTitle titre={titre} />
+            {!isGlobalView && <GraphTitle titre={titre} />}
 
 
             <div
@@ -355,7 +392,7 @@ function addYearToNestedMap(
         if (!typeMap.has(typeId)) typeMap.set(typeId, []);
         const entries = typeMap.get(typeId)!;
 
-        entries.push({ date, value });
+        entries.push({ date, value, monthId, year: Number(year) });
     }
 
     processedYearsRef.current.add(year);
@@ -396,6 +433,8 @@ function flattenGlobalMap(
                         produit: produitMap[String(productId)].name,
                         type: typeMap[String(typeId)],
                         value: e.value,
+                        monthId: e.monthId,
+                        year: e.year,
                     });
                 }
             }

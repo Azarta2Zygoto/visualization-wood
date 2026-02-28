@@ -17,7 +17,10 @@ import SlidingYears from "@/components/personal/slidingYears";
 import metadata_app from "@/data/metadata.json";
 import { SHOW_INTRO_STORAGE_KEY, type definitions } from "@/metadata/constants";
 import type { ColorName, ProjectionName } from "@/metadata/types";
-import { getAllChildren } from "@/utils/MODLecture";
+import {
+    expandSelectionWithDescendants,
+    getAllChildren,
+} from "@/utils/MODLecture";
 import Icon from "@/utils/icon";
 import { readNpz } from "@/utils/read";
 
@@ -36,6 +39,7 @@ export default function HomePage(): JSX.Element {
     const [productsSelected, setProductsSelected] = useState<number[]>([0]);
     const [countriesSelected, setCountriesSelected] = useState<number[]>([]);
     const [isMultipleMode, setIsMultipleMode] = useState<boolean>(false);
+    const [isGlobalView, setIsGlobalView] = useState<boolean>(false);
     const [isCountryMode, setIsCountryMode] = useState<boolean>(true);
     const [loadingYears, setLoadingYears] = useState<Set<number>>(new Set());
     const [iconSelected, setIconSelected] = useState<string[]>([]);
@@ -112,9 +116,9 @@ export default function HomePage(): JSX.Element {
                     AddAllYears &&
                     year < metadata_app.bois.end_year &&
                     Object.keys(allData).length !==
-                        metadata_app.bois.end_year -
-                            metadata_app.bois.start_year +
-                            1
+                    metadata_app.bois.end_year -
+                    metadata_app.bois.start_year +
+                    1
                 ) {
                     fetchData(year + 1);
                 }
@@ -227,6 +231,7 @@ export default function HomePage(): JSX.Element {
                 currentYear={currentYear}
                 currentMonth={currentMonth}
                 isMultipleMode={isMultipleMode}
+                isGlobalView={isGlobalView}
                 isCountryMode={isCountryMode}
                 isAbsolute={isAbsolute}
                 productsSelected={productsSelected}
@@ -235,8 +240,8 @@ export default function HomePage(): JSX.Element {
                 isAllDataLoaded={
                     Object.keys(allData).length ===
                     metadata_app.bois.end_year -
-                        metadata_app.bois.start_year +
-                        1
+                    metadata_app.bois.start_year +
+                    1
                 }
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
@@ -244,6 +249,7 @@ export default function HomePage(): JSX.Element {
                 setProductsSelected={setProductsSelected}
                 setCountriesSelected={setCountriesSelected}
                 setIsMultipleMode={setIsMultipleMode}
+                setIsGlobalView={setIsGlobalView}
                 setIsCountryMode={setIsCountryMode}
                 setIconSelected={setIconSelected}
                 setIsAbsolute={setIsAbsolute}
@@ -254,18 +260,23 @@ export default function HomePage(): JSX.Element {
             <Graphique
                 allData={allData}
                 type={[typeData]}
+                currentYear={currentYear}
+                currentMonth={currentMonth}
                 productsSelected={
                     productsSelected.length === 0
                         ? [0]
-                        : productsSelected.length === 1
-                          ? getAllChildren(productsSelected[0]).length > 0
-                              ? getAllChildren(productsSelected[0])
-                              : productsSelected
-                          : productsSelected
+                        : isGlobalView
+                            ? expandSelectionWithDescendants(productsSelected)
+                            : productsSelected.length === 1
+                                ? getAllChildren(productsSelected[0]).length > 0
+                                    ? getAllChildren(productsSelected[0])
+                                    : productsSelected
+                                : productsSelected
                 }
                 countriesSelected={
                     countriesSelected.length === 0 ? [21] : countriesSelected
                 }
+                isGlobalView={isGlobalView}
                 iconSelected={iconSelected}
                 allEvents={allEvents}
             />
