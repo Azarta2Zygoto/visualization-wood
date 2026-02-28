@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
+import { type JSX, useEffect, useRef } from "react";
 
 import * as d3 from "d3";
 
@@ -23,9 +24,11 @@ export default function ClevellandDotChart({
     data,
     width = 280,
     height = 250,
-}: ClevellandDotChartProps) {
+}: ClevellandDotChartProps): JSX.Element {
     const svgRef = useRef<SVGSVGElement>(null);
     const initRef = useRef(false);
+    const t = useTranslations("Tooltip");
+    const productTrads = useTranslations("Produits");
 
     useEffect(() => {
         if (!svgRef.current || data.length === 0) return;
@@ -47,9 +50,17 @@ export default function ClevellandDotChart({
             )
             .map((d) => ({
                 ...d,
-                productName:
-                    products[d.productIndex.toString() as keyof typeof products]
-                        ?.name || `Produit ${d.productIndex}`,
+                productName: products[
+                    d.productIndex.toString() as keyof typeof products
+                ]?.name
+                    ? productTrads(
+                          products[
+                              d.productIndex.toString() as keyof typeof products
+                          ].name,
+                      )
+                    : t("default-product", {
+                          product: d.productIndex,
+                      }),
             }))
             .sort((a, b) => {
                 // Sort by max of export and import, descending
@@ -64,6 +75,8 @@ export default function ClevellandDotChart({
         //graphique
         let margin = { top: 5, right: 10, bottom: 30, left: 80 };
         const legend_height = 10;
+        const font_size_name = 8;
+        const font_size = 10;
 
         // fonction pour optimiser la margin.left en fonction de la largeur des labels, pour éviter d'avoir une margin trop grande si les labels sont courts
         const optimizeMarginLeft = (): {
@@ -83,7 +96,7 @@ export default function ClevellandDotChart({
                 .append("text")
                 .attr("x", 0)
                 .attr("y", 0)
-                .attr("font-size", "8px")
+                .attr("font-size", `${font_size_name}px`)
                 .text((d) => d.productName);
 
             // Appliquer le wrap avec la marge courante
@@ -123,7 +136,7 @@ export default function ClevellandDotChart({
             .append("text")
             .attr("x", 0)
             .attr("y", 0)
-            .attr("font-size", "8px")
+            .attr("font-size", `${font_size_name}px`)
             .text((d) => d.productName);
 
         // Appliquer le wrap avec la margin.left optimisée
@@ -199,8 +212,8 @@ export default function ClevellandDotChart({
                         .duration(600)
                         .attr("x1", (d) => x(d.exportValue))
                         .attr("x2", (d) => x(d.importValue))
-                        .attr("y1", (d, i) => getY(i))
-                        .attr("y2", (d, i) => getY(i)),
+                        .attr("y1", (_, i) => getY(i))
+                        .attr("y2", (_, i) => getY(i)),
                 (exit) => exit.remove(),
             );
 
@@ -282,15 +295,15 @@ export default function ClevellandDotChart({
                     }),
             );
 
-        xAxisGroup.style("font-size", "10px");
-        xAxisGroup.selectAll("text").style("font-size", "10px");
+        xAxisGroup.style("font-size", `${font_size}px`);
+        xAxisGroup.selectAll("text").style("font-size", `${font_size}px`);
 
         // Y-axis quasi pas utilisé
         const yAxisGroup = g
             .append("g")
             .attr("class", "y-axis")
             .call(d3.axisLeft(y).tickFormat(() => ""));
-        yAxisGroup.style("font-size", "10px");
+        yAxisGroup.style("font-size", `${font_size}px`);
         yAxisGroup.selectAll("path").style("stroke", "none");
         yAxisGroup.selectAll("line").style("stroke", "none");
 
@@ -308,7 +321,7 @@ export default function ClevellandDotChart({
                 return yVal;
             })
             .attr("text-anchor", "end")
-            .attr("font-size", "8px")
+            .attr("font-size", `${font_size_name}px`)
             .attr("fill", "var(--fg)")
             .attr("opacity", 0.8)
             .text((d) => d.productName);
@@ -333,7 +346,7 @@ export default function ClevellandDotChart({
             .append("text")
             .attr("x", 8)
             .attr("y", legendY + 3)
-            .attr("font-size", "9px")
+            .attr("font-size", `${font_size}px`)
             .attr("fill", "var(--fg)")
             .text("Export");
 
@@ -347,7 +360,7 @@ export default function ClevellandDotChart({
             .append("text")
             .attr("x", 88)
             .attr("y", legendY + 3)
-            .attr("font-size", "9px")
+            .attr("font-size", `${font_size}px`)
             .attr("fill", "var(--fg)")
             .text("Import");
     }, [data, width, height]);

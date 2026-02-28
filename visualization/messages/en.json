@@ -89,7 +89,7 @@
         "import_euro": "Import: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "export_tonnes": "Export: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
         "import_tonnes": "Import: {value, plural, =-1 {No data} =1 {{value, number} tonne} other {{value, number} tonnes}}",
-        "balance_euro": "Trade balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
+        "balance_euro": "Balance: {value, plural, =-1 {No data} other {{value, number} k€}}",
         "flag": "{country} flag",
         "no-data": "No data available",
         "france-tooltip": "This is the reference country for this visualization. Trade flows are represented in relation to this country.",
@@ -104,7 +104,8 @@
         "Septembre": "September",
         "Octobre": "October",
         "Novembre": "November",
-        "Décembre": "December"
+        "Décembre": "December",
+        "default-product": "Product: {product}"
     },
     "WorldMap": {
         "error-data": "Error loading data",

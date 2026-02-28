@@ -89,7 +89,7 @@
         "import_euro": "Import : {value, plural, =-1 {Aucune donnée} other {{value, number} k€}}",
         "export_tonnes": "Export : {value, plural, =-1 {Aucune donnée} =1 {{value, number} tonne} other {{value, number} tonnes}}",
         "import_tonnes": "Import : {value, plural, =-1 {Aucune donnée} =1 {{value, number} tonne} other {{value, number} tonnes}}",
-        "balance_euro": "Balance commerciale : {value, plural, =-1 {Aucune donnée} other {{value, number} k€}}",
+        "balance_euro": "Balance : {value, plural, =-1 {Aucune donnée} other {{value, number} k€}}",
         "flag": "Drapeau de {country}",
         "no-data": "Aucune donnée disponible",
         "france-tooltip": "C'est le pays de référence pour cette visualisation. Les échanges commerciaux sont représentés par rapport à ce pays.",
@@ -104,7 +104,8 @@
         "Septembre": "Septembre",
         "Octobre": "Octobre",
         "Novembre": "Novembre",
-        "Décembre": "Décembre"
+        "Décembre": "Décembre",
+        "default-product": "Produit : {product}"
     },
     "WorldMap": {
         "error-data": "Erreur lors du chargement des données",
