@@ -211,7 +211,9 @@ export default function Graphique({
     // --- Mise à jour du graphique quand les données changent
     useEffect(() => {
         if (!svgRef.current || flatten_data_plot.length === 0) return;
-        const selectedCountryName = countryMap.get(String(countriesSelected[0]))?.fr;
+        const selectedCountryName = countryMap.get(
+            String(countriesSelected[0]),
+        )?.fr;
 
         if (isGlobalView) {
             update_current_graphique(current_graph, 2, svgRef.current);
@@ -236,6 +238,7 @@ export default function Graphique({
                     globalAllDates,
                     events_filtered,
                     map_icons,
+                    t,
                 );
             } else {
                 update_current_graphique(current_graph, 0, svgRef.current);
@@ -355,10 +358,7 @@ export default function Graphique({
     // Title animation is handled by the separate `GraphTitle` component
     return (
         <div className={`graph-wrapper ${isGlobalView ? "global-view" : ""}`}>
-
-
             {!isGlobalView && <GraphTitle titre={titre} />}
-
 
             <div
                 className="graphique"
@@ -482,8 +482,8 @@ function filterevents(
             const dateParsed = parseDate1(event.date_debut)
                 ? parseDate1(event.date_debut)
                 : parseDate2(event.date_debut)
-                    ? parseDate2(event.date_debut)
-                    : null;
+                  ? parseDate2(event.date_debut)
+                  : null;
             if (!dateParsed) return null;
 
             // catégorie / icône

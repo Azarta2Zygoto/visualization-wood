@@ -239,7 +239,10 @@
         "title": "Titre :",
         "description": "Description :",
         "date": "Date :",
-        "valeur": "Valeur :"
+        "value": "Valeur :",
+        "type": "Type :",
+        "export": "Exportations",
+        "import": "Importations"
     },
     "Produits": {
         "Produits": "Produits",

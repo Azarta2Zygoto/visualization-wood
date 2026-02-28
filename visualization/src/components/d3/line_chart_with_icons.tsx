@@ -525,6 +525,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             });
 
             if (!closestStock || !closestValue) return;
+
             const svgNode = svg_animated.node()!;
             const point = svgNode.createSVGPoint();
 
