@@ -69,6 +69,7 @@ export function Legend(
         .range([marginTop, height - marginBottom]);
 
     svg.append("image")
+        .attr("class", "color-legend-image")
         .attr("x", marginLeft)
         .attr("y", marginTop)
         .attr("width", width - marginLeft - marginRight)
@@ -84,6 +85,7 @@ export function Legend(
     const axis = d3.axisRight(y).ticks(ticks, tickFormat).tickSize(tickSize);
 
     svg.append("g")
+        .attr("class", "color-legend-ticks")
         .attr("transform", `translate(${width - marginRight},0)`)
         .call(axis)
         .call(tickAdjust)

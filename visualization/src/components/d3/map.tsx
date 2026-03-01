@@ -447,6 +447,7 @@ export function WorldMap({
                         }
                         if (event.transform.k !== currentTransformRef.current.k)
                             applyZoomOnElement({
+                                svg,
                                 mapLayer: currentMapLayer,
                                 legendLayer: correctLegend,
                                 radiusScale: legendScaleRef.current!,
@@ -497,6 +498,7 @@ export function WorldMap({
                                 // Also update legend
                                 if (zoomScale !== currentTransformRef.current.k)
                                     applyZoomOnElement({
+                                        svg,
                                         mapLayer: currentMapLayer,
                                         legendLayer: correctLegend,
                                         radiusScale: legendScaleRef.current!,

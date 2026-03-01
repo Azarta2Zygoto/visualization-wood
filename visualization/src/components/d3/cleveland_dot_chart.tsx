@@ -56,7 +56,7 @@ export default function ClevellandDotChart({
                     ? productTrads(
                           products[
                               d.productIndex.toString() as keyof typeof products
-                          ].name,
+                          ].name.replaceAll(".", "-"),
                       )
                     : t("default-product", {
                           product: d.productIndex,

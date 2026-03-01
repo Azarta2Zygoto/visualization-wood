@@ -6,6 +6,7 @@ import { calculateArrowHead } from "@/utils/arrow";
 import { clampedScale } from "@/utils/function";
 
 interface ApplyZoomOnElementProps {
+    svg: SVGSVGElement;
     mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     radiusScale: d3.ScaleLinear<number, number>;
@@ -16,6 +17,7 @@ interface ApplyZoomOnElementProps {
 }
 
 export function applyZoomOnElement({
+    svg,
     mapLayer,
     legendLayer,
     radiusScale,
@@ -27,6 +29,9 @@ export function applyZoomOnElement({
     mapLayer
         .selectAll(".country")
         .attr("stroke-width", config.mapStrokeWidth / zoomScale ** 0.5);
+
+    const color = d3.select(svg).selectAll(".color-legend");
+    if (!color.empty()) return;
 
     // Keep data points at constant visual size when isStatic
     const effectiveZoom = isStatic ? (isGlobe ? 1 : zoomScale) : 1;

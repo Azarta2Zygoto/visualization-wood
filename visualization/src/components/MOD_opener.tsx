@@ -284,7 +284,7 @@ function MODRecursif({
         return (
             <Checkbox
                 id={`checkbox-${code}`}
-                label={productTrads(name)}
+                label={productTrads(name.replaceAll(".", "-"))}
                 className="checkbox-product"
                 checked={isChecked || IsParentSelected(code, selectedProducts)}
                 onChange={handleCheckboxChange}
@@ -300,8 +300,8 @@ function MODRecursif({
                     title: (
                         <Checkbox
                             id={`checkbox-${code}`}
-                            label={productTrads(name)}
-                            title={`Select all in ${productTrads(name)}`}
+                            label={productTrads(name.replaceAll(".", "-"))}
+                            title={`Select all in ${productTrads(name.replaceAll(".", "-"))}`}
                             className="checkbox-product"
                             checked={
                                 isChecked ||
