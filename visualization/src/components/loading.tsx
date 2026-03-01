@@ -95,10 +95,13 @@ export default function Loading({ yearLoading }: LoadingProps): JSX.Element {
                             type="button"
                             title={t("close")}
                             aria-label={t("close")}
-                            className="btn-icon"
+                            className="btn btn-icon"
                             onClick={() => handleClose(validatedYear)}
                         >
-                            <i className="bi bi-x-circle-fill" />
+                            <i
+                                className="bi bi-x-circle-fill"
+                                style={{ fontSize: "1.2rem" }}
+                            />
                         </button>
                     </div>
                 ))}

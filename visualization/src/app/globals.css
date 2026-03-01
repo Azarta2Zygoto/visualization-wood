@@ -32,6 +32,7 @@
     --color-special: #6496fa;
     --color-special-shadow: #6496fa88;
     --color-text-special: #122a5a;
+    --color-text-special-hover: #122a5aaa;
     --color-mat: #b2d3ffbb;
     --color-page: #f3ede6;
     --low-border-color: #666;
@@ -65,6 +66,7 @@
     --fg: #ffffff;
     --color-special: #192b50;
     --color-text-special: #558eff;
+    --color-text-special-hover: #558effaa;
     --color-special-shadow: #192b5088;
     --color-mat: #024091;
     --color-page: #332d25;
@@ -88,6 +90,7 @@
         --fg: #ffffff;
         --color-special: #192b50;
         --color-text-special: #558eff;
+        --color-text-special-hover: #558effaa;
         --color-special-shadow: #192b5088;
         --color-mat: #061830;
         --color-page: #332d25;
@@ -575,15 +578,17 @@ label {
     border: none;
     outline: none;
 }
+.btn.btn-info:hover,
 .btn.btn-icon:hover {
     cursor: pointer;
-    color: var(--color-special);
+    color: var(--color-text-special-hover);
     box-shadow: none;
 }
+.btn.btn-info:focus-visible,
 .btn.btn-icon:focus-visible {
     outline: none;
     border: none;
-    box-shadow: 0 0 0 3px var(--color-special);
+    box-shadow: 0 0 0 3px var(--color-text-special-hover);
 }
 .btn.btn-icon i {
     font-size: 1.5rem;
@@ -617,6 +622,7 @@ label {
     padding: 0;
     margin: 0;
     border: none;
+    color: var(--color-text-special);
 }
 .btn-icon {
     background: none;
@@ -645,6 +651,7 @@ label {
     transform: translate(-50%, 50%);
     display: flex;
     flex-direction: column;
+    width: 30%;
     gap: 1rem;
     padding: 0.5rem 1rem;
     background-color: var(--on-map);

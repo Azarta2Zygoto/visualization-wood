@@ -116,9 +116,9 @@ export default function HomePage(): JSX.Element {
                     AddAllYears &&
                     year < metadata_app.bois.end_year &&
                     Object.keys(allData).length !==
-                    metadata_app.bois.end_year -
-                    metadata_app.bois.start_year +
-                    1
+                        metadata_app.bois.end_year -
+                            metadata_app.bois.start_year +
+                            1
                 ) {
                     fetchData(year + 1);
                 }
@@ -188,7 +188,6 @@ export default function HomePage(): JSX.Element {
                 <Icon
                     name="info-circle-fill"
                     size={20}
-                    color="var(--color-text-special)"
                 />
             </button>
 
@@ -240,8 +239,8 @@ export default function HomePage(): JSX.Element {
                 isAllDataLoaded={
                     Object.keys(allData).length ===
                     metadata_app.bois.end_year -
-                    metadata_app.bois.start_year +
-                    1
+                        metadata_app.bois.start_year +
+                        1
                 }
                 setTypeData={setTypeData}
                 setCurrentYear={setCurrentYear}
@@ -266,12 +265,12 @@ export default function HomePage(): JSX.Element {
                     productsSelected.length === 0
                         ? [0]
                         : isGlobalView
-                            ? expandSelectionWithDescendants(productsSelected)
-                            : productsSelected.length === 1
-                                ? getAllChildren(productsSelected[0]).length > 0
-                                    ? getAllChildren(productsSelected[0])
-                                    : productsSelected
+                          ? expandSelectionWithDescendants(productsSelected)
+                          : productsSelected.length === 1
+                            ? getAllChildren(productsSelected[0]).length > 0
+                                ? getAllChildren(productsSelected[0])
                                 : productsSelected
+                            : productsSelected
                 }
                 countriesSelected={
                     countriesSelected.length === 0 ? [21] : countriesSelected

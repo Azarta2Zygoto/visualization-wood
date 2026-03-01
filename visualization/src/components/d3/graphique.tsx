@@ -225,6 +225,7 @@ export default function Graphique({
                 currentMonth,
                 isBalanceMode,
                 unitLabel,
+                t,
             );
             return;
         }

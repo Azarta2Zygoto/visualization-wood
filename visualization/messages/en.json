@@ -242,7 +242,8 @@
         "value": "Value:",
         "type": "Type:",
         "export": "Exports",
-        "import": "Imports"
+        "import": "Imports",
+        "content": "Visible containers (level {containerDepth}) — click to enter, click background to go back"
     },
     "Produits": {
         "Produits": "Products",

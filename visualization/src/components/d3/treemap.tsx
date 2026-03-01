@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as d3 from "d3";
+
 import products from "@/data/products.json";
 
 type FlattenSeries = {
@@ -54,6 +56,7 @@ export default function updateTreemap(
     selectedMonth?: number,
     isBalanceMode: boolean = false,
     unitLabel: string = "",
+    t?: any,
 ) {
     if (!data || data.length === 0) return;
 
@@ -91,7 +94,9 @@ export default function updateTreemap(
 
         const inferredMonthId =
             point.monthId ??
-            (point.date ? JS_MONTH_TO_MONTH_ID[point.date.getMonth()] : undefined);
+            (point.date
+                ? JS_MONTH_TO_MONTH_ID[point.date.getMonth()]
+                : undefined);
 
         return inferredMonthId === selectedMonth;
     };
@@ -116,15 +121,15 @@ export default function updateTreemap(
         .paddingOuter(2)
         .paddingInner(1)
         .round(true)(
-            d3
-                .hierarchy(rootData)
-                .sum((d) =>
-                    d.children && d.children.length > 0
-                        ? 0
-                        : Math.max(0, d.value ?? 0),
-                )
-                .sort((a, b) => (b.value ?? 0) - (a.value ?? 0)),
-        );
+        d3
+            .hierarchy(rootData)
+            .sum((d) =>
+                d.children && d.children.length > 0
+                    ? 0
+                    : Math.max(0, d.value ?? 0),
+            )
+            .sort((a, b) => (b.value ?? 0) - (a.value ?? 0)),
+    );
 
     let chartRoot = svg.select<SVGGElement>(".treemap-root");
     if (chartRoot.empty()) {
@@ -152,14 +157,19 @@ export default function updateTreemap(
         code?: string,
     ) => {
         if (!code) return null;
-        return tree
-            .descendants()
-            .find((node) => node.data.code === code) ?? null;
+        return (
+            tree.descendants().find((node) => node.data.code === code) ?? null
+        );
     };
 
-    const persistedFocus = findNodeByCode(root, svgWithState?.__treemapPreviousFocusCode);
+    const persistedFocus = findNodeByCode(
+        root,
+        svgWithState?.__treemapPreviousFocusCode,
+    );
     let currentFocus: d3.HierarchyRectangularNode<ProductNode> =
-        persistedFocus && persistedFocus.children && persistedFocus.children.length > 0
+        persistedFocus &&
+        persistedFocus.children &&
+        persistedFocus.children.length > 0
             ? persistedFocus
             : root;
 
@@ -201,7 +211,7 @@ export default function updateTreemap(
         .attr("width", innerWidth)
         .attr("height", headerHeight)
         .attr("fill", "var(--bg)")
-        .attr("stroke", "var(--color-text)")
+        .attr("stroke", "var(--fg)")
         .attr("stroke-width", 0.6);
 
     const headerTrail = header
@@ -227,7 +237,7 @@ export default function updateTreemap(
         .attr("width", innerWidth)
         .attr("height", legendHeight)
         .attr("fill", "var(--bg)")
-        .attr("stroke", "var(--color-text)")
+        .attr("stroke", "var(--fg)")
         .attr("stroke-width", 0.4)
         .attr("opacity", 0.85);
 
@@ -237,7 +247,7 @@ export default function updateTreemap(
         .attr("y", 15)
         .style("font-size", "11px")
         .style("font-weight", "600")
-        .style("fill", "var(--color-text)");
+        .style("fill", "var(--fg)");
 
     const legendItems = legend
         .append("g")
@@ -254,8 +264,7 @@ export default function updateTreemap(
             }
         });
 
-    plot
-        .append("rect")
+    plot.append("rect")
         .attr("class", "treemap-plot-bg")
         .attr("x", 0)
         .attr("y", 0)
@@ -353,8 +362,10 @@ export default function updateTreemap(
             }
         });
 
-        const crumbText = headerTrail
-            .selectAll<SVGTextElement, (typeof crumbLayout)[number]>("text.crumb")
+        headerTrail
+            .selectAll<SVGTextElement, (typeof crumbLayout)[number]>(
+                "text.crumb",
+            )
             .data(crumbLayout, (d) => d.node.data.code)
             .join(
                 (enter) =>
@@ -367,7 +378,7 @@ export default function updateTreemap(
             )
             .attr("x", (d) => d.x)
             .style("font-weight", (d) => (d.isCurrent ? "700" : "400"))
-            .style("fill", "var(--color-text)")
+            .style("fill", "var(--fg)")
             .style("cursor", (d) => (d.isCurrent ? "default" : "pointer"))
             .text((d) => d.label)
             .on("click", (event, d) => {
@@ -391,7 +402,7 @@ export default function updateTreemap(
                         .append("text")
                         .attr("class", "crumb-sep")
                         .style("font-size", "12px")
-                        .style("fill", "var(--color-text)"),
+                        .style("fill", "var(--fg)"),
                 (update) => update,
                 (exit) => exit.remove(),
             )
@@ -406,7 +417,9 @@ export default function updateTreemap(
         const minValue = d3.min(nodeValues) ?? 0;
         const maxValue = d3.max(nodeValues) ?? 1;
 
-        const containerColor = (node: d3.HierarchyRectangularNode<ProductNode>) => {
+        const containerColor = (
+            node: d3.HierarchyRectangularNode<ProductNode>,
+        ) => {
             if (focus.depth === 0) {
                 return topLevelColors.get(node.data.code) ?? "#4E79A7";
             }
@@ -414,12 +427,28 @@ export default function updateTreemap(
             const top = topLevelOf(node) ?? focus;
             const baseColor = topLevelColors.get(top.data.code) ?? "#4E79A7";
             const base = d3.hsl(baseColor);
-            const light = d3.hsl(base.h, Math.max(0.35, base.s * 0.65), Math.min(0.84, base.l + 0.22)).formatHex();
-            const dark = d3.hsl(base.h, Math.min(0.9, base.s * 1.1), Math.max(0.22, base.l - 0.2)).formatHex();
+            const light = d3
+                .hsl(
+                    base.h,
+                    Math.max(0.35, base.s * 0.65),
+                    Math.min(0.84, base.l + 0.22),
+                )
+                .formatHex();
+            const dark = d3
+                .hsl(
+                    base.h,
+                    Math.min(0.9, base.s * 1.1),
+                    Math.max(0.22, base.l - 0.2),
+                )
+                .formatHex();
 
             const scale = d3
                 .scaleLinear<string>()
-                .domain(maxValue === minValue ? [minValue, minValue + 1] : [minValue, maxValue])
+                .domain(
+                    maxValue === minValue
+                        ? [minValue, minValue + 1]
+                        : [minValue, maxValue],
+                )
                 .range([light, dark])
                 .interpolate(d3.interpolateHcl);
 
@@ -428,7 +457,7 @@ export default function updateTreemap(
 
         const containerDepth = focus.depth + 1;
         legendTitle.text(
-            `Conteneurs visibles (niveau ${containerDepth}) — clic pour entrer, clic fond pour revenir`,
+            t("content", { containerDepth, value: containerDepth }),
         );
 
         const legendData = nodes;
@@ -473,13 +502,15 @@ export default function updateTreemap(
             .data(legendLayout, (d) => d.node.data.code)
             .join(
                 (enter) => {
-                    const group = enter.append("g").attr("class", "legend-item");
+                    const group = enter
+                        .append("g")
+                        .attr("class", "legend-item");
                     group
                         .append("rect")
                         .attr("width", 10)
                         .attr("height", 10)
                         .attr("y", -5)
-                        .attr("stroke", "var(--color-text)")
+                        .attr("stroke", "var(--fg)")
                         .attr("stroke-width", 0.5);
                     group
                         .append("text")
@@ -487,7 +518,7 @@ export default function updateTreemap(
                         .attr("y", 0)
                         .attr("dominant-baseline", "middle")
                         .style("font-size", "10px")
-                        .style("fill", "var(--color-text)");
+                        .style("fill", "var(--fg)");
                     return group;
                 },
                 (update) => update,
@@ -521,7 +552,9 @@ export default function updateTreemap(
         });
 
         const cell = plot
-            .selectAll<SVGGElement, d3.HierarchyRectangularNode<ProductNode>>("g.treemap-cell")
+            .selectAll<SVGGElement, d3.HierarchyRectangularNode<ProductNode>>(
+                "g.treemap-cell",
+            )
             .data(nodes, (d) => d.data.code)
             .join(
                 (enter) => {
@@ -537,7 +570,9 @@ export default function updateTreemap(
                             return `translate(${focusBox.x + focusBox.width / 2},${focusBox.y + focusBox.height / 2})`;
                         })
                         .style("opacity", 0.6)
-                        .style("cursor", (d) => (d.children ? "zoom-in" : "default"))
+                        .style("cursor", (d) =>
+                            d.children ? "zoom-in" : "default",
+                        )
                         .on("click", (event, d) => {
                             event.stopPropagation();
                             if (d.children && d.children.length > 0) {
@@ -548,7 +583,7 @@ export default function updateTreemap(
                     g.append("rect")
                         .attr("fill", (d) => containerColor(d))
                         .attr("fill-opacity", 0.92)
-                        .attr("stroke", "var(--color-text)")
+                        .attr("stroke", "var(--fg)")
                         .attr("stroke-width", 1.1)
                         .attr("width", (d) => {
                             const previous = previousBoxByCode.get(d.data.code);
@@ -562,7 +597,7 @@ export default function updateTreemap(
                     g.append("title");
                     g.append("text")
                         .style("font-size", "11px")
-                        .style("fill", "var(--color-text)");
+                        .style("fill", "var(--fg)");
 
                     g.append("rect")
                         .attr("class", "treemap-sign-badge")
@@ -591,40 +626,32 @@ export default function updateTreemap(
                 },
                 (update) => update,
                 (exit) =>
-                    exit
-                        .transition(transition)
-                        .style("opacity", 0)
-                        .remove(),
+                    exit.transition(transition).style("opacity", 0).remove(),
             );
 
-        cell
-            .transition(transition)
+        cell.transition(transition)
             .style("opacity", 1)
             .attr("transform", (d) => `translate(${x(d.x0)},${y(d.y0)})`);
 
-        cell
-            .select("rect")
+        cell.select("rect")
             .transition(transition)
             .attr("width", (d) => Math.max(0, x(d.x1) - x(d.x0)))
             .attr("height", (d) => Math.max(0, y(d.y1) - y(d.y0)))
             .attr("fill", (d) => containerColor(d));
 
-        cell
-            .select("title")
-            .text((d) => {
-                const path = d
-                    .ancestors()
-                    .reverse()
-                    .map((node) => node.data.name)
-                    .join(" / ");
-                const valueText = isBalanceMode
-                    ? `Solde: ${withUnit(signedFormat(Math.round(displayedNodeValue(d))))}`
-                    : withUnit(format(Math.round(d.value ?? 0)));
-                return `${path}\n${valueText}`;
-            });
+        cell.select("title").text((d) => {
+            const path = d
+                .ancestors()
+                .reverse()
+                .map((node) => node.data.name)
+                .join(" / ");
+            const valueText = isBalanceMode
+                ? `Solde: ${withUnit(signedFormat(Math.round(displayedNodeValue(d))))}`
+                : withUnit(format(Math.round(d.value ?? 0)));
+            return `${path}\n${valueText}`;
+        });
 
-        cell
-            .select("text")
+        cell.select("text")
             .attr("x", 4)
             .attr("y", 14)
             .text((d) => {
@@ -637,8 +664,7 @@ export default function updateTreemap(
                 return `${d.data.name} · ${withUnit(format(Math.round(d.value ?? 0)))}`;
             });
 
-        cell
-            .select<SVGRectElement>("rect.treemap-sign-badge")
+        cell.select<SVGRectElement>("rect.treemap-sign-badge")
             .transition(transition)
             .style("opacity", (d) => {
                 if (!isBalanceMode) return 0;
@@ -665,8 +691,7 @@ export default function updateTreemap(
             .attr("y", 2)
             .attr("fill", (d) => signColor(d));
 
-        cell
-            .select<SVGTextElement>("text.treemap-sign-label")
+        cell.select<SVGTextElement>("text.treemap-sign-label")
             .transition(transition)
             .style("opacity", (d) => {
                 if (!isBalanceMode) return 0;
@@ -682,11 +707,15 @@ export default function updateTreemap(
             .attr("y", 10);
 
         const subLines = cell
-            .selectAll<SVGRectElement, d3.HierarchyRectangularNode<ProductNode>>(
-                "rect.treemap-subline",
-            )
+            .selectAll<
+                SVGRectElement,
+                d3.HierarchyRectangularNode<ProductNode>
+            >("rect.treemap-subline")
             .data(
-                (d) => (d.children ?? []).filter((child) => (child.value ?? 0) > 0),
+                (d) =>
+                    (d.children ?? []).filter(
+                        (child) => (child.value ?? 0) > 0,
+                    ),
                 (d) => d.data.code,
             )
             .join(
@@ -700,25 +729,33 @@ export default function updateTreemap(
                         .attr("stroke-width", 1)
                         .attr("pointer-events", "none")
                         .attr("x", (child) => {
-                            const previous = previousBoxByCode.get(child.data.code);
+                            const previous = previousBoxByCode.get(
+                                child.data.code,
+                            );
                             const parent = child.parent;
                             if (!previous || !parent) return 0;
                             const parentBox = boxOf(parent);
                             return previous.x - parentBox.x;
                         })
                         .attr("y", (child) => {
-                            const previous = previousBoxByCode.get(child.data.code);
+                            const previous = previousBoxByCode.get(
+                                child.data.code,
+                            );
                             const parent = child.parent;
                             if (!previous || !parent) return 0;
                             const parentBox = boxOf(parent);
                             return previous.y - parentBox.y;
                         })
                         .attr("width", (child) => {
-                            const previous = previousBoxByCode.get(child.data.code);
+                            const previous = previousBoxByCode.get(
+                                child.data.code,
+                            );
                             return previous ? previous.width : 0;
                         })
                         .attr("height", (child) => {
-                            const previous = previousBoxByCode.get(child.data.code);
+                            const previous = previousBoxByCode.get(
+                                child.data.code,
+                            );
                             return previous ? previous.height : 0;
                         })
                         .style("opacity", 0.55);
@@ -823,11 +860,12 @@ function buildHierarchy(
             const sign = typeLabel.includes("import")
                 ? -1
                 : typeLabel.includes("export")
-                    ? 1
-                    : 0;
+                  ? 1
+                  : 0;
 
             if (sign === 0) return;
-            const nextRaw = (rawValuesByCode.get(metadata.code) ?? 0) + sign * value;
+            const nextRaw =
+                (rawValuesByCode.get(metadata.code) ?? 0) + sign * value;
             rawValuesByCode.set(metadata.code, nextRaw);
             valuesByCode.set(metadata.code, Math.abs(nextRaw));
             return;
@@ -846,7 +884,8 @@ function buildHierarchy(
 
     const leafCodes = Array.from(valuesByCode.keys()).filter((code) => {
         return !Array.from(valuesByCode.keys()).some(
-            (otherCode) => otherCode !== code && otherCode.startsWith(`${code}.`),
+            (otherCode) =>
+                otherCode !== code && otherCode.startsWith(`${code}.`),
         );
     });
 
