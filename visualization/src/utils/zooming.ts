@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as d3 from "d3";
 
-import { config } from "@/metadata/mapConfig";
+import { config } from "@/metadata/configurations";
 import { calculateArrowHead } from "@/utils/arrow";
 import { clampedScale } from "@/utils/function";
 
@@ -28,7 +28,10 @@ export function applyZoomOnElement({
 }: ApplyZoomOnElementProps): void {
     mapLayer
         .selectAll(".country")
-        .attr("stroke-width", config.mapStrokeWidth / zoomScale ** 0.5);
+        .attr(
+            "stroke-width",
+            config.mapStrokeWidth / zoomScale ** config.mapStrokeWidthPower,
+        );
 
     const color = d3.select(svg).selectAll(".color-legend");
     if (!color.empty()) return;
@@ -39,7 +42,8 @@ export function applyZoomOnElement({
 
     mapLayer
         .selectAll<SVGCircleElement, any>(".data-point")
-        .attr("r", (d) => radiusScale(d.value) / effectiveZoom);
+        .attr("r", (d) => radiusScale(d.value) / effectiveZoom)
+        .attr("stroke-width", config.circleStrokeWidth / effectiveZoom);
     mapLayer
         .selectAll<SVGLineElement, any>(".data-arrow")
         .attr("stroke-width", (d) => radiusScale(d.value) / effectiveZoom);

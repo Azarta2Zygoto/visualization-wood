@@ -69,7 +69,7 @@
     --color-text-special-hover: #558effaa;
     --color-special-shadow: #192b5088;
     --color-mat: #024091;
-    --color-page: #332d25;
+    --color-page: #283042;
     --low-border-color: #666;
     --border-color: #333;
     --on-map: #141a1fbb;
@@ -93,7 +93,7 @@
         --color-text-special-hover: #558effaa;
         --color-special-shadow: #192b5088;
         --color-mat: #061830;
-        --color-page: #332d25;
+        --color-page: #283042;
         --low-border-color: #666;
         --border-color: #333;
         --on-map: #141a1fbb;
@@ -464,6 +464,10 @@ main {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     margin-bottom: 0.5rem;
+}
+/* Explicit no-data class: use !important so it overrides presentation attributes/transitions */
+.country.no-data-country {
+    fill: url(#no-data-hatch-pattern) !important;
 }
 
 .data-point {

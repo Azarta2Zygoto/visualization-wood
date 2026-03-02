@@ -20,13 +20,13 @@ import colors from "@/data/colors.json";
 import continent from "@/data/continents.json";
 import pays from "@/data/countries.json";
 import type_data from "@/data/exports.json";
+import { config } from "@/metadata/configurations";
 import {
     MAP_DEFINITIONS,
     type Themes,
     type definitions,
 } from "@/metadata/constants";
 import { projections } from "@/metadata/geoprojections";
-import { config } from "@/metadata/mapConfig";
 import type {
     ColorName,
     ContinentType,
@@ -117,7 +117,14 @@ export function WorldMap({
         country: CountryType;
         x: number;
         y: number;
-    }>({ appear: false, year: 0, month: 0, country: "103", x: 0, y: 0 });
+    }>({
+        appear: false,
+        year: 0,
+        month: 0,
+        country: config.franceValue,
+        x: 0,
+        y: 0,
+    });
     const [dataPointOnMap, setDataPointOnMap] = useState<
         Array<{
             countryName: string;
@@ -231,40 +238,38 @@ export function WorldMap({
     // Effect 3: Memoized event handlers (stable references to prevent re-attaching)
     const handleCountryMouseover = useCallback(
         (event: any) => {
-            // Visual feedback
+            const datum = event?.target?.__data__;
+            if (!datum || !mapLayer) return;
 
-            if (event.target.__data__.continentCode) {
-                d3.select(event.currentTarget).attr("opacity", (d: any) => {
-                    return isKnownCountry(d.continentCode, isCountryMode)
-                        ? 0.6
-                        : 1;
-                });
-                d3.selectAll(".data-arrow").attr("opacity", (d: any) => {
-                    if (d.continentCode !== event.target.__data__.continentCode)
-                        return 1;
-                    return 0.6;
-                });
-            } else
+            // Visual feedback — use scoped arrow selection when mapLayer is available
+            if (datum.continentCode) {
+                mapLayer
+                    .selectAll(".data-arrow")
+                    .attr("opacity", (d: any) =>
+                        d.continentCode !== datum.continentCode
+                            ? 1
+                            : config.opacityHover,
+                    );
+            } else {
+                const strokeWidth =
+                    2 *
+                    Math.pow(
+                        config.mapStrokeWidth / currentTransformRef.current.k,
+                        config.mapStrokeWidthPower,
+                    );
                 d3.select(event.currentTarget)
-                    .attr("stroke-width", (d: any) => {
-                        return isKnownCountry(d.properties.name, isCountryMode)
-                            ? 1.5 / currentTransformRef.current.k ** 0.5
-                            : config.mapStrokeWidth /
-                                  currentTransformRef.current.k ** 0.25;
-                    })
-                    .attr("opacity", (d: any) => {
-                        return isKnownCountry(d.properties.name, isCountryMode)
-                            ? 0.6
-                            : 1;
-                    });
+                    .attr("stroke-width", strokeWidth)
+                    .attr("opacity", (d: any) =>
+                        isKnownCountry(d.properties.name, isCountryMode)
+                            ? config.opacityHover
+                            : 1,
+                    );
+            }
 
-            // Tooltip data (read from ref to get current data)
+            // Tooltip data
             const currentCountryNumberCode =
-                countryNameToNumber.get(
-                    event.target.__data__.properties?.name,
-                ) ??
-                countryCodeToNumber.get(event.target.__data__.continentCode);
-
+                countryNameToNumber.get(datum.properties?.name) ??
+                countryCodeToNumber.get(datum.continentCode);
             if (currentCountryNumberCode === undefined) return;
 
             setTooltipData({
@@ -276,23 +281,31 @@ export function WorldMap({
                 y: event.pageY,
             });
         },
-        [isCountryMode, year, month, dataPointOnMap],
+        [isCountryMode, year, month, mapLayer, dataPointOnMap],
     );
 
     // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)
-    const handleCountryMouseout = useCallback((event: any) => {
-        if (event.target.__data__.continentCode) {
-            d3.selectAll(".data-arrow").attr("opacity", 1);
-        } else
-            d3.select(event.currentTarget)
-                .attr(
-                    "stroke-width",
-                    config.mapStrokeWidth /
-                        currentTransformRef.current.k ** 0.25,
-                )
-                .attr("opacity", 1);
-        setTooltipData((prev) => ({ ...prev, appear: false }));
-    }, []);
+    const handleCountryMouseout = useCallback(
+        (event: any) => {
+            const datum = event?.target?.__data__;
+            if (!datum || !mapLayer) return;
+
+            if (datum.continentCode) {
+                mapLayer.selectAll(".data-arrow").attr("opacity", 1);
+            } else {
+                const strokeWidth = Math.pow(
+                    config.mapStrokeWidth / currentTransformRef.current.k,
+                    config.mapStrokeWidthPower,
+                );
+                d3.select(event.currentTarget)
+                    .attr("stroke-width", strokeWidth)
+                    .attr("opacity", 1);
+            }
+
+            setTooltipData((prev) => ({ ...prev, appear: false }));
+        },
+        [mapLayer],
+    );
 
     // Effect 5: Load map and draw countries (runs once on mount, then only if mode or window size changes)
     useEffect(() => {
@@ -333,6 +346,8 @@ export function WorldMap({
                 );
 
             const root = mapSvg.append("g").attr("class", "map-root");
+            // Ensure hatch pattern defs exist for no-data overlay — defs must be on the SVG element
+            createHatchPattern(mapSvg);
 
             const currentMapLayer = root.append("g").attr("class", "map-layer");
             setMapLayer(currentMapLayer);
@@ -524,6 +539,7 @@ export function WorldMap({
                 }
 
                 // Draw countries
+                console.log("Drawing countries...");
                 currentMapLayer
                     .selectAll(".country")
                     .data(features)
@@ -532,12 +548,12 @@ export function WorldMap({
                     .attr("class", (d: any) => {
                         return isKnownCountry(d.properties.name, isCountryMode)
                             ? "country known-country"
-                            : "country";
+                            : "country unknown-country";
                     })
                     .attr("d", pathGenerator as any)
                     .attr("fill", (d: any) => {
                         return d.properties.name === "France"
-                            ? "#ff6b6b"
+                            ? config.franceColor
                             : isKnownCountry(d.properties.name, isCountryMode)
                               ? config[theme].validCountry
                               : config[theme].invalidCountry;
@@ -845,7 +861,9 @@ export function WorldMap({
                 lat: number;
             }>;
             setNBCountryWithData(newNBCountryWithData);
-
+            console.log(
+                `Countries with data: ${newNBCountryWithData} / ${dataPointOnMap.length}`,
+            );
             countries
                 .transition()
                 .duration(config.animationDuration)
@@ -854,7 +872,7 @@ export function WorldMap({
                         (p) => p.countryName === d.properties.name,
                     );
                     return d.properties.name === "France"
-                        ? "#ff6b6b"
+                        ? config.franceColor
                         : isKnownCountry(d.properties.name, isCountryMode)
                           ? isData !== undefined
                               ? config[theme].validCountry
@@ -877,6 +895,40 @@ export function WorldMap({
                 correctProjection?.drag || false,
                 isStatic,
             );
+
+            // Apply hatch pattern directly to `.country` elements for countries without data
+            ((): void => {
+                console.time("Applying hatch pattern");
+                // Build set of country names currently displayed on the map
+                const allCountryNames = dataPointOnMap.map(
+                    (p) => p.countryName,
+                );
+                const hasValueSet = new Set(
+                    pointData.map((p) => p.countryName),
+                );
+                const noDataNames = new Set(
+                    allCountryNames.filter((n) => !hasValueSet.has(n)),
+                );
+
+                const countrySelection = mapLayer.selectAll<
+                    SVGPathElement,
+                    any
+                >(".country");
+
+                countrySelection.attr("class", (d: any) => {
+                    const baseClass = isKnownCountry(
+                        d.properties.name,
+                        isCountryMode,
+                    )
+                        ? "country known-country"
+                        : "country";
+                    return noDataNames.has(d.properties.name)
+                        ? `${baseClass} no-data-country`
+                        : baseClass;
+                });
+
+                console.timeEnd("Applying hatch pattern");
+            })();
         } else {
             const projection = projectionRef.current;
             if (!projection) return;
@@ -957,6 +1009,64 @@ export function WorldMap({
                 correctProjection?.drag || false,
                 isStatic,
             );
+
+            // Apply hatch pattern directly to `.country` elements for countries belonging to continents without data
+            ((): void => {
+                const continentsWithValue = new Set(
+                    pointData.map((p) => p.countryName),
+                );
+                const continentsNoValue = Object.keys(continent).filter(
+                    (cont) => !continentsWithValue.has(cont),
+                );
+
+                const noDataNames = new Set<string>();
+                continentsNoValue.forEach((cont) => {
+                    const countriesInContinent =
+                        continent[cont as ContinentType].countries;
+                    Object.values(countriesInContinent).forEach((c: any) =>
+                        noDataNames.add(c.en),
+                    );
+                });
+
+                const countrySelection = mapLayer.selectAll<
+                    SVGPathElement,
+                    any
+                >(".country");
+                // Interrupt any running transitions so they don't overwrite the pattern fill
+                countrySelection.interrupt();
+
+                if (noDataNames.size === 0) {
+                    countrySelection
+                        .attr("fill", (d: any) => {
+                            return d.properties.name === "France"
+                                ? config.franceColor
+                                : isKnownCountry(
+                                        d.properties.name,
+                                        isCountryMode,
+                                    )
+                                  ? config[theme].validCountry
+                                  : config[theme].invalidCountry;
+                        })
+                        .attr("stroke", "var(--low-border-color)");
+                    return;
+                }
+
+                countrySelection
+                    .filter((d: any) => noDataNames.has(d.properties.name))
+                    .attr("fill", "url(#no-data-hatch-pattern)")
+                    .attr("stroke", "none");
+
+                countrySelection
+                    .filter((d: any) => !noDataNames.has(d.properties.name))
+                    .attr("fill", (d: any) => {
+                        return d.properties.name === "France"
+                            ? config.franceColor
+                            : isKnownCountry(d.properties.name, isCountryMode)
+                              ? config[theme].validCountry
+                              : config[theme].invalidCountry;
+                    })
+                    .attr("stroke", "var(--low-border-color)");
+            })();
         }
     }, [
         lectureData,
@@ -1045,6 +1155,35 @@ function createLegend(
     return innerLegend;
 }
 
+function createHatchPattern(
+    root: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+): void {
+    const defs = root.select<SVGDefsElement>("defs#hatch-defs");
+    if (!defs.empty()) return; // already created
+    const newDefs = root.append("defs").attr("id", "hatch-defs");
+
+    const pattern = newDefs
+        .append("pattern")
+        .attr("id", "no-data-hatch-pattern")
+        .attr("patternUnits", "userSpaceOnUse")
+        .attr("width", 8)
+        .attr("height", 8)
+        .attr("patternTransform", "rotate(45)");
+
+    pattern
+        .append("rect")
+        .attr("width", 8)
+        .attr("height", 8)
+        .attr("fill", "var(--color-page)");
+
+    pattern
+        .append("path")
+        .attr("d", "M0,0 L0,8")
+        .attr("stroke", "var(--fg)")
+        .attr("stroke-width", 1)
+        .attr("opacity", 0.6);
+}
+
 function makeCircleProjection(
     mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
     legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
@@ -1117,7 +1256,7 @@ function makeCircleProjection(
             (d) => config.legendYposition - radiusScale(d) * legendZoom * 2,
         )
         .attr("stroke", "var(--fg)")
-        .attr("stroke-width", 1);
+        .attr("stroke-width", config.circleStrokeWidth);
 
     legendLayer
         .selectAll(".legend-label")
@@ -1165,7 +1304,7 @@ function makeCircleProjection(
         .attr("fill", colors[palette].fill)
         .attr("opacity", 0.7)
         .attr("stroke", colors[palette].stroke)
-        .attr("stroke-width", 1)
+        .attr("stroke-width", config.circleStrokeWidth)
         .style("cursor", "pointer")
         .transition()
         .duration(config.animationDuration)

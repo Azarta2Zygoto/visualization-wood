@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import versor from "versor";
 
 import continent from "@/data/continents.json";
-import { config } from "@/metadata/mapConfig";
+import { config } from "@/metadata/configurations";
 
 const ParisCoord: [number, number] = [2.3522, 48.8566];
 
