@@ -465,10 +465,6 @@ main {
     border-radius: 4px;
     margin-bottom: 0.5rem;
 }
-/* Explicit no-data class: use !important so it overrides presentation attributes/transitions */
-.country.no-data-country {
-    fill: url(#no-data-hatch-pattern) !important;
-}
 
 .data-point {
     pointer-events: none;

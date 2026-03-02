@@ -1,5 +1,5 @@
 {
-    "AFRSB": {
+    "Sub-Saharan Africa": {
         "center": [-3.387918, 29.920395],
         "countries": {
             "AO": {
@@ -164,7 +164,7 @@
             }
         }
     },
-    "AFRNO": {
+    "North Africa": {
         "center": [25.439039, 30.558604],
         "countries": {
             "DZ": {
@@ -213,7 +213,7 @@
             }
         }
     },
-    "EU": {
+    "European Union": {
         "center": [51.922751, 19.136874],
         "countries": {
             "AT": {
@@ -334,7 +334,7 @@
             }
         }
     },
-    "CIS": {
+    "Commonwealth of Independent States": {
         "center": [54.98474062439858, 82.8050734716675],
         "countries": {
             "AM": {
@@ -387,7 +387,7 @@
             }
         }
     },
-    "ASISO": {
+    "Southwest Asia": {
         "center": [29.7376478907611, 69.82721008938131],
         "countries": {
             "AF": {
@@ -424,7 +424,7 @@
             }
         }
     },
-    "OCEAN": {
+    "Oceania": {
         "center": [-22.7359, 140.0188],
         "countries": {
             "AU": {
@@ -465,7 +465,7 @@
             }
         }
     },
-    "EURHU": {
+    "Non-EU Europe": {
         "center": [42.67272, 21.16688],
         "countries": {
             "AL": {
@@ -510,7 +510,7 @@
             }
         }
     },
-    "ASINE": {
+    "Northeast Asia": {
         "center": [30.597689614745345, 103.92827468727751],
         "countries": {
             "CN": {
@@ -539,7 +539,7 @@
             }
         }
     },
-    "AMESUD": {
+    "South America": {
         "center": [-8.7832, -55.4915],
         "countries": {
             "AR": {
@@ -596,7 +596,7 @@
             }
         }
     },
-    "MOYOR": {
+    "Middle East": {
         "center": [23.886292, 45.081139],
         "countries": {
             "IL": {
@@ -657,7 +657,7 @@
             }
         }
     },
-    "ASISE": {
+    "Southeast Asia": {
         "center": [17.824928757660103, 102.67801201366368],
         "countries": {
             "BN": {
@@ -702,7 +702,7 @@
             }
         }
     },
-    "AMENO": {
+    "North America": {
         "center": [44.977753, -93.2650108],
         "countries": {
             "CA": {
@@ -715,7 +715,7 @@
             }
         }
     },
-    "AMECE": {
+    "Central America (excl. Caribbean)": {
         "center": [15.5149204, -87.9922684],
         "countries": {
             "BZ": {
@@ -752,7 +752,7 @@
             }
         }
     },
-    "CARAIB": {
+    "Caribbean": {
         "center": [20.7837893, -75.8069082],
         "countries": {
             "AG": {

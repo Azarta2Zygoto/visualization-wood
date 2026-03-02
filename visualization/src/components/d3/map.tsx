@@ -39,6 +39,7 @@ import { MakeBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";
 import { isKnownCountry } from "@/utils/function";
+import { createLegend } from "@/utils/legend";
 import { applyZoomOnElement } from "@/utils/zooming";
 
 const englishCountriesName = new Set(
@@ -55,6 +56,16 @@ Object.entries(pays).forEach(([key, val]) => {
     countryNumberToName.set(Number(key), val.en);
     countryNameToNumber.set(val.en, Number(key));
 });
+
+interface GlobalCountryData {
+    name: string;
+    feature: any;
+    d: string;
+    className: string;
+    fill: string;
+    cursor: string;
+    type: "country" | "continent";
+}
 
 interface WorldMapProps {
     rawData: { [key: string]: number[][] };
@@ -147,6 +158,17 @@ export function WorldMap({
         undefined
     > | null>(null);
 
+    // Refs to hold latest prop/state values so event handlers need not be reattached
+    const countriesSelectedRef = useRef<number[]>(countriesSelected);
+    useEffect(() => {
+        countriesSelectedRef.current = countriesSelected;
+    }, [countriesSelected]);
+
+    const isMultipleModeRef = useRef<boolean>(isMultipleMode);
+    useEffect(() => {
+        isMultipleModeRef.current = isMultipleMode;
+    }, [isMultipleMode]);
+
     /**
      * Memoized values and functions (re-computed only when dependencies change, stable references for D3 to avoid re-attaching handlers)
      */
@@ -238,17 +260,17 @@ export function WorldMap({
     // Effect 3: Memoized event handlers (stable references to prevent re-attaching)
     const handleCountryMouseover = useCallback(
         (event: any) => {
-            const datum = event?.target?.__data__;
+            const datum = event?.target?.__data__ as
+                | GlobalCountryData
+                | undefined;
             if (!datum || !mapLayer) return;
 
             // Visual feedback — use scoped arrow selection when mapLayer is available
-            if (datum.continentCode) {
+            if (datum.type === "continent") {
                 mapLayer
                     .selectAll(".data-arrow")
                     .attr("opacity", (d: any) =>
-                        d.continentCode !== datum.continentCode
-                            ? 1
-                            : config.opacityHover,
+                        d.name === datum.name ? config.opacityHover : 1,
                     );
             } else {
                 const strokeWidth =
@@ -260,16 +282,16 @@ export function WorldMap({
                 d3.select(event.currentTarget)
                     .attr("stroke-width", strokeWidth)
                     .attr("opacity", (d: any) =>
-                        isKnownCountry(d.properties.name, isCountryMode)
+                        isKnownCountry(d.name, isCountryMode)
                             ? config.opacityHover
                             : 1,
                     );
             }
 
             // Tooltip data
-            const currentCountryNumberCode =
-                countryNameToNumber.get(datum.properties?.name) ??
-                countryCodeToNumber.get(datum.continentCode);
+            const currentCountryNumberCode = countryNameToNumber.get(
+                datum.name,
+            );
             if (currentCountryNumberCode === undefined) return;
 
             setTooltipData({
@@ -287,10 +309,12 @@ export function WorldMap({
     // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)
     const handleCountryMouseout = useCallback(
         (event: any) => {
-            const datum = event?.target?.__data__;
+            const datum = event?.target?.__data__ as
+                | GlobalCountryData
+                | undefined;
             if (!datum || !mapLayer) return;
 
-            if (datum.continentCode) {
+            if (datum.type === "continent") {
                 mapLayer.selectAll(".data-arrow").attr("opacity", 1);
             } else {
                 const strokeWidth = Math.pow(
@@ -361,10 +385,10 @@ export function WorldMap({
                 )
                 .attr("pointer-events", "none");
 
-            const correctLegend = createLegend(
+            const correctLegend = createLegend({
                 legendLayer,
-                t("legend", { unite: t("ton-unit") }),
-            );
+                name: t("legend", { unite: t("ton-unit") }),
+            });
             setLegendLayer(correctLegend);
 
             try {
@@ -404,46 +428,43 @@ export function WorldMap({
                         ) as any
                     ).features;
                 } else {
-                    Object.keys(continent).forEach((cont) => {
+                    // Precompute a lookup from country name -> geometry to avoid
+                    // filtering the full geometries array for every continent.
+                    const geometries = worldData.objects.countries
+                        .geometries as any[];
+                    const nameToGeometry = new Map<string, any>(
+                        geometries.map((g: any) => [g.properties.name, g]),
+                    );
+
+                    for (const cont of Object.keys(continent)) {
                         const countriesInContinent =
                             continent[cont as ContinentType].countries;
-
-                        const countriesSet = new Set(
-                            Object.entries(countriesInContinent).map(
-                                ([, value]) => value.en,
-                            ),
+                        console.log(
+                            `Merging continent: ${cont} with countries: ${Object.keys(countriesInContinent).join(", ")}`,
                         );
 
-                        const geometriesToMerge =
-                            worldData.objects.countries.geometries.filter(
-                                (g: any) => countriesSet.has(g.properties.name),
-                            );
+                        const geometriesToMerge: any[] = [];
+                        for (const c of Object.values(countriesInContinent)) {
+                            const geom = nameToGeometry.get(c.en);
+                            if (geom) geometriesToMerge.push(geom);
+                        }
 
-                        if (!geometriesToMerge.length) return;
+                        if (geometriesToMerge.length === 0) continue;
 
                         const mergedGeometry = topojson.merge(
                             worldData,
                             geometriesToMerge,
                         );
 
-                        const continentCodeNumber =
-                            countryCodeToNumber.get(cont);
-                        if (!continentCodeNumber) return;
-
                         const mergedFeature: CountryData = {
                             type: "Feature",
                             properties: {
-                                name:
-                                    pays[
-                                        String(
-                                            continentCodeNumber,
-                                        ) as CountryType
-                                    ].en || cont,
+                                name: cont,
                             },
                             geometry: mergedGeometry,
                         };
                         features.push(mergedFeature);
-                    });
+                    }
                 }
 
                 const zoom = d3
@@ -473,6 +494,7 @@ export function WorldMap({
 
                         currentTransformRef.current = event.transform;
                     });
+
                 currentMapLayer.selectAll(".globe-background").remove(); // Nettoie l'ancien cercle si besoin
                 currentMapLayer.select("defs#globe-gradient-defs").remove();
                 if (correctProjection.drag) {
@@ -538,35 +560,63 @@ export function WorldMap({
                     mapSvg.call(zoom.transform, restoredTransform);
                 }
 
+                const countryLayer = currentMapLayer
+                    .append("g")
+                    .attr("class", "country-layer");
+
                 // Draw countries
-                console.log("Drawing countries...");
-                currentMapLayer
-                    .selectAll(".country")
-                    .data(features)
+                console.time("Drawing countries");
+                let nbCountriesWithData = 0;
+                const prepared: GlobalCountryData[] = features
+                    .map((f: any) => {
+                        const name = f.properties.name;
+                        const known = isKnownCountry(name, isCountryMode);
+                        const path = pathGenerator(f);
+                        if (!path) return;
+                        if (known) nbCountriesWithData++;
+                        return {
+                            name: name,
+                            feature: f,
+                            d: pathGenerator(f),
+                            className: known
+                                ? "country known-country"
+                                : "country unknown-country",
+                            fill:
+                                name === "France"
+                                    ? config.franceColor
+                                    : known
+                                      ? config[theme].validCountry
+                                      : config[theme].invalidCountry,
+                            cursor: known ? "pointer" : "default",
+                        };
+                    })
+                    .filter(Boolean) as GlobalCountryData[];
+                setNBCountryWithData(nbCountriesWithData);
+
+                // Use a keyed join and update both enter + update in one merged pass
+                const sel = countryLayer
+                    .selectAll<SVGPathElement, GlobalCountryData>(".country")
+                    .data(prepared, (d) => d.name);
+
+                sel.exit().remove();
+
+                const enter = sel
                     .enter()
                     .append("path")
-                    .attr("class", (d: any) => {
-                        return isKnownCountry(d.properties.name, isCountryMode)
-                            ? "country known-country"
-                            : "country unknown-country";
-                    })
-                    .attr("d", pathGenerator as any)
-                    .attr("fill", (d: any) => {
-                        return d.properties.name === "France"
-                            ? config.franceColor
-                            : isKnownCountry(d.properties.name, isCountryMode)
-                              ? config[theme].validCountry
-                              : config[theme].invalidCountry;
-                    })
+                    .attr("class", (d) => d.className)
                     .attr("stroke", "var(--low-border-color)")
-                    .attr("stroke-width", config.mapStrokeWidth)
-                    .style("cursor", (d: any) => {
-                        return isKnownCountry(d.properties.name, isCountryMode)
-                            ? "pointer"
-                            : "default";
-                    });
+                    .attr("stroke-width", config.mapStrokeWidth);
+
+                enter
+                    .merge(sel)
+                    .attr("d", (d) => d.d)
+                    .attr("fill", (d) => d.fill)
+                    .style("cursor", (d) => d.cursor);
+
+                console.timeEnd("Drawing countries");
 
                 // Create arrow layer after countries so arrows appear on top
+                currentMapLayer.append("g").attr("class", "circle-layer");
                 currentMapLayer.append("g").attr("class", "arrow-layer");
 
                 // Build a list of points with projected positions
@@ -575,15 +625,13 @@ export function WorldMap({
                         const countryName = feature.properties.name;
                         if (
                             isCountryMode &&
-                            !englishCountriesName.has(countryName) &&
-                            countryName !== "France"
+                            !englishCountriesName.has(countryName)
                         )
                             return null;
 
                         const centroid = d3.geoCentroid(feature);
                         const projectedCentroid = projection(centroid);
                         if (!projectedCentroid) return null;
-
                         return {
                             countryName,
                             lon: centroid[0],
@@ -630,6 +678,7 @@ export function WorldMap({
         isCountryMode,
         getGeoCenterFromTransform,
         getTransformForGeoCenter,
+        setNBCountryWithData,
         t,
     ]);
 
@@ -638,9 +687,7 @@ export function WorldMap({
         if (!mapLayer || mapLayer.empty()) return;
 
         mapLayer.selectAll(".known-country").on("click", (_: any, d: any) => {
-            const countryNumberCode = countryNameToNumber.get(
-                d.properties.name,
-            );
+            const countryNumberCode = countryNameToNumber.get(d.name);
             if (countryNumberCode === undefined || countryNumberCode === 103)
                 return;
 
@@ -659,6 +706,10 @@ export function WorldMap({
                 else setCountriesSelected([countryNumberCode]);
             }
         });
+
+        return () => {
+            mapLayer.selectAll(".known-country").on("click", null);
+        };
     }, [
         countriesSelected,
         isMultipleMode,
@@ -685,6 +736,8 @@ export function WorldMap({
         };
     }, [handleCountryMouseover, handleCountryMouseout, mapLayer]);
 
+    // Effect 8: Update map points and legend when data is in balance mode (type 4)
+    // separate from other data updates for performance and because it has a different visual encoding
     useEffect(() => {
         if (
             type !== 4 ||
@@ -698,6 +751,14 @@ export function WorldMap({
         const svg = svgRef.current;
         if (!svg) return;
 
+        const pointData = MakeBalance({
+            lectureData,
+            countries: isCountryMode ? dataPointOnMap : undefined,
+            continent: !isCountryMode ? continent : undefined,
+            isAbsolute,
+        });
+        if (pointData.length === 0) return;
+
         const legend = d3.select(svg).select<SVGGElement>(".legend-layer");
 
         legend
@@ -708,19 +769,23 @@ export function WorldMap({
             .selectAll<SVGTextElement, unknown>(".legend-text")
             .text(t("legend", { unite: t("euro-unit") }));
 
-        const pointData = MakeBalance({
-            lectureData,
-            countries: isCountryMode ? dataPointOnMap : undefined,
-            continent: !isCountryMode ? continent : undefined,
-            isAbsolute,
-        });
-        if (pointData.length === 0) return;
+        let maxValue = 1;
+        let minValue = 0;
 
-        const maxValue = Math.max(
-            ...pointData.map((d) => Math.abs(d.value)),
-            1,
-        );
-        const minValue = Math.min(...pointData.map((d) => d.value), 0);
+        if (pointData.length > 0) {
+            maxValue = 1;
+            minValue = 0;
+
+            for (const d of pointData) {
+                const absValue = Math.abs(d.value);
+                if (absValue > maxValue) {
+                    maxValue = absValue;
+                }
+                if (d.value < minValue) {
+                    minValue = d.value;
+                }
+            }
+        }
 
         const arrowLayer = mapLayer.select<SVGGElement>(".arrow-layer");
         arrowLayer
@@ -802,6 +867,8 @@ export function WorldMap({
         )
             return;
 
+        console.time("Updating map with new data");
+
         const svg = svgRef.current;
         if (!svg) return;
 
@@ -813,75 +880,66 @@ export function WorldMap({
         legend
             .transition()
             .duration(config.animationDuration)
-            .attr("opacity", "1");
+            .attr("opacity", 1);
         d3.select(svg).selectAll(".color-legend").remove();
 
         legendTitle.text(
             t("legend", { unite: type <= 1 ? t("ton-unit") : t("euro-unit") }),
         );
-        const countries = mapLayer.selectAll<
-            SVGPathElement,
-            {
-                countryName: string;
-                value: number;
-                x: number;
-                y: number;
-            }
-        >(".country");
+        const countries = mapLayer.selectAll<SVGPathElement, GlobalCountryData>(
+            ".known-country",
+        );
 
         const correctProjection = projections.find(
             (p) => p.name === geoProjection,
         );
+        const typeKey = type.toString() as keyof typeof type_data;
+        const countryNamesWithData = new Set<string>();
+        let maxValue = 1;
+        const pointData: Array<{
+            countryName: string;
+            value: number;
+            x: number;
+            y: number;
+            lon: number;
+            lat: number;
+        }> = [];
         if (isCountryMode) {
-            const typeKey = type.toString() as keyof typeof type_data;
-            // Build point data ONLY for countries with values
-            let newNBCountryWithData = 0;
-            const pointData = dataPointOnMap
-                .map((point) => {
-                    const countryName = point.countryName;
-                    const value = lectureData[countryName]?.[typeKey];
+            for (const point of dataPointOnMap) {
+                const value = lectureData[point.countryName]?.[typeKey];
 
-                    newNBCountryWithData++;
-                    if (!value && value !== 0) return null;
-                    return {
-                        countryName,
+                if (value || value === 0) {
+                    pointData.push({
+                        countryName: point.countryName,
                         value,
                         lon: point.lon,
                         lat: point.lat,
                         x: point.x,
                         y: point.y,
-                    };
-                })
-                .filter(Boolean) as Array<{
-                countryName: string;
-                value: number;
-                x: number;
-                y: number;
-                lon: number;
-                lat: number;
-            }>;
-            setNBCountryWithData(newNBCountryWithData);
-            console.log(
-                `Countries with data: ${newNBCountryWithData} / ${dataPointOnMap.length}`,
-            );
+                    });
+                    countryNamesWithData.add(point.countryName);
+
+                    // Calculate max in same pass
+                    if (value > maxValue) {
+                        maxValue = value;
+                    }
+                }
+            }
+            // Add France to the set (always considered as having data)
+            countryNamesWithData.add("France");
+
             countries
                 .transition()
                 .duration(config.animationDuration)
-                .attr("fill", (d: any) => {
-                    const isData = pointData.find(
-                        (p) => p.countryName === d.properties.name,
-                    );
-                    return d.properties.name === "France"
-                        ? config.franceColor
-                        : isKnownCountry(d.properties.name, isCountryMode)
-                          ? isData !== undefined
-                              ? config[theme].validCountry
-                              : config[theme].nullCountry
-                          : config[theme].invalidCountry;
+                .attr("fill", (d: GlobalCountryData) => {
+                    const hasData = countryNamesWithData.has(d.name);
+                    if (hasData) {
+                        return d.name === "France"
+                            ? config.franceColor
+                            : config[theme].validCountry;
+                    }
+                    return "url(#no-data-hatch-pattern)";
                 });
-
-            // Find max value for scaling
-            const maxValue = Math.max(...pointData.map((d) => d.value), 1);
 
             legendScaleRef.current = makeCircleProjection(
                 mapLayer,
@@ -895,107 +953,41 @@ export function WorldMap({
                 correctProjection?.drag || false,
                 isStatic,
             );
-
-            // Apply hatch pattern directly to `.country` elements for countries without data
-            ((): void => {
-                console.time("Applying hatch pattern");
-                // Build set of country names currently displayed on the map
-                const allCountryNames = dataPointOnMap.map(
-                    (p) => p.countryName,
-                );
-                const hasValueSet = new Set(
-                    pointData.map((p) => p.countryName),
-                );
-                const noDataNames = new Set(
-                    allCountryNames.filter((n) => !hasValueSet.has(n)),
-                );
-
-                const countrySelection = mapLayer.selectAll<
-                    SVGPathElement,
-                    any
-                >(".country");
-
-                countrySelection.attr("class", (d: any) => {
-                    const baseClass = isKnownCountry(
-                        d.properties.name,
-                        isCountryMode,
-                    )
-                        ? "country known-country"
-                        : "country";
-                    return noDataNames.has(d.properties.name)
-                        ? `${baseClass} no-data-country`
-                        : baseClass;
-                });
-
-                console.timeEnd("Applying hatch pattern");
-            })();
         } else {
             const projection = projectionRef.current;
             if (!projection) return;
 
-            let newNBCountryWithData = 0;
-            const pointData = Object.entries(continent)
-                .map(([cont, values]) => {
-                    const countryCode = Object.keys(pays).find(
-                        (key) => pays[key as keyof typeof pays].code === cont,
-                    );
-                    const countryName =
-                        pays[countryCode as keyof typeof pays]?.en || cont;
+            for (const [cont, values] of Object.entries(continent)) {
+                const value = lectureData[cont]?.[typeKey];
+                if (value === undefined) continue;
 
-                    const value =
-                        lectureData[countryName]?.[
-                            type.toString() as keyof typeof type_data
-                        ];
-                    newNBCountryWithData++;
-                    if (!value) return null;
-
-                    return {
-                        countryName: cont,
-                        value: value,
-                        x:
-                            projection(
-                                values.center as [number, number],
-                            )?.[0] || 0,
-                        y:
-                            projection(
-                                values.center as [number, number],
-                            )?.[1] || 0,
-                        lon: values.center[0],
-                        lat: values.center[1],
-                    };
-                })
-                .filter(Boolean) as Array<{
-                countryName: string;
-                value: number;
-                x: number;
-                y: number;
-                lon: number;
-                lat: number;
-            }>;
-            setNBCountryWithData(newNBCountryWithData);
+                pointData.push({
+                    countryName: cont,
+                    value,
+                    lon: values.center[0],
+                    lat: values.center[1],
+                    x: projection(values.center as [number, number])?.[0] || 0,
+                    y: projection(values.center as [number, number])?.[1] || 0,
+                });
+                countryNamesWithData.add(cont);
+                if (value > maxValue) {
+                    maxValue = value;
+                }
+            }
 
             countries
                 .transition()
                 .duration(config.animationDuration)
-                .attr("fill", (d: any) => {
-                    const findNumberCode = Object.keys(pays).find(
-                        (key) =>
-                            pays[key as keyof typeof pays].en ===
-                            d.properties.name,
-                    );
-                    const isData = pointData.find(
-                        (p) =>
-                            p.countryName ===
-                            pays[findNumberCode as keyof typeof pays]?.code,
-                    );
-                    return isKnownCountry(d.properties.name, isCountryMode)
-                        ? isData !== undefined
-                            ? config[theme].validCountry
-                            : config[theme].nullCountry
-                        : config[theme].invalidCountry;
+                .attr("fill", (d: GlobalCountryData) => {
+                    const hasData = countryNamesWithData.has(d.name);
+                    if (hasData) {
+                        return d.name === "France"
+                            ? config.franceColor
+                            : config[theme].validCountry;
+                    }
+                    return "url(#no-data-hatch-pattern)";
                 });
 
-            const maxValue = Math.max(...pointData.map((d) => d.value), 1);
             legendScaleRef.current = makeArrowProjection(
                 mapLayer,
                 legendLayer,
@@ -1009,65 +1001,8 @@ export function WorldMap({
                 correctProjection?.drag || false,
                 isStatic,
             );
-
-            // Apply hatch pattern directly to `.country` elements for countries belonging to continents without data
-            ((): void => {
-                const continentsWithValue = new Set(
-                    pointData.map((p) => p.countryName),
-                );
-                const continentsNoValue = Object.keys(continent).filter(
-                    (cont) => !continentsWithValue.has(cont),
-                );
-
-                const noDataNames = new Set<string>();
-                continentsNoValue.forEach((cont) => {
-                    const countriesInContinent =
-                        continent[cont as ContinentType].countries;
-                    Object.values(countriesInContinent).forEach((c: any) =>
-                        noDataNames.add(c.en),
-                    );
-                });
-
-                const countrySelection = mapLayer.selectAll<
-                    SVGPathElement,
-                    any
-                >(".country");
-                // Interrupt any running transitions so they don't overwrite the pattern fill
-                countrySelection.interrupt();
-
-                if (noDataNames.size === 0) {
-                    countrySelection
-                        .attr("fill", (d: any) => {
-                            return d.properties.name === "France"
-                                ? config.franceColor
-                                : isKnownCountry(
-                                        d.properties.name,
-                                        isCountryMode,
-                                    )
-                                  ? config[theme].validCountry
-                                  : config[theme].invalidCountry;
-                        })
-                        .attr("stroke", "var(--low-border-color)");
-                    return;
-                }
-
-                countrySelection
-                    .filter((d: any) => noDataNames.has(d.properties.name))
-                    .attr("fill", "url(#no-data-hatch-pattern)")
-                    .attr("stroke", "none");
-
-                countrySelection
-                    .filter((d: any) => !noDataNames.has(d.properties.name))
-                    .attr("fill", (d: any) => {
-                        return d.properties.name === "France"
-                            ? config.franceColor
-                            : isKnownCountry(d.properties.name, isCountryMode)
-                              ? config[theme].validCountry
-                              : config[theme].invalidCountry;
-                    })
-                    .attr("stroke", "var(--low-border-color)");
-            })();
         }
+        console.timeEnd("Updating map with new data");
     }, [
         lectureData,
         type,
@@ -1083,6 +1018,8 @@ export function WorldMap({
         isDaltonian,
         handleCountryMouseover,
         handleCountryMouseout,
+        mapLayer,
+        t,
     ]);
 
     return (
@@ -1107,52 +1044,6 @@ export function WorldMap({
             />
         </div>
     );
-}
-
-function createLegend(
-    legendLayer: d3.Selection<SVGGElement, unknown, null, undefined>,
-    name: string = "Légende :",
-): d3.Selection<SVGGElement, unknown, null, undefined> {
-    const clipId = "legend-clip";
-
-    const defs = legendLayer.append("defs");
-    defs.append("clipPath")
-        .attr("id", clipId)
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", config.legendWidth)
-        .attr("height", config.legendHeight)
-        .attr("rx", 8)
-        .attr("class", "legend-clip-rect");
-
-    legendLayer
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", config.legendWidth)
-        .attr("height", config.legendHeight)
-        .attr("rx", 8)
-        .attr("fill", "var(--on-map)")
-        .attr("stroke", "var(--border-color)")
-        .attr("class", "legend-background");
-
-    legendLayer
-        .append("text")
-        .attr("x", 10)
-        .attr("y", 25)
-        .attr("fill", "var(--fg)")
-        .attr("font-size", 18)
-        .attr("class", "legend-text")
-        .text(name);
-
-    const innerLegend = legendLayer
-        .append("g")
-        .attr("class", "inner-legend")
-        .attr("clip-path", `url(#${clipId})`)
-        .attr("transform", `translate(0, 10)`);
-
-    return innerLegend;
 }
 
 function createHatchPattern(
@@ -1282,8 +1173,9 @@ function makeCircleProjection(
                 }) + " 000",
         );
 
+    const circleLayer = mapLayer.select<SVGGElement>(".circle-layer");
     // Bind data to circles (only countries with data)
-    const circles = mapLayer
+    const circles = circleLayer
         .selectAll<SVGCircleElement, (typeof pointData)[number]>(".data-point")
         .data(pointData, (d) => d.countryName);
     circles
@@ -1578,18 +1470,18 @@ function MakeHuexBalanceProjection(
 
     // Put veridis for colorblind users
 
-    const countries = mapLayer.selectAll<
-        SVGPathElement,
-        (typeof pointData)[number]
-    >(".country");
+    const countries = mapLayer.selectAll<SVGPathElement, GlobalCountryData>(
+        ".known-country",
+    );
 
     countries
         .transition()
         .duration(config.animationDuration)
-        .attr("fill", (d: any) => {
-            const countryName = d.properties.name;
+        .attr("fill", (d: GlobalCountryData) => {
+            const countryName = d.name;
             const point = pointData.find((p) => p.countryName === countryName);
             const isCountry = isKnownCountry(countryName, true);
+            if (countryName === "France") return config.franceColor;
             return point
                 ? colorScale(point.value)
                 : isCountry
