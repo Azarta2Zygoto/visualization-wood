@@ -111,8 +111,6 @@ export function WorldMap({
      * Refs for D3-managed elements and state (no React state to avoid re-renders on changes)
      */
     const svgRef = useRef<SVGSVGElement>(null);
-    const worldDataCache = useRef<{ map: any; size: definitions }[]>([]);
-    const loadTokenRef = useRef(0); // Token to cancel stale async initializations (prevents double append)
     const projectionRef = useRef<d3.GeoProjection | null>(null);
     const currentTransformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
     const legendScaleRef = useRef<d3.ScaleLinear<number, number> | null>(null);
@@ -123,15 +121,11 @@ export function WorldMap({
      */
     const [tooltipData, setTooltipData] = useState<{
         appear: boolean;
-        year: number;
-        month: number;
         country: CountryType;
         x: number;
         y: number;
     }>({
         appear: false,
-        year: 0,
-        month: 0,
         country: config.franceValue,
         x: 0,
         y: 0,
@@ -157,17 +151,9 @@ export function WorldMap({
         null,
         undefined
     > | null>(null);
-
-    // Refs to hold latest prop/state values so event handlers need not be reattached
-    const countriesSelectedRef = useRef<number[]>(countriesSelected);
-    useEffect(() => {
-        countriesSelectedRef.current = countriesSelected;
-    }, [countriesSelected]);
-
-    const isMultipleModeRef = useRef<boolean>(isMultipleMode);
-    useEffect(() => {
-        isMultipleModeRef.current = isMultipleMode;
-    }, [isMultipleMode]);
+    const [worldDataCache, setWorldDataCache] = useState<
+        { map: any; size: definitions }[]
+    >([]);
 
     /**
      * Memoized values and functions (re-computed only when dependencies change, stable references for D3 to avoid re-attaching handlers)
@@ -183,6 +169,7 @@ export function WorldMap({
 
     // Filter and aggregate data
     const lectureData = useMemo(() => {
+        console.time("Filtering and aggregating data");
         if (!rawData || !rawData[year] || productsSelected.length === 0)
             return {};
 
@@ -213,6 +200,7 @@ export function WorldMap({
                 (dataByCountry[countryName][typeIndex] || 0) + value;
         }
 
+        console.timeEnd("Filtering and aggregating data");
         return dataByCountry;
     }, [rawData, year, month, productsSelected]);
 
@@ -269,9 +257,9 @@ export function WorldMap({
             if (datum.type === "continent") {
                 mapLayer
                     .selectAll(".data-arrow")
-                    .attr("opacity", (d: any) =>
-                        d.name === datum.name ? config.opacityHover : 1,
-                    );
+                    .transition()
+                    .duration(config.fastAnimationDuration)
+                    .attr("filter", `brightness(${config.mapBrightnessHover})`);
             } else {
                 const strokeWidth =
                     2 *
@@ -280,12 +268,10 @@ export function WorldMap({
                         config.mapStrokeWidthPower,
                     );
                 d3.select(event.currentTarget)
+                    .transition()
+                    .duration(config.fastAnimationDuration)
                     .attr("stroke-width", strokeWidth)
-                    .attr("opacity", (d: any) =>
-                        isKnownCountry(d.name, isCountryMode)
-                            ? config.opacityHover
-                            : 1,
-                    );
+                    .attr("filter", `brightness(${config.mapBrightnessHover})`);
             }
 
             // Tooltip data
@@ -296,14 +282,12 @@ export function WorldMap({
 
             setTooltipData({
                 appear: true,
-                year,
-                month,
                 country: String(currentCountryNumberCode) as CountryType,
                 x: event.pageX,
                 y: event.pageY,
             });
         },
-        [isCountryMode, year, month, mapLayer, dataPointOnMap],
+        [mapLayer, dataPointOnMap],
     );
 
     // Effect 4: Memoized mouseout handler (stable reference to prevent re-attaching)
@@ -315,15 +299,21 @@ export function WorldMap({
             if (!datum || !mapLayer) return;
 
             if (datum.type === "continent") {
-                mapLayer.selectAll(".data-arrow").attr("opacity", 1);
+                mapLayer
+                    .selectAll(".data-arrow")
+                    .transition()
+                    .duration(config.fastAnimationDuration)
+                    .attr("filter", "brightness(1)");
             } else {
                 const strokeWidth = Math.pow(
                     config.mapStrokeWidth / currentTransformRef.current.k,
                     config.mapStrokeWidthPower,
                 );
                 d3.select(event.currentTarget)
+                    .transition()
+                    .duration(config.fastAnimationDuration)
                     .attr("stroke-width", strokeWidth)
-                    .attr("opacity", 1);
+                    .attr("filter", "brightness(1)");
             }
 
             setTooltipData((prev) => ({ ...prev, appear: false }));
@@ -338,8 +328,7 @@ export function WorldMap({
 
         const loadMap = async () => {
             console.log("Initializing map...");
-            // Mark this async init with a token
-            const token = ++loadTokenRef.current;
+
             const svg = svgRef.current;
             if (!svg) return;
 
@@ -353,8 +342,6 @@ export function WorldMap({
                 .scale(config.projectionScale)
                 .translate([correctionSize.width, correctionSize.height]);
             projectionRef.current = projection;
-
-            const pathGenerator = d3.geoPath().projection(projection);
 
             // Clear any previous map root to avoid duplicate renderings
             const svgSel = d3.select(svg);
@@ -393,7 +380,7 @@ export function WorldMap({
 
             try {
                 // Fetch or use cached world topology data
-                const cachedEntry = worldDataCache.current.find(
+                const cachedEntry = worldDataCache.find(
                     (entry) => entry.size === mapDefinition,
                 );
                 let worldData = cachedEntry?.map;
@@ -408,246 +395,13 @@ export function WorldMap({
                     if (signal.aborted) return;
                     worldData = await response.json();
 
-                    worldDataCache.current.push({
-                        map: worldData,
-                        size: mapDefinition,
-                    });
+                    // Cache the loaded data for future use
+
+                    setWorldDataCache((prev) => [
+                        ...prev,
+                        { map: worldData, size: mapDefinition },
+                    ]);
                 }
-
-                // If another load started after this one, abort this init
-                if (token !== loadTokenRef.current) return;
-
-                // Extract country features (topojson.feature always returns FeatureCollection)
-                let features: CountryData[] = [];
-
-                if (isCountryMode) {
-                    features = (
-                        topojson.feature(
-                            worldData,
-                            worldData.objects.countries,
-                        ) as any
-                    ).features;
-                } else {
-                    // Precompute a lookup from country name -> geometry to avoid
-                    // filtering the full geometries array for every continent.
-                    const geometries = worldData.objects.countries
-                        .geometries as any[];
-                    const nameToGeometry = new Map<string, any>(
-                        geometries.map((g: any) => [g.properties.name, g]),
-                    );
-
-                    for (const cont of Object.keys(continent)) {
-                        const countriesInContinent =
-                            continent[cont as ContinentType].countries;
-                        console.log(
-                            `Merging continent: ${cont} with countries: ${Object.keys(countriesInContinent).join(", ")}`,
-                        );
-
-                        const geometriesToMerge: any[] = [];
-                        for (const c of Object.values(countriesInContinent)) {
-                            const geom = nameToGeometry.get(c.en);
-                            if (geom) geometriesToMerge.push(geom);
-                        }
-
-                        if (geometriesToMerge.length === 0) continue;
-
-                        const mergedGeometry = topojson.merge(
-                            worldData,
-                            geometriesToMerge,
-                        );
-
-                        const mergedFeature: CountryData = {
-                            type: "Feature",
-                            properties: {
-                                name: cont,
-                            },
-                            geometry: mergedGeometry,
-                        };
-                        features.push(mergedFeature);
-                    }
-                }
-
-                const zoom = d3
-                    .zoom<SVGSVGElement, unknown>()
-                    .scaleExtent(config.scaleExtent)
-                    .on("zoom", (event) => {
-                        currentMapLayer.attr("transform", event.transform);
-
-                        // Update geographic center for cross-projection sync
-                        const geoCenter = getGeoCenterFromTransform(
-                            event.transform,
-                            projection,
-                        );
-                        if (geoCenter) {
-                            mapCenterRef.current = geoCenter;
-                        }
-                        if (event.transform.k !== currentTransformRef.current.k)
-                            applyZoomOnElement({
-                                svg,
-                                mapLayer: currentMapLayer,
-                                legendLayer: correctLegend,
-                                radiusScale: legendScaleRef.current!,
-                                zoomScale: event.transform.k,
-                                isStatic,
-                                isCountryMode,
-                            });
-
-                        currentTransformRef.current = event.transform;
-                    });
-
-                currentMapLayer.selectAll(".globe-background").remove(); // Nettoie l'ancien cercle si besoin
-                currentMapLayer.select("defs#globe-gradient-defs").remove();
-                if (correctProjection.drag) {
-                    // Convert geographic center to rotation for globe: rotation = [-lon, -lat, 0]
-                    const initialRotation: [number, number, number] = [
-                        -mapCenterRef.current[0],
-                        -mapCenterRef.current[1],
-                        0,
-                    ];
-                    mapSvg.call(
-                        simpleDrag({
-                            projection,
-                            pathGenerator,
-                            mapLayer: currentMapLayer,
-                            projectionScale: config.projectionScale,
-                            scaleExtent: config.scaleExtent,
-                            isStatic,
-                            // Use unified zoom scale to sync with planar projection zoom
-                            initialTransform: d3.zoomIdentity.scale(
-                                currentTransformRef.current.k,
-                            ),
-                            initialRotation,
-                            onZoomChange: (zoomScale, rotation) => {
-                                // Sync unified zoom scale when globe changes
-                                const currentTransform =
-                                    currentTransformRef.current;
-                                const newTransform = d3.zoomIdentity
-                                    .translate(
-                                        currentTransform.x,
-                                        currentTransform.y,
-                                    )
-                                    .scale(zoomScale);
-                                // Convert rotation back to geographic center: center = [-rotation[0], -rotation[1]]
-                                mapCenterRef.current = [
-                                    -rotation[0],
-                                    -rotation[1],
-                                ];
-                                // Also update legend
-                                if (zoomScale !== currentTransformRef.current.k)
-                                    applyZoomOnElement({
-                                        svg,
-                                        mapLayer: currentMapLayer,
-                                        legendLayer: correctLegend,
-                                        radiusScale: legendScaleRef.current!,
-                                        zoomScale: zoomScale,
-                                        isStatic,
-                                        isCountryMode,
-                                        isGlobe: true,
-                                    });
-                                currentTransformRef.current = newTransform;
-                            },
-                            correctionSize,
-                        }),
-                    );
-                } else {
-                    mapSvg.call(zoom);
-                    // Restore view centered on mapCenterRef with unified zoom scale
-                    const restoredTransform = getTransformForGeoCenter(
-                        mapCenterRef.current,
-                        projection,
-                        currentTransformRef.current.k,
-                    );
-                    mapSvg.call(zoom.transform, restoredTransform);
-                }
-
-                const countryLayer = currentMapLayer
-                    .append("g")
-                    .attr("class", "country-layer");
-
-                // Draw countries
-                console.time("Drawing countries");
-                let nbCountriesWithData = 0;
-                const prepared: GlobalCountryData[] = features
-                    .map((f: any) => {
-                        const name = f.properties.name;
-                        const known = isKnownCountry(name, isCountryMode);
-                        const path = pathGenerator(f);
-                        if (!path) return;
-                        if (known) nbCountriesWithData++;
-                        return {
-                            name: name,
-                            feature: f,
-                            d: pathGenerator(f),
-                            className: known
-                                ? "country known-country"
-                                : "country unknown-country",
-                            fill:
-                                name === "France"
-                                    ? config.franceColor
-                                    : known
-                                      ? config[theme].validCountry
-                                      : config[theme].invalidCountry,
-                            cursor: known ? "pointer" : "default",
-                        };
-                    })
-                    .filter(Boolean) as GlobalCountryData[];
-                setNBCountryWithData(nbCountriesWithData);
-
-                // Use a keyed join and update both enter + update in one merged pass
-                const sel = countryLayer
-                    .selectAll<SVGPathElement, GlobalCountryData>(".country")
-                    .data(prepared, (d) => d.name);
-
-                sel.exit().remove();
-
-                const enter = sel
-                    .enter()
-                    .append("path")
-                    .attr("class", (d) => d.className)
-                    .attr("stroke", "var(--low-border-color)")
-                    .attr("stroke-width", config.mapStrokeWidth);
-
-                enter
-                    .merge(sel)
-                    .attr("d", (d) => d.d)
-                    .attr("fill", (d) => d.fill)
-                    .style("cursor", (d) => d.cursor);
-
-                console.timeEnd("Drawing countries");
-
-                // Create arrow layer after countries so arrows appear on top
-                currentMapLayer.append("g").attr("class", "circle-layer");
-                currentMapLayer.append("g").attr("class", "arrow-layer");
-
-                // Build a list of points with projected positions
-                const pointData = features
-                    .map((feature: any) => {
-                        const countryName = feature.properties.name;
-                        if (
-                            isCountryMode &&
-                            !englishCountriesName.has(countryName)
-                        )
-                            return null;
-
-                        const centroid = d3.geoCentroid(feature);
-                        const projectedCentroid = projection(centroid);
-                        if (!projectedCentroid) return null;
-                        return {
-                            countryName,
-                            lon: centroid[0],
-                            lat: centroid[1],
-                            x: projectedCentroid[0],
-                            y: projectedCentroid[1],
-                        };
-                    })
-                    .filter(Boolean) as Array<{
-                    countryName: string;
-                    lon: number;
-                    lat: number;
-                    x: number;
-                    y: number;
-                }>;
-                setDataPointOnMap(pointData);
             } catch (error) {
                 // Ignore abort errors (expected on cleanup)
                 if (
@@ -670,6 +424,280 @@ export function WorldMap({
             abortController.abort();
         };
     }, [
+        correctionSize.height,
+        correctionSize.width,
+        geoProjection,
+        mapDefinition,
+        t,
+    ]);
+
+    // Effect 6: Load map and draw countries (runs once on mount, then only if mode or window size changes)
+    useEffect(() => {
+        if (
+            !mapLayer ||
+            mapLayer.empty() ||
+            !projectionRef.current ||
+            !legendLayer
+        )
+            return;
+
+        const svg = svgRef.current;
+        if (!svg) return;
+
+        const worldData = worldDataCache.find(
+            (entry) => entry.size === mapDefinition,
+        )?.map;
+        if (!worldData) return;
+
+        const mapSvg = d3.select(svg);
+        const projection = projectionRef.current;
+        const pathGenerator = d3.geoPath().projection(projection);
+
+        // Extract country features (topojson.feature always returns FeatureCollection)
+        let features: CountryData[] = [];
+
+        if (isCountryMode) {
+            features = (
+                topojson.feature(worldData, worldData.objects.countries) as any
+            ).features;
+        } else {
+            // Precompute a lookup from country name -> geometry to avoid
+            // filtering the full geometries array for every continent.
+            const geometries = worldData.objects.countries.geometries as any[];
+            const nameToGeometry = new Map<string, any>(
+                geometries.map((g: any) => [g.properties.name, g]),
+            );
+
+            for (const cont of Object.keys(continent)) {
+                const countriesInContinent =
+                    continent[cont as ContinentType].countries;
+
+                const geometriesToMerge: any[] = [];
+                for (const c of Object.values(countriesInContinent)) {
+                    const geom = nameToGeometry.get(c.en);
+                    if (geom) geometriesToMerge.push(geom);
+                }
+
+                if (geometriesToMerge.length === 0) continue;
+
+                const mergedGeometry = topojson.merge(
+                    worldData,
+                    geometriesToMerge,
+                );
+
+                const mergedFeature: CountryData = {
+                    type: "Feature",
+                    properties: {
+                        name: cont,
+                    },
+                    geometry: mergedGeometry,
+                };
+                features.push(mergedFeature);
+            }
+        }
+
+        const zoom = d3
+            .zoom<SVGSVGElement, unknown>()
+            .scaleExtent(config.scaleExtent)
+            .on("zoom", (event) => {
+                mapLayer.attr("transform", event.transform);
+
+                // Update geographic center for cross-projection sync
+                const geoCenter = getGeoCenterFromTransform(
+                    event.transform,
+                    projection,
+                );
+                if (geoCenter) {
+                    mapCenterRef.current = geoCenter;
+                }
+                if (event.transform.k !== currentTransformRef.current.k)
+                    applyZoomOnElement({
+                        svg,
+                        mapLayer: mapLayer,
+                        legendLayer: legendLayer,
+                        radiusScale: legendScaleRef.current!,
+                        zoomScale: event.transform.k,
+                        isStatic,
+                        isCountryMode,
+                    });
+
+                currentTransformRef.current = event.transform;
+            });
+
+        mapLayer.selectAll(".globe-background").remove(); // Nettoie l'ancien cercle si besoin
+        mapLayer.select("defs#globe-gradient-defs").remove();
+        const correctGeoProjection = projections.find(
+            (p) => p.name === geoProjection,
+        )!;
+        if (correctGeoProjection.drag) {
+            // Convert geographic center to rotation for globe: rotation = [-lon, -lat, 0]
+            const initialRotation: [number, number, number] = [
+                -mapCenterRef.current[0],
+                -mapCenterRef.current[1],
+                0,
+            ];
+            mapSvg.call(
+                simpleDrag({
+                    projection,
+                    pathGenerator,
+                    mapLayer: mapLayer,
+                    projectionScale: config.projectionScale,
+                    scaleExtent: config.scaleExtent,
+                    isStatic,
+                    // Use unified zoom scale to sync with planar projection zoom
+                    initialTransform: d3.zoomIdentity.scale(
+                        currentTransformRef.current.k,
+                    ),
+                    initialRotation,
+                    onZoomChange: (zoomScale, rotation) => {
+                        // Sync unified zoom scale when globe changes
+                        const currentTransform = currentTransformRef.current;
+                        const newTransform = d3.zoomIdentity
+                            .translate(currentTransform.x, currentTransform.y)
+                            .scale(zoomScale);
+                        // Convert rotation back to geographic center: center = [-rotation[0], -rotation[1]]
+                        mapCenterRef.current = [-rotation[0], -rotation[1]];
+                        // Also update legend
+                        if (zoomScale !== currentTransformRef.current.k)
+                            applyZoomOnElement({
+                                svg,
+                                mapLayer: mapLayer,
+                                legendLayer: legendLayer,
+                                radiusScale: legendScaleRef.current!,
+                                zoomScale: zoomScale,
+                                isStatic,
+                                isCountryMode,
+                                isGlobe: true,
+                            });
+                        currentTransformRef.current = newTransform;
+                    },
+                    correctionSize,
+                }),
+            );
+        } else {
+            mapSvg.call(zoom);
+            // Restore view centered on mapCenterRef with unified zoom scale
+            const restoredTransform = getTransformForGeoCenter(
+                mapCenterRef.current,
+                projection,
+                currentTransformRef.current.k,
+            );
+            mapSvg.call(zoom.transform, restoredTransform);
+        }
+
+        mapLayer
+            .selectAll(".country-layer, .circle-layer, .arrow-layer")
+            .remove();
+
+        // Draw countries
+        let nbCountriesWithData = 0;
+        const prepared: GlobalCountryData[] = features
+            .map((f: any) => {
+                const name = f.properties.name;
+                const known = isKnownCountry(name, isCountryMode);
+                const path = pathGenerator(f);
+                if (!path) return;
+                if (known) nbCountriesWithData++;
+                return {
+                    name: name,
+                    feature: f,
+                    d: pathGenerator(f),
+                    className: known
+                        ? "country known-country"
+                        : "country unknown-country",
+                    fill:
+                        name === "France"
+                            ? config.franceColor
+                            : known
+                              ? config[theme].validCountry
+                              : "url(#no-data-hatch-pattern)",
+                    cursor: known ? "pointer" : "default",
+                };
+            })
+            .filter(Boolean) as GlobalCountryData[];
+        setNBCountryWithData(nbCountriesWithData);
+
+        const countryLayer = mapLayer
+            .append("g")
+            .attr("class", "country-layer");
+
+        const mergedWorldGeometry = topojson.merge(
+            worldData,
+            worldData.objects.countries.geometries as any[],
+        );
+        const mergedWorldFeature = {
+            type: "Feature",
+            properties: { name: "World" },
+            geometry: mergedWorldGeometry,
+        };
+
+        countryLayer
+            .selectAll<SVGPathElement, any>(".world-merged")
+            .data([mergedWorldFeature])
+            .join("path")
+            .attr("class", "world-merged")
+            .attr("d", (d) => pathGenerator(d as any) || "")
+            .attr("fill", "url(#no-data-hatch-pattern)")
+            .attr("stroke", "var(--low-border-color)")
+            .attr("stroke-width", config.mapStrokeWidth)
+            .attr("opacity", 1)
+            .attr("pointer-events", "none");
+
+        // Use a keyed join and update both enter + update in one merged pass
+        const sel = countryLayer
+            .selectAll<SVGPathElement, GlobalCountryData>(".country")
+            .data(prepared, (d) => d.name);
+
+        sel.exit().remove();
+
+        const enter = sel
+            .enter()
+            .append("path")
+            .attr("class", (d) => d.className)
+            .attr("stroke", "var(--low-border-color)")
+            .attr("stroke-width", config.mapStrokeWidth)
+            .attr("filter", "brightness(1)");
+
+        enter
+            .merge(sel)
+            .attr("d", (d) => d.d)
+            .attr("fill", (d) => d.fill)
+            .attr("opacity", (d) =>
+                d.name === "France" || d.cursor === "pointer" ? 1 : 0,
+            )
+            .style("cursor", (d) => d.cursor);
+
+        // Create arrow layer after countries so arrows appear on top
+        mapLayer.append("g").attr("class", "circle-layer");
+        mapLayer.append("g").attr("class", "arrow-layer");
+
+        // Build a list of points with projected positions
+        const pointData = features
+            .map((feature: any) => {
+                const countryName = feature.properties.name;
+                if (isCountryMode && !englishCountriesName.has(countryName))
+                    return null;
+
+                const centroid = d3.geoCentroid(feature);
+                const projectedCentroid = projection(centroid);
+                if (!projectedCentroid) return null;
+                return {
+                    countryName,
+                    lon: centroid[0],
+                    lat: centroid[1],
+                    x: projectedCentroid[0],
+                    y: projectedCentroid[1],
+                };
+            })
+            .filter(Boolean) as Array<{
+            countryName: string;
+            lon: number;
+            lat: number;
+            x: number;
+            y: number;
+        }>;
+        setDataPointOnMap(pointData);
+    }, [
         correctionSize,
         theme,
         mapDefinition,
@@ -680,9 +708,12 @@ export function WorldMap({
         getTransformForGeoCenter,
         setNBCountryWithData,
         t,
+        mapLayer,
+        legendLayer,
+        worldDataCache,
     ]);
 
-    // Effect 6: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
+    // Effect 7: Ajout des gestionnaires d'événements de clic sur les pays (sélection)
     useEffect(() => {
         if (!mapLayer || mapLayer.empty()) return;
 
@@ -718,7 +749,7 @@ export function WorldMap({
         dataPointOnMap,
     ]);
 
-    // Effect 7: Attach event handlers when map layer changes
+    // Effect 8: Attach event handlers when map layer changes
     useEffect(() => {
         if (!mapLayer || mapLayer.empty()) return;
 
@@ -736,7 +767,7 @@ export function WorldMap({
         };
     }, [handleCountryMouseover, handleCountryMouseout, mapLayer]);
 
-    // Effect 8: Update map points and legend when data is in balance mode (type 4)
+    // Effect 9: Update map points and legend when data is in balance mode (type 4)
     // separate from other data updates for performance and because it has a different visual encoding
     useEffect(() => {
         if (
@@ -855,7 +886,7 @@ export function WorldMap({
         type,
     ]);
 
-    // Effect 8: Update data based on filtered data
+    // Effect 10: Update data based on filtered data
     useEffect(() => {
         if (
             type === 4 || // Skip if in balance mode, handled by separate effect (Effect 7)
@@ -931,14 +962,13 @@ export function WorldMap({
             countries
                 .transition()
                 .duration(config.animationDuration)
-                .attr("fill", (d: GlobalCountryData) => {
+                .attr("fill", (d: GlobalCountryData) => d.fill)
+                .attr("opacity", (d: GlobalCountryData) => {
                     const hasData = countryNamesWithData.has(d.name);
                     if (hasData) {
-                        return d.name === "France"
-                            ? config.franceColor
-                            : config[theme].validCountry;
+                        return 1;
                     }
-                    return "url(#no-data-hatch-pattern)";
+                    return 0;
                 });
 
             legendScaleRef.current = makeCircleProjection(
@@ -978,14 +1008,13 @@ export function WorldMap({
             countries
                 .transition()
                 .duration(config.animationDuration)
-                .attr("fill", (d: GlobalCountryData) => {
+                .attr("fill", (d: GlobalCountryData) => d.fill)
+                .attr("opacity", (d: GlobalCountryData) => {
                     const hasData = countryNamesWithData.has(d.name);
                     if (hasData) {
-                        return d.name === "France"
-                            ? config.franceColor
-                            : config[theme].validCountry;
+                        return 1;
                     }
-                    return "url(#no-data-hatch-pattern)";
+                    return 0;
                 });
 
             legendScaleRef.current = makeArrowProjection(
@@ -1009,7 +1038,6 @@ export function WorldMap({
         dataPointOnMap,
         legendLayer,
         correctionSize,
-        isCountryMode,
         theme,
         isAbsolute,
         isStatic,
@@ -1020,6 +1048,7 @@ export function WorldMap({
         handleCountryMouseout,
         mapLayer,
         t,
+        isCountryMode,
     ]);
 
     return (
@@ -1035,8 +1064,8 @@ export function WorldMap({
                     y: tooltipData.y,
                 }}
                 country={tooltipData.country}
-                year={tooltipData.year}
-                month={tooltipData.month}
+                year={year}
+                month={month}
                 appear={tooltipData.appear}
                 rawData={rawData}
                 productsSelected={productsSelected}
@@ -1048,14 +1077,16 @@ export function WorldMap({
 
 function createHatchPattern(
     root: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+    id: string = "no-data-hatch",
+    color: string = "var(--bg)",
 ): void {
-    const defs = root.select<SVGDefsElement>("defs#hatch-defs");
+    const defs = root.select<SVGDefsElement>(`defs#${id}`);
     if (!defs.empty()) return; // already created
-    const newDefs = root.append("defs").attr("id", "hatch-defs");
+    const newDefs = root.append("defs").attr("id", id);
 
     const pattern = newDefs
         .append("pattern")
-        .attr("id", "no-data-hatch-pattern")
+        .attr("id", id + "-pattern")
         .attr("patternUnits", "userSpaceOnUse")
         .attr("width", 8)
         .attr("height", 8)
@@ -1065,7 +1096,7 @@ function createHatchPattern(
         .append("rect")
         .attr("width", 8)
         .attr("height", 8)
-        .attr("fill", "var(--color-page)");
+        .attr("fill", color);
 
     pattern
         .append("path")
