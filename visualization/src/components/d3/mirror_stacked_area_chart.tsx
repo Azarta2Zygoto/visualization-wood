@@ -273,7 +273,7 @@ export default function updateMirrorStackedAreaChart(
             .transition()
             .duration(500)
             .call(d3.axisBottom(x).tickSizeOuter(0));
-        console.log(yAxisLabels, t("export"));
+
         // EXPORT (haut)
         yAxisLabels
             .selectAll(".label-export")

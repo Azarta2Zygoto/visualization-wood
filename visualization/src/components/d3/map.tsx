@@ -169,7 +169,6 @@ export function WorldMap({
 
     // Filter and aggregate data
     const lectureData = useMemo(() => {
-        console.time("Filtering and aggregating data");
         if (!rawData || !rawData[year] || productsSelected.length === 0)
             return {};
 
@@ -200,7 +199,6 @@ export function WorldMap({
                 (dataByCountry[countryName][typeIndex] || 0) + value;
         }
 
-        console.timeEnd("Filtering and aggregating data");
         return dataByCountry;
     }, [rawData, year, month, productsSelected]);
 
@@ -898,8 +896,6 @@ export function WorldMap({
         )
             return;
 
-        console.time("Updating map with new data");
-
         const svg = svgRef.current;
         if (!svg) return;
 
@@ -1031,7 +1027,6 @@ export function WorldMap({
                 isStatic,
             );
         }
-        console.timeEnd("Updating map with new data");
     }, [
         lectureData,
         type,

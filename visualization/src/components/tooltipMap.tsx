@@ -2,14 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import {
-    type JSX,
-    useEffect,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import { type JSX, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { hasFlag } from "country-flag-icons";
 
@@ -69,14 +62,6 @@ export default function TooltipMap({
 
     // Calculate Cleveland dot chart data
     const chartData = useMemo(() => {
-        console.time("calculateChartData");
-        console.log(
-            "new Chart Data Calculation",
-            month,
-            year,
-            country,
-            productsSelected,
-        );
         if (
             !rawData ||
             !rawData[year] ||
@@ -85,8 +70,6 @@ export default function TooltipMap({
         ) {
             return [];
         }
-
-        console.log(month, year, country, productsSelected);
 
         const yearData = rawData[year];
         const countryName = pays[country].en;
@@ -135,7 +118,6 @@ export default function TooltipMap({
             }
         }
 
-        console.timeEnd("calculateChartData");
         // Convert to chart format
         return Object.entries(chartDataByProduct).map(
             ([productIndex, values]) => ({
@@ -146,18 +128,11 @@ export default function TooltipMap({
         );
     }, [rawData, year, month, country, productsSelected, countryNumberToName]);
 
-    useEffect(() => {
-        console.log("TooltipMap received - year:", year, "month:", month);
-    }, [year, month]);
-
     useLayoutEffect(() => {
         if (!tooltipRef.current) return;
 
-        const replaceDots = () => {
-            if (!tooltipRef.current) return;
-
-            const { width, height } =
-                tooltipRef.current.getBoundingClientRect();
+        const replaceDots = (tooltip: HTMLDivElement) => {
+            const { width, height } = tooltip.getBoundingClientRect();
             const left =
                 x + width + 10 > windowSize.width
                     ? windowSize.width - width / 2 - 10
@@ -172,7 +147,7 @@ export default function TooltipMap({
             setCurrentPosition({ x: left, y: top });
         };
 
-        replaceDots();
+        replaceDots(tooltipRef.current);
     }, [windowSize.height, windowSize.width, x, y]);
 
     return (
