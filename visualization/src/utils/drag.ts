@@ -11,16 +11,14 @@ interface SimpleDragProps {
     projection: d3.GeoProjection;
     pathGenerator: d3.GeoPath<any, d3.GeoPermissibleObjects>;
     mapLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
-    projectionScale: number;
-    scaleExtent?: [number, number];
-    initialTransform?: d3.ZoomTransform;
-    initialRotation?: [number, number, number];
+    initialTransform: d3.ZoomTransform;
+    initialRotation: [number, number, number];
     isStatic?: boolean; // If false, need to adapt circle sizes on zoom
-    onZoomChange?: (
+    correctionSize?: { width: number; height: number }; // Optional correction for centering the globe
+    onZoomChange: (
         zoomScale: number,
         rotation: [number, number, number],
     ) => void;
-    correctionSize?: { width: number; height: number }; // Optional correction for centering the globe
 }
 
 /**
@@ -59,10 +57,8 @@ export function simpleDrag({
     projection,
     pathGenerator,
     mapLayer,
-    projectionScale,
     initialTransform = d3.zoomIdentity,
     initialRotation = [0, 0, 0],
-    scaleExtent = [0.5, 10],
     isStatic = false,
     onZoomChange,
     correctionSize,
@@ -79,10 +75,29 @@ export function simpleDrag({
     const zoom = d3
         .zoom<SVGSVGElement, unknown>()
         .scaleExtent(
-            scaleExtent.map((x) => x * projectionScale) as [number, number],
+            config.scaleExtent.map((x) => x * config.projectionScale) as [
+                number,
+                number,
+            ],
         )
         .on("start", zoomstarted)
         .on("zoom", zoomed);
+
+    function redrawMapPaths() {
+        mapLayer
+            .selectAll<
+                SVGPathElement,
+                { feature: d3.GeoPermissibleObjects }
+            >(".country")
+            .attr("d", (d) => pathGenerator(d.feature) || "");
+
+        mapLayer
+            .selectAll<
+                SVGPathElement,
+                d3.GeoPermissibleObjects
+            >(".world-merged")
+            .attr("d", (feature) => pathGenerator(feature) || "");
+    }
 
     function point(
         event: any,
@@ -132,16 +147,13 @@ export function simpleDrag({
         projection.rotate(newRotation);
 
         // Notify about zoom/rotation changes
-        const zoomScale = event.transform.k / projectionScale;
-        if (onZoomChange) {
-            onZoomChange(zoomScale, newRotation);
-        }
+        const zoomScale = event.transform.k / config.projectionScale;
+        onZoomChange(zoomScale, newRotation);
 
-        mapLayer.selectAll(".country").attr("d", pathGenerator as any);
+        redrawMapPaths();
 
         mapLayer.selectAll(".data-point").each(function (d: any) {
             const center = getMapCenter(projection);
-
             const p = projection([d.lon, d.lat]);
             d3.select(this)
                 .attr("cx", p ? p[0] : null)
@@ -225,7 +237,7 @@ export function simpleDrag({
             const angle = Math.atan2(end[1] - prev[1], end[0] - prev[0]);
 
             // Calculate arrowhead size
-            const zoomScale = event.transform.k / projectionScale;
+            const zoomScale = event.transform.k / config.projectionScale;
             const baseSize = isStatic ? 17 : 17 * zoomScale;
             const size = 3 + baseSize * (d.value / maxValue) ** 0.5;
 
@@ -275,7 +287,7 @@ export function simpleDrag({
         selection: d3.Selection<SVGSVGElement, unknown, null, undefined>,
     ) => {
         // Use unified zoom scale from initialTransform
-        const initialScale = initialTransform.k * projectionScale;
+        const initialScale = initialTransform.k * config.projectionScale;
         const zoomScale = initialTransform.k;
         selection
             .property("__zoom", d3.zoomIdentity.scale(initialScale))
@@ -323,7 +335,8 @@ export function simpleDrag({
             .append("stop")
             .attr("offset", "100%")
             .attr("stop-color", "var(--map-bg-1)");
-        mapLayer.selectAll(".country").attr("d", pathGenerator as any);
+
+        redrawMapPaths();
 
         // Initialize data points position
         const center = getMapCenter(projection);

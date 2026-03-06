@@ -252,7 +252,7 @@ export function WorldMap({
             if (!datum || !mapLayer) return;
 
             // Visual feedback — use scoped arrow selection when mapLayer is available
-            if (datum.type === "continent") {
+            if (datum.type === undefined) {
                 mapLayer
                     .selectAll(".data-arrow")
                     .transition()
@@ -539,8 +539,6 @@ export function WorldMap({
                     projection,
                     pathGenerator,
                     mapLayer: mapLayer,
-                    projectionScale: config.projectionScale,
-                    scaleExtent: config.scaleExtent,
                     isStatic,
                     // Use unified zoom scale to sync with planar projection zoom
                     initialTransform: d3.zoomIdentity.scale(
@@ -610,6 +608,7 @@ export function WorldMap({
                               ? config[theme].validCountry
                               : "url(#no-data-hatch-pattern)",
                     cursor: known ? "pointer" : "default",
+                    type: isCountryMode ? "country" : "continent",
                 };
             })
             .filter(Boolean) as GlobalCountryData[];
