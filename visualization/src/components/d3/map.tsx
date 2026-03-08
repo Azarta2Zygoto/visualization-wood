@@ -607,8 +607,8 @@ export function WorldMap({
                         name === "France"
                             ? config.franceColor
                             : known
-                              ? config[theme].validCountry
-                              : "url(#no-data-hatch-pattern)",
+                                ? config[theme].validCountry
+                                : "url(#no-data-hatch-pattern)",
                     cursor: known ? "pointer" : "default",
                     type: isCountryMode ? "country" : "continent",
                 };
@@ -689,12 +689,12 @@ export function WorldMap({
                 };
             })
             .filter(Boolean) as Array<{
-            countryName: string;
-            lon: number;
-            lat: number;
-            x: number;
-            y: number;
-        }>;
+                countryName: string;
+                lon: number;
+                lat: number;
+                x: number;
+                y: number;
+            }>;
         setDataPointOnMap(pointData);
     }, [
         correctionSize,
@@ -726,8 +726,8 @@ export function WorldMap({
                     countryNumberCode,
                 )
                     ? countriesSelected.filter(
-                          (code: number) => code !== countryNumberCode,
-                      )
+                        (code: number) => code !== countryNumberCode,
+                    )
                     : [...countriesSelected, countryNumberCode];
                 setCountriesSelected(newSelection);
             } else {
@@ -1129,6 +1129,7 @@ export function WorldMap({
                 rawData={rawData}
                 productsSelected={productsSelected}
                 countryNumberToName={countryNumberToName}
+                isDaltonian={isDaltonian}
             />
         </div>
     );
@@ -1192,8 +1193,8 @@ function makeCircleProjection(
                 ? radiusScale(d.value)
                 : radiusScale(d.value) / zoom
             : isGlobe
-              ? radiusScale(d.value) * zoom
-              : radiusScale(d.value);
+                ? radiusScale(d.value) * zoom
+                : radiusScale(d.value);
 
     legendLayer
         .selectAll(".legend-circle, .legend-label, .legend-tick, .legend-line")
@@ -1203,7 +1204,7 @@ function makeCircleProjection(
 
     const legendCircleX = Math.max(
         config.legendCircleBaseX +
-            config.legendCircleXFactor * (legendZoom - 1),
+        config.legendCircleXFactor * (legendZoom - 1),
         config.legendCircleBaseX,
     );
     legendLayer
@@ -1334,8 +1335,8 @@ function makeArrowProjection(
                 ? strokeScale(d)
                 : strokeScale(d) / zoom
             : isGlobe
-              ? strokeScale(d) * zoom
-              : strokeScale(d);
+                ? strokeScale(d) * zoom
+                : strokeScale(d);
 
     // Build arcs and associated data for each continent
     const arcsData = continents
@@ -1579,8 +1580,8 @@ function MakeHuexBalanceProjection(
             return point
                 ? colorScale(point.value)
                 : isCountry
-                  ? config[theme].nullCountry
-                  : config[theme].invalidCountry;
+                    ? config[theme].nullCountry
+                    : config[theme].invalidCountry;
         });
     return colorScale;
 }

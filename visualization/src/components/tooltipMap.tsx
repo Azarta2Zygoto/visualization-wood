@@ -33,6 +33,7 @@ interface TooltipMapProps {
     rawData?: { [key: string]: number[][] };
     productsSelected?: number[];
     countryNumberToName?: Map<number, string>;
+    isDaltonian?: boolean;
 }
 
 export default function TooltipMap({
@@ -45,6 +46,7 @@ export default function TooltipMap({
     rawData,
     productsSelected = [],
     countryNumberToName,
+    isDaltonian = false,
 }: TooltipMapProps): JSX.Element {
     const t = useTranslations("Tooltip");
     const { windowSize, locale } = useGlobal();
@@ -137,8 +139,8 @@ export default function TooltipMap({
                 x + width + 10 > windowSize.width
                     ? windowSize.width - width / 2 - 10
                     : x < width / 2
-                      ? width / 2 + 10
-                      : x;
+                        ? width / 2 + 10
+                        : x;
 
             const top =
                 y + height + 10 > windowSize.height
@@ -188,7 +190,7 @@ export default function TooltipMap({
                         {month !== 0 &&
                             t(
                                 month_names[
-                                    month.toString() as keyof typeof month_names
+                                month.toString() as keyof typeof month_names
                                 ],
                             ) + " / "}
                         {year}
@@ -198,10 +200,10 @@ export default function TooltipMap({
             {pays[country].fr === "France" ? (
                 <p className="france-tooltip">{t("france-tooltip")}</p>
             ) : values.export_euro +
-                  values.export_tonnes +
-                  values.import_euro +
-                  values.import_tonnes ===
-              4 * defaultNoData ? (
+                values.export_tonnes +
+                values.import_euro +
+                values.import_tonnes ===
+                4 * defaultNoData ? (
                 <p>{t("no-data")}</p>
             ) : (
                 <div className="tooltip-content">
@@ -211,6 +213,7 @@ export default function TooltipMap({
                                 data={chartData}
                                 width={260}
                                 height={250}
+                                isDaltonian={isDaltonian}
                             />
                         </div>
                     )}

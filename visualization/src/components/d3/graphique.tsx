@@ -48,6 +48,7 @@ interface GraphiqueProps {
     isGlobalView: boolean;
     iconSelected: string[];
     allEvents: any;
+    isDaltonian: boolean;
 }
 type Country = {
     code: string;
@@ -86,6 +87,7 @@ export default function Graphique({
     isGlobalView,
     iconSelected,
     allEvents,
+    isDaltonian,
 }: GraphiqueProps): JSX.Element {
     const { windowSize } = useGlobal();
     const selectedType = type[0];
@@ -225,6 +227,7 @@ export default function Graphique({
                 currentMonth,
                 isBalanceMode,
                 unitLabel,
+                isDaltonian,
                 t,
             );
             return;
@@ -239,6 +242,7 @@ export default function Graphique({
                     globalAllDates,
                     events_filtered,
                     map_icons,
+                    isDaltonian,
                     t,
                 );
             } else {
@@ -250,6 +254,7 @@ export default function Graphique({
                     map_icons,
                     events_filtered,
                     { x: (d) => d.date, y: (d) => d.value },
+                    isDaltonian,
                     t,
                 );
             }
@@ -262,6 +267,7 @@ export default function Graphique({
                 map_icons,
                 events_filtered,
                 { x: (d) => d.date, y: (d) => d.value },
+                isDaltonian,
                 t,
             );
         }
@@ -271,6 +277,7 @@ export default function Graphique({
         events_filtered,
         countriesSelected,
         isGlobalView,
+        isDaltonian,
     ]);
 
     //On retourne le container

@@ -28,6 +28,7 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
         | d3.ValueFn<d3.BaseType, unknown, unknown[] | Iterable<unknown>>, //la liste des évènement qui a été filtré, on a ajouté la date parsé, la catégorie, et l'iconid associé
 
     { x = (d: DataPoint) => d.date, y = (d: DataPoint) => d.value } = {},
+    isDaltonian = false,
     t?: any,
 ) {
     const width = 1200;
@@ -52,14 +53,21 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     }
 
     // couleurs
-    const palette = d3.schemeTableau10;
+    const palette = !isDaltonian ? d3.schemeTableau10 : ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
+    // récupérer ancienne palette
+    const previousPalette = svg_animated.property("__palette");
 
-    // registry persistante (par exemple sur le svg)
-    const colorRegistry: Map<string, string> =
+    // registry persistante
+    let colorRegistry: Map<string, string> =
         svg_animated.property("__colorRegistry") ?? new Map();
 
-    svg_animated.property("__colorRegistry", colorRegistry);
+    // si la palette a changé → reset
+    if (previousPalette !== palette) {
+        colorRegistry = new Map();
+    }
 
+    svg_animated.property("__palette", palette);
+    svg_animated.property("__colorRegistry", colorRegistry);
     // Symboles actuellement visibles
     const currentSymbols = new Set(stocks.map((s) => s.symbol));
 
@@ -150,8 +158,8 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
     const yAxisLabel = firstSymbol.includes("valeur")
         ? t("euro-value")
         : firstSymbol.includes("volume")
-          ? t("ton-value")
-          : t("default-value");
+            ? t("ton-value")
+            : t("default-value");
     yLabel.text(yAxisLabel);
 
     const clipId = "clip-mouse-rect"; // ou un nom unique
@@ -449,15 +457,17 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
                         .text((d: string) => d);
 
                     // Mettre à jour le rect
-                    update.select("rect").attr("y", (d: any) => {
-                        const lineCount = wrapText(
-                            d.symbol,
-                            LEGEND_MAX_CHARS_PER_LINE,
-                        ).length;
-                        const textHeight =
-                            lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
-                        return textHeight;
-                    });
+                    update.select("rect")
+                        .attr("fill", (d: any) => color(d.symbol))
+                        .attr("y", (d: any) => {
+                            const lineCount = wrapText(
+                                d.symbol,
+                                LEGEND_MAX_CHARS_PER_LINE,
+                            ).length;
+                            const textHeight =
+                                lineCount == 1 ? -11 : lineCount == 2 ? -3 : 5; // ajustement pour une ligne
+                            return textHeight;
+                        });
                 }),
             (exit) =>
                 exit.call((exit) =>
@@ -560,8 +570,8 @@ export default function updateMultiLines_with_icons( //c'est la fonction pour me
             const unit = symbol.includes("valeur")
                 ? t("euro-unit")
                 : symbol.includes("volume")
-                  ? t("ton-unit-count", { count: numericValue })
-                  : "";
+                    ? t("ton-unit-count", { count: numericValue })
+                    : "";
             // Formattage de la valeur
             const formattedValue = d3
                 .format(",.0f")(numericValue)

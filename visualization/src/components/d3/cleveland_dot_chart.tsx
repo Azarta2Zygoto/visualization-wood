@@ -18,12 +18,14 @@ interface ClevellandDotChartProps {
     data: ClevellandDotChartData[];
     width?: number;
     height?: number;
+    isDaltonian?: boolean;
 }
 
 export default function ClevellandDotChart({
     data,
     width = 280,
     height = 250,
+    isDaltonian = false,
 }: ClevellandDotChartProps): JSX.Element {
     const svgRef = useRef<SVGSVGElement>(null);
     const initRef = useRef(false);
@@ -54,13 +56,13 @@ export default function ClevellandDotChart({
                     d.productIndex.toString() as keyof typeof products
                 ]?.name
                     ? productTrads(
-                          products[
-                              d.productIndex.toString() as keyof typeof products
-                          ].name.replaceAll(".", "-"),
-                      )
+                        products[
+                            d.productIndex.toString() as keyof typeof products
+                        ].name.replaceAll(".", "-"),
+                    )
                     : t("default-product", {
-                          product: d.productIndex,
-                      }),
+                        product: d.productIndex,
+                    }),
             }))
             .sort((a, b) => {
                 // Sort by max of export and import, descending
@@ -203,7 +205,7 @@ export default function ClevellandDotChart({
                         .attr("x2", (d) => x(d.importValue))
                         .attr("y1", (_, i) => getY(i))
                         .attr("y2", (_, i) => getY(i))
-                        .attr("stroke", "#999")
+                        .attr("stroke", isDaltonian ? "#f7f7f7" : "#999")
                         .attr("stroke-width", 1)
                         .attr("opacity", 0.8),
                 (update) =>
@@ -213,6 +215,7 @@ export default function ClevellandDotChart({
                         .attr("x1", (d) => x(d.exportValue))
                         .attr("x2", (d) => x(d.importValue))
                         .attr("y1", (_, i) => getY(i))
+                        .attr("stroke", isDaltonian ? "#f7f7f7" : "#999")
                         .attr("y2", (_, i) => getY(i)),
                 (exit) => exit.remove(),
             );
@@ -228,36 +231,63 @@ export default function ClevellandDotChart({
                         .attr("cx", (d) => x(d.exportValue))
                         .attr("cy", (_, i) => getY(i))
                         .attr("r", 4)
-                        .attr("fill", "#e74c3c")
+                        .attr("fill", isDaltonian ? "#d95f02" : "#e74c3c")
                         .attr("opacity", 0.8),
                 (update) =>
                     update
                         .transition()
                         .duration(600)
                         .attr("cx", (d) => x(d.exportValue))
+                        .attr("fill", isDaltonian ? "#d95f02" : "#e74c3c")
                         .attr("cy", (_, i) => getY(i)),
                 (exit) => exit.remove(),
             );
 
         // Import circles
-        g.selectAll("circle.import")
-            .data(chartData, (d: any) => `import-${d.productIndex}`)
+        if (isDaltonian) {
+            g.selectAll("circle.import").remove();
+        } else {
+            g.selectAll("rect.import").remove();
+        }
+        g.selectAll(".import")
+            .data(chartData, (d: any) => `import-${d.productIndex}-${isDaltonian}`)
             .join(
-                (enter) =>
-                    enter
-                        .append("circle")
+                (enter) => {
+                    const el = enter
+                        .append(isDaltonian ? "rect" : "circle")
                         .attr("class", "import")
-                        .attr("cx", (d) => x(d.importValue))
-                        .attr("cy", (_, i) => getY(i))
-                        .attr("r", 4)
-                        .attr("fill", "#3498db")
-                        .attr("opacity", 0.8), //on peut pas animer car ya des rappel sur l'update ce qui cut le transition
-                (update) =>
-                    update
+                        .attr("fill", isDaltonian ? "#7570b3" : "#3498db")
+                        .attr("opacity", 0.8); //on peut pas animer car ya des rappel sur l'update ce qui cut le transition
+                    if (isDaltonian) {
+                        el.attr("width", 8)
+                            .attr("height", 8)
+                            .attr("x", (d) => x(d.importValue) - 4)
+                            .attr("y", (_, i) => getY(i) - 4);
+                    }
+                    else {
+                        el.attr("cx", (d) => x(d.importValue))
+                            .attr("cy", (_, i) => getY(i))
+                            .attr("r", 4)
+                    }
+                    return el;
+                },
+                (update) => {
+                    if (isDaltonian) {
+                        return update
+                            .transition()
+                            .duration(600)
+                            .attr("x", (d) => x(d.importValue) - 4)
+                            .attr("y", (_, i) => getY(i) - 4)
+                            .attr("fill", "#7570b3");
+                    }
+
+                    return update
                         .transition()
                         .duration(600)
                         .attr("cx", (d) => x(d.importValue))
-                        .attr("cy", (_, i) => getY(i)),
+                        .attr("cy", (_, i) => getY(i))
+                        .attr("fill", "#3498db");
+                },
                 (exit) => exit.remove(),
             );
 
@@ -273,7 +303,7 @@ export default function ClevellandDotChart({
             )
             .call((g) => g.select(".domain").remove()) // enlève la ligne pleine
             .selectAll(".tick line")
-            .attr("stroke", "var(--fg")
+            .attr("stroke", "var(--fg)")
             .attr("stroke-dasharray", "3,3");
         // X-axis
         const xAxisGroup = g
@@ -341,7 +371,7 @@ export default function ClevellandDotChart({
             .attr("cx", 0)
             .attr("cy", legendY)
             .attr("r", 3)
-            .attr("fill", "#e74c3c");
+            .attr("fill", isDaltonian ? "#d95f02" : "#e74c3c");
         legendGroup
             .append("text")
             .attr("x", 8)
@@ -349,13 +379,25 @@ export default function ClevellandDotChart({
             .attr("font-size", `${font_size}px`)
             .attr("fill", "var(--fg)")
             .text("Export");
-
         legendGroup
-            .append("circle")
-            .attr("cx", 80)
-            .attr("cy", legendY)
-            .attr("r", 3)
-            .attr("fill", "#3498db");
+            .append(isDaltonian ? "rect" : "circle")
+            .attr("fill", isDaltonian ? "#7570b3" : "#3498db");
+        const importLegend = legendGroup
+            .append(isDaltonian ? "rect" : "circle")
+            .attr("fill", isDaltonian ? "#7570b3" : "#3498db");
+
+        if (isDaltonian) {
+            importLegend
+                .attr("x", 80 - 3)
+                .attr("y", legendY - 3)
+                .attr("width", 6)
+                .attr("height", 6);
+        } else {
+            importLegend
+                .attr("cx", 80)
+                .attr("cy", legendY)
+                .attr("r", 3);
+        }
         legendGroup
             .append("text")
             .attr("x", 88)
@@ -363,7 +405,7 @@ export default function ClevellandDotChart({
             .attr("font-size", `${font_size}px`)
             .attr("fill", "var(--fg)")
             .text("Import");
-    }, [data, width, height]);
+    }, [data, width, height, isDaltonian]);
 
     return (
         <div className="cleveland-chart-wrapper">

@@ -56,6 +56,7 @@ export default function updateTreemap(
     selectedMonth?: number,
     isBalanceMode: boolean = false,
     unitLabel: string = "",
+    isDaltonian: boolean = false,
     t?: any,
 ) {
     if (!data || data.length === 0) return;
@@ -121,15 +122,15 @@ export default function updateTreemap(
         .paddingOuter(2)
         .paddingInner(1)
         .round(true)(
-        d3
-            .hierarchy(rootData)
-            .sum((d) =>
-                d.children && d.children.length > 0
-                    ? 0
-                    : Math.max(0, d.value ?? 0),
-            )
-            .sort((a, b) => (b.value ?? 0) - (a.value ?? 0)),
-    );
+            d3
+                .hierarchy(rootData)
+                .sum((d) =>
+                    d.children && d.children.length > 0
+                        ? 0
+                        : Math.max(0, d.value ?? 0),
+                )
+                .sort((a, b) => (b.value ?? 0) - (a.value ?? 0)),
+        );
 
     let chartRoot = svg.select<SVGGElement>(".treemap-root");
     if (chartRoot.empty()) {
@@ -168,8 +169,8 @@ export default function updateTreemap(
     );
     let currentFocus: d3.HierarchyRectangularNode<ProductNode> =
         persistedFocus &&
-        persistedFocus.children &&
-        persistedFocus.children.length > 0
+            persistedFocus.children &&
+            persistedFocus.children.length > 0
             ? persistedFocus
             : root;
 
@@ -287,7 +288,7 @@ export default function updateTreemap(
     const topLevelColors = new Map<string, string>(
         (root.children ?? []).map((node, index) => [
             node.data.code,
-            d3.schemeTableau10[index % d3.schemeTableau10.length],
+            !isDaltonian ? d3.schemeTableau10[index % d3.schemeTableau10.length] : ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"][index % 8],
         ]),
     );
 
@@ -860,8 +861,8 @@ function buildHierarchy(
             const sign = typeLabel.includes("import")
                 ? -1
                 : typeLabel.includes("export")
-                  ? 1
-                  : 0;
+                    ? 1
+                    : 0;
 
             if (sign === 0) return;
             const nextRaw =

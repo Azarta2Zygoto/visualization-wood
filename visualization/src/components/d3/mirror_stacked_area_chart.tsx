@@ -15,6 +15,7 @@ export default function updateMirrorStackedAreaChart(
     globalAllDates: Date[],
     events: any[], //la liste des évènement qui a été filtré, on a ajouté la date parsé, la catégorie, et l'iconid associé
     map_icons: Record<string, any>,
+    isDaltonian: boolean,
     t?: any,
 ) {
     if (!data || data.length === 0) return;
@@ -110,14 +111,23 @@ export default function updateMirrorStackedAreaChart(
     const y = y0.copy();
 
     // Palette disponible
-    const palette = d3.schemeTableau10;
+    const palette = !isDaltonian ? d3.schemeTableau10 : ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
 
-    // Stockage persistant sur le svg
-    let colorRegistry = svg.property("__colorRegistry");
-    if (!colorRegistry) {
-        colorRegistry = new Map<string, string>();
-        svg.property("__colorRegistry", colorRegistry);
+    // récupérer ancienne palette
+    const previousPalette = svg.property("__palette");
+
+    // registry persistante
+    let colorRegistry: Map<string, string> =
+        svg.property("__colorRegistry") ?? new Map();
+
+    // si la palette a changé → reset
+    if (previousPalette !== palette) {
+        colorRegistry = new Map();
     }
+
+    svg.property("__palette", palette);
+    svg.property("__colorRegistry", colorRegistry);
+
 
     // Produits actuellement visibles
     const currentProducts = new Set(products);
@@ -328,7 +338,9 @@ export default function updateMirrorStackedAreaChart(
                 },
 
                 (update: any) => {
-                    return update.call((u: any) =>
+                    return update.attr("fill", (d: any) => {
+                        return color(d.key);
+                    }).call((u: any) =>
                         u.transition().duration(800).attr("d", area),
                     );
                 },
@@ -355,7 +367,7 @@ export default function updateMirrorStackedAreaChart(
 
                 const closest = d.reduce((a: any, b: any) =>
                     Math.abs(b.data[0] - +mouseDate) <
-                    Math.abs(a.data[0] - +mouseDate)
+                        Math.abs(a.data[0] - +mouseDate)
                         ? b
                         : a,
                 );
@@ -488,7 +500,7 @@ export default function updateMirrorStackedAreaChart(
                         .text((d: string) => d);
 
                     // Mettre à jour le rect
-                    update.select("rect").attr("y", (d: any) => {
+                    update.select("rect").attr("fill", (d) => color(d)).attr("y", (d: any) => {
                         const lineCount = wrapText(
                             d,
                             LEGEND_MAX_CHARS_PER_LINE,
