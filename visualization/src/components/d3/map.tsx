@@ -1196,7 +1196,7 @@ function makeCircleProjection(
               : radiusScale(d.value);
 
     legendLayer
-        .selectAll(".legend-circle, .legend-label, .legend-tick")
+        .selectAll(".legend-circle, .legend-label, .legend-tick, .legend-line")
         .remove();
 
     const legendValues = [maxValue, maxValue / 2, maxValue / 4];
@@ -1480,7 +1480,11 @@ function makeArrowProjection(
         .on("mouseout", onMouseout);
 
     if (legendLayer) {
-        legendLayer.selectAll(".legend-line, .legend-label").remove();
+        legendLayer
+            .selectAll(
+                ".legend-line, .legend-label, .legend-circle, .legend-tick",
+            )
+            .remove();
 
         const legendValues = [maxValue, maxValue / 2, maxValue / 4];
         legendLayer
