@@ -254,6 +254,7 @@ export function WorldMap({
 
             // Visual feedback — use scoped arrow selection when mapLayer is available
             if (datum.type === undefined) {
+                console.log("Datum without type:", datum);
                 mapLayer
                     .selectAll(".data-arrow")
                     .transition()
@@ -297,7 +298,7 @@ export function WorldMap({
                 | undefined;
             if (!datum || !mapLayer) return;
 
-            if (datum.type === "continent") {
+            if (datum.type === undefined) {
                 mapLayer
                     .selectAll(".data-arrow")
                     .transition()
@@ -955,7 +956,7 @@ export function WorldMap({
                         lat: point.lat,
                         x: point.x,
                         y: point.y,
-                        positive: value > 0,
+                        ...(type === 4 ? { positive: value > 0 } : {}),
                     });
                     countryNamesWithData.add(point.countryName);
 
@@ -1011,27 +1012,63 @@ export function WorldMap({
             if (!projection) return;
 
             for (const [cont, values] of Object.entries(continent)) {
-                const value = lectureData[cont]?.[typeKey];
+                let value = lectureData[cont]?.[typeKey];
+                console.log(
+                    `Processing continent ${cont}:`,
+                    values,
+                    "with value:",
+                    value,
+                );
+                if (type === 4) {
+                    const exportValue = lectureData[cont]?.[2];
+                    const importValue = lectureData[cont]?.[3];
+                    if (exportValue === undefined || importValue === undefined)
+                        continue;
+                    value = calculateBalance(
+                        exportValue,
+                        importValue,
+                        isAbsolute,
+                    );
+                }
                 if (value === undefined) continue;
+
+                console.log(
+                    `Continent ${cont} has value ${value} for type ${typeKey}`,
+                );
 
                 pointData.push({
                     countryName: cont,
-                    value,
+                    value: Math.abs(value),
                     lon: values.center[0],
                     lat: values.center[1],
                     x: projection(values.center as [number, number])?.[0] || 0,
                     y: projection(values.center as [number, number])?.[1] || 0,
+                    ...(type === 4 ? { positive: value > 0 } : {}),
                 });
                 countryNamesWithData.add(cont);
-                if (value > maxValue) {
-                    maxValue = value;
+                if (Math.abs(value) > maxValue) {
+                    maxValue = Math.abs(value);
                 }
             }
 
             countries
                 .transition()
                 .duration(config.animationDuration)
-                .attr("fill", (d: GlobalCountryData) => d.fill)
+                .attr("fill", (d: GlobalCountryData) => {
+                    if (type !== 4) return d.fill; // For non-balance types, keep original fill
+                    if (d.name === "France") return d.fill;
+                    const index = pointData.findIndex(
+                        (p) => p.countryName === d.name,
+                    );
+                    if (index === -1) {
+                        return d.fill;
+                    }
+                    if (pointData[index]?.positive) {
+                        return config.positiveColor;
+                    } else {
+                        return config.negativeColor;
+                    }
+                })
                 .attr("opacity", (d: GlobalCountryData) => {
                     const hasData = countryNamesWithData.has(d.name);
                     if (hasData) {
