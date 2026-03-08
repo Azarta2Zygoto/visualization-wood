@@ -82,6 +82,10 @@ export default function IntroComponent({
                     <p>{t("product-desc")}</p>
                     <h3 className="h-tertiary">{t("historic")}</h3>
                     <p>{t("historic-desc")}</p>
+                    <h3 className="h-tertiary">{t("line-chart")}</h3>
+                    <p>{t("line-chart-desc")}</p>
+                    <h3 className="h-tertiary">{t("treemap")}</h3>
+                    <p>{t("treemap-desc")}</p>
                     <h3 className="h-tertiary">{t("param")}</h3>
                     <p>{t("param-desc")}</p>
                     <ul>
