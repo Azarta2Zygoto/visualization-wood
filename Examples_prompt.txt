@@ -1,0 +1,47 @@
+Pour les évènements historiques, nous avons utilisé un l'outil MakeIa qui permet de faire un workflow automatisé. 
+On a donc une liste de pays, pour chaque pays on fait 2 requêtes a un LLM qui a accès a internet, on a une requête pour les évènements dans le pays et une autre pour les évènements en lien avec le bois.
+On parse ensuite la réponse et on ajoute le csv dans le csv global.
+
+
+Voici les deux prompts utilisés pour les évènements historiques : 
+- Pour le bois : 
+
+
+"Cherche maintenant des événements qui peuvent être liés à l'export et l'import de bois entre 2012 et 2025 dans le pays suivant : {{9.country}}, répartis de façon à couvrir l’ensemble de cette période.
+Je veux une réponse en français sous forme de CSV avec les colonnes suivantes :
+- date_debut : date de début de l’événement (au mois près si nécessaire)
+- date_fin : date de fin d’influence de l’événement (si c’est ponctuel, mets le mois suivant)
+- titre_court : un titre concis de l’événement
+- description_rapide : une description synthétique de l’événement
+- categorie : une ou plusieurs catégories parmi [Politique/Géopolitique/Économie/Social/Juridique/Environnement/Sanitaire/Logistique/Technologie/Global/Autre], séparées par un / si plusieurs
+- pays_concernes : le(s) pays concernés, séparés par un / si plusieurs
+
+**Le CSV doit utiliser le point-virgule (;) comme séparateur de colonnes**, et **les éléments multiples dans une cellule doivent être séparés par /**.
+
+**Exemple correct de ligne CSV** :  
+2013-03-03;2013-04-30;Entrée en application de l'EUTR;Loi européenne interdisant la mise sur le marché de bois illégal et imposant une diligence raisonnable;Politique/Juridique/Économie/Logistique;EU27
+
+La réponse doit être uniquement le CSV final, sans aucune explication ni contentReference."
+
+
+
+- Pour les évènements normaux :     
+
+
+"Donne-moi tous les événements importants qui sont survenus dans le pays suivant : {{9.country}} entre 2012 et 2025, répartis de façon à couvrir toutes les années.
+
+Je veux une réponse en français sous forme de CSV avec les colonnes suivantes :
+- date_debut : date de début de l’événement (au mois près si nécessaire)
+- date_fin : date de fin d’influence de l’événement (si c’est ponctuel, mets le mois suivant)
+- titre_court : un titre concis de l’événement
+- description_rapide : une description synthétique de l’événement
+- categorie : une ou plusieurs catégories parmi [Politique/Géopolitique/Économie/Social/Juridique/Environnement/Sanitaire/Logistique/Technologie/Global/Autre], séparées par un / si plusieurs
+- pays_concernes : le(s) pays concernés, séparés par un / si plusieurs
+
+**Le CSV doit utiliser le point-virgule (;) comme séparateur de colonnes**, et **les éléments multiples dans une cellule doivent être séparés par /**.
+
+**Exemple correct de ligne CSV** :  
+2013-03-03;2013-04-30;Entrée en application de l'EUTR;Loi européenne interdisant la mise sur le marché de bois illégal et imposant une diligence raisonnable;Politique/Juridique/Économie/Logistique;EU27
+
+La réponse doit être uniquement le CSV final, sans aucune explication ni contentReference."
+
