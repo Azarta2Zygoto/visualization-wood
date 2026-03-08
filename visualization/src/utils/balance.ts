@@ -96,7 +96,7 @@ export function MakeBalance({
 }
 
 // Helper to calculate balance value
-function calculateBalance(
+export function calculateBalance(
     valueExport: number,
     valueImport: number,
     isAbsolute: boolean,

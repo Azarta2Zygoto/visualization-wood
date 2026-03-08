@@ -24,6 +24,8 @@ export const config = {
     mapBrightnessHover: 1.2,
     mapStrokeWidthPower: 0.5,
     franceColor: "#34ff34",
+    positiveColor: "#3442ff",
+    negativeColor: "#ff3434",
     franceValue: "103",
     light: {
         validCountry: "#87ceeb",

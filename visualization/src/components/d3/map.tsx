@@ -36,6 +36,7 @@ import type {
 } from "@/metadata/types";
 import { calculateArrowHead } from "@/utils/arrow";
 import { MakeBalance } from "@/utils/balance";
+import { calculateBalance } from "@/utils/balance";
 import { Legend } from "@/utils/colorLegend";
 import { simpleDrag } from "@/utils/drag";
 import { isKnownCountry } from "@/utils/function";
@@ -768,7 +769,7 @@ export function WorldMap({
     // separate from other data updates for performance and because it has a different visual encoding
     useEffect(() => {
         if (
-            type !== 4 ||
+            (type !== 4 && !isAbsolute) ||
             !lectureData ||
             Object.keys(lectureData).length === 0 ||
             !mapLayer ||
@@ -886,7 +887,7 @@ export function WorldMap({
     // Effect 10: Update data based on filtered data
     useEffect(() => {
         if (
-            type === 4 || // Skip if in balance mode, handled by separate effect (Effect 7)
+            (type === 4 && !isAbsolute) || // Skip if in balance mode, handled by separate effect (Effect 7)
             !lectureData ||
             Object.keys(lectureData).length === 0 ||
             !mapLayer ||
@@ -929,25 +930,38 @@ export function WorldMap({
             y: number;
             lon: number;
             lat: number;
+            positive?: boolean;
         }> = [];
         if (isCountryMode) {
             for (const point of dataPointOnMap) {
-                const value = lectureData[point.countryName]?.[typeKey];
+                let value = lectureData[point.countryName]?.[typeKey];
+                if (type === 4) {
+                    const exportValue = lectureData[point.countryName]?.[2];
+                    const importValue = lectureData[point.countryName]?.[3];
+                    if (exportValue === undefined || importValue === undefined)
+                        continue;
+                    value = calculateBalance(
+                        exportValue,
+                        importValue,
+                        isAbsolute,
+                    );
+                }
 
                 if (value || value === 0) {
                     pointData.push({
                         countryName: point.countryName,
-                        value,
+                        value: Math.abs(value),
                         lon: point.lon,
                         lat: point.lat,
                         x: point.x,
                         y: point.y,
+                        positive: value > 0,
                     });
                     countryNamesWithData.add(point.countryName);
 
                     // Calculate max in same pass
-                    if (value > maxValue) {
-                        maxValue = value;
+                    if (Math.abs(value) > maxValue) {
+                        maxValue = Math.abs(value);
                     }
                 }
             }
@@ -957,7 +971,21 @@ export function WorldMap({
             countries
                 .transition()
                 .duration(config.animationDuration)
-                .attr("fill", (d: GlobalCountryData) => d.fill)
+                .attr("fill", (d: GlobalCountryData) => {
+                    if (type !== 4) return d.fill; // For non-balance types, keep original fill
+                    if (d.name === "France") return d.fill;
+                    const index = pointData.findIndex(
+                        (p) => p.countryName === d.name,
+                    );
+                    if (index === -1) {
+                        return d.fill;
+                    }
+                    if (pointData[index]?.positive) {
+                        return config.positiveColor;
+                    } else {
+                        return config.negativeColor;
+                    }
+                })
                 .attr("opacity", (d: GlobalCountryData) => {
                     const hasData = countryNamesWithData.has(d.name);
                     if (hasData) {
