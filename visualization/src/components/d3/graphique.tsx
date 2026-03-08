@@ -203,7 +203,7 @@ export default function Graphique({
                     "viewBox",
                     `0 0 ${windowSize.width * 0.95} ${windowSize.height * 0.95 - 100}`,
                 )
-                .attr("width", windowSize.width * 0.95)
+                .attr("width", windowSize.width - 20)
                 .attr("height", windowSize.height * 0.95 - 100);
         }
     }, [windowSize]);
@@ -483,8 +483,8 @@ function filterevents(
             const dateParsed = parseDate1(event.date_debut)
                 ? parseDate1(event.date_debut)
                 : parseDate2(event.date_debut)
-                  ? parseDate2(event.date_debut)
-                  : null;
+                    ? parseDate2(event.date_debut)
+                    : null;
             if (!dateParsed) return null;
 
             // catégorie / icône
